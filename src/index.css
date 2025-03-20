@@ -1,0 +1,88 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 220 60% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 98%;
+    --secondary-foreground: 220 40% 30%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 220 40% 96%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71% 44%;
+
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html, body {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  ::selection {
+    @apply bg-primary/10 text-primary;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply rounded-2xl bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+  }
+  
+  .subtle-shadow {
+    @apply shadow-[0_8px_30px_rgba(0,0,0,0.06)];
+  }
+  
+  .hover-effect {
+    @apply transition-all duration-300 hover:translate-y-[-3px] hover:shadow-[0_14px_35px_rgba(0,0,0,0.07)];
+  }
+  
+  .chip {
+    @apply inline-flex items-center px-3 py-1 text-xs font-medium rounded-full;
+  }
+  
+  .container-page {
+    @apply container mx-auto px-4 sm:px-6 py-8;
+  }
+  
+  .section-title {
+    @apply font-display text-2xl sm:text-3xl font-bold tracking-tight;
+  }
+  
+  .page-transition {
+    @apply animate-fade-in;
+  }
+}
