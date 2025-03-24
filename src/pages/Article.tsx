@@ -1,8 +1,8 @@
 import SidebarStock from '@/components/SidebarStock';
+import { showToast } from "@/config/toast.config";
 import { ArrowLeft, Bookmark, Calendar, Clock, Share2, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import { ArticleProps } from '../components/ArticleCard';
 import MainLayout from "../layouts/MainLayout";
 
@@ -124,12 +124,13 @@ const Article = () => {
     } else {
       // Fallback
       navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied to clipboard');
+      showToast.success('Link copied to clipboard');
     }
   };
   
-  const handleBookmark = () => {
-    toast.success('Article saved to your bookmarks');
+  const handleSaveBookmark = () => {
+    // Logic to save bookmark
+    showToast.success('Article saved to your bookmarks');
   };
   
   if (isLoading) {
@@ -229,7 +230,7 @@ const Article = () => {
                   <Share2 size={18} />
                 </button>
                 <button 
-                  onClick={handleBookmark}
+                  onClick={handleSaveBookmark}
                   className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
                   aria-label="Bookmark article"
                 >

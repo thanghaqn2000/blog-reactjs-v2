@@ -1,21 +1,20 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
-import { Separator } from '@/components/ui/separator';
-import { FileText, Plus, Eye, Edit, Trash, AlertTriangle } from 'lucide-react';
-import AdminLayout from '../../layouts/AdminLayout';
-import { usePosts } from '@/contexts/PostsContext';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { Separator } from '@/components/ui/separator';
+import { showToast } from "@/config/toast.config";
+import { usePosts } from '@/contexts/PostsContext';
+import { AlertTriangle, Edit, Eye, FileText, Plus, Trash } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import AdminLayout from '../../layouts/AdminLayout';
 
 const statusColors = {
   published: "bg-green-100 text-green-800",
@@ -45,7 +44,7 @@ const Posts = () => {
   const confirmDelete = () => {
     if (postToDelete) {
       deletePost(postToDelete);
-      toast.success('Post deleted successfully');
+      showToast.success('Post deleted successfully');
       setDeleteDialogOpen(false);
       setPostToDelete(null);
     }

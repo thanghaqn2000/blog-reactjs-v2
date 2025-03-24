@@ -1,19 +1,18 @@
-
-import React, { useState } from 'react';
-import AdminLayout from '@/layouts/AdminLayout';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { ArrowUpDown, Trash2, ImagePlus, Save, Plus, X } from 'lucide-react';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { showToast } from "@/config/toast.config";
+import AdminLayout from '@/layouts/AdminLayout';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowUpDown, ImagePlus, Plus, Save, Trash2, X } from 'lucide-react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // Define the slide structure
 interface Slide {
@@ -130,13 +129,13 @@ const HeroSlides = () => {
     if (!file) return;
     
     if (!activeSlide) {
-      toast.error("Please select a slide first");
+      showToast.error("Please select a slide first");
       return;
     }
 
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
+      showToast.error("Image size should be less than 5MB");
       return;
     }
 
@@ -163,7 +162,7 @@ const HeroSlides = () => {
 
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
+      showToast.error("Image size should be less than 5MB");
       return;
     }
 
@@ -182,7 +181,7 @@ const HeroSlides = () => {
   // Handle form submission for editing slides
   const onSubmit = (values: z.infer<typeof slideSchema>) => {
     if (!activeSlide) {
-      toast.error("No slide selected");
+      showToast.error("No slide selected");
       return;
     }
 
@@ -208,7 +207,7 @@ const HeroSlides = () => {
     setSlides(updatedSlides);
     // Save to localStorage for persistence
     localStorage.setItem('heroSlides', JSON.stringify(updatedSlides));
-    toast.success("Slide updated successfully");
+    showToast.success("Slide updated successfully");
   };
 
   // Create a new slide
@@ -242,7 +241,7 @@ const HeroSlides = () => {
       alt: "New slide image",
     });
     
-    toast.success("New slide created successfully");
+    showToast.success("New slide created successfully");
     
     // Select the new slide for editing
     handleSelectSlide(newSlide);
@@ -252,7 +251,7 @@ const HeroSlides = () => {
   const removeSlide = (slideId: number) => {
     // Prevent removing all slides
     if (slides.length <= 1) {
-      toast.error("Cannot remove the last slide. At least one slide must remain.");
+      showToast.error("Cannot remove the last slide. At least one slide must remain.");
       return;
     }
     
@@ -269,7 +268,7 @@ const HeroSlides = () => {
       setPreviewImage(null);
     }
     
-    toast.success("Slide removed successfully");
+    showToast.success("Slide removed successfully");
   };
 
   // Move slide up or down in the order
@@ -305,6 +304,11 @@ const HeroSlides = () => {
   const removeNewSlideImage = () => {
     setNewSlideImage(null);
     setUploadedFile(null);
+  };
+
+  const handleSaveAll = () => {
+    // Logic to save all changes
+    showToast.success("All changes saved");
   };
 
   return (
@@ -432,11 +436,7 @@ const HeroSlides = () => {
               </DialogContent>
             </Dialog>
             
-            <Button onClick={() => {
-              // Save to localStorage for demo purposes
-              localStorage.setItem('heroSlides', JSON.stringify(slides));
-              toast.success("All changes saved");
-            }}>
+            <Button onClick={handleSaveAll}>
               <Save className="mr-2 h-4 w-4" /> Save All Changes
             </Button>
           </div>

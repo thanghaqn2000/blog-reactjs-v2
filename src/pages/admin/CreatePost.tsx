@@ -1,16 +1,16 @@
-import React, { useState, useRef } from 'react';
-import JoditEditor from 'jodit-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileImage, Eye, Save, ArrowLeft, Trash2 } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { showToast } from "@/config/toast.config";
 import { usePosts } from '@/contexts/PostsContext';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import AdminLayout from '@/layouts/AdminLayout';
+import JoditEditor from 'jodit-react';
+import { ArrowLeft, FileImage, Save, Trash2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CreatePost = () => {
   const editor = useRef(null);
@@ -89,7 +89,8 @@ const CreatePost = () => {
     if (fileInput) fileInput.value = '';
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!title.trim()) {
       toastNotification({
         title: "Error",
@@ -124,7 +125,7 @@ const CreatePost = () => {
     const newPostId = addPost(newPost);
     
     // Show success message
-    toast.success('Post created successfully!');
+    showToast.success('Post created successfully!');
     
     // Navigate to the post detail view
     navigate(`/admin/posts/detail/${newPostId}`);

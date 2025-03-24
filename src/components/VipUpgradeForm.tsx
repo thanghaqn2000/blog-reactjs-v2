@@ -1,18 +1,17 @@
-
-import { useState } from "react";
-import { Check, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { showToast } from "@/config/toast.config";
+import { Check, CreditCard } from "lucide-react";
+import { useState } from "react";
 
 interface VipUpgradeFormProps {
   open: boolean;
@@ -31,7 +30,7 @@ const VipUpgradeForm = ({ open, onClose, onCancel }: VipUpgradeFormProps) => {
     
     // Simulate API call
     setTimeout(() => {
-      toast.success("VIP upgrade request submitted successfully!", {
+      showToast.success("VIP upgrade request submitted successfully!", {
         description: "We'll contact you shortly with further details.",
       });
       setIsSubmitting(false);
