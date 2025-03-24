@@ -8,7 +8,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (phone_number: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
 }
@@ -22,23 +22,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: false,
   });
 
-  // Khôi phục trạng thái đăng nhập từ localStorage khi component mount
+  // Khôi phục trạng thái đăng nhập bằng refresh token khi component mount
   useEffect(() => {
-    const tokenInfo = localStorage.getItem('tokenInfo');
-    const user = localStorage.getItem('user');
+    const refreshAuth = async () => {
+      try {
+        const response = await authService.refreshToken();
+        setAuthState({
+          tokenInfo: response.token_info,
+          user: response.user,
+          isAuthenticated: true,
+        });
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        setAuthState({
+          tokenInfo: null,
+          user: null,
+          isAuthenticated: false,
+        });
+      }
+    };
 
-    if (tokenInfo && user) {
-      setAuthState({
-        tokenInfo: JSON.parse(tokenInfo),
-        user: JSON.parse(user),
-        isAuthenticated: true,
-      });
-    }
+    refreshAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (phone_number: string, password: string) => {
     try {
-      const response = await authService.login({ email, password });
+      const response = await authService.login(phone_number, password);
       
       // Lưu thông tin vào state
       setAuthState({
@@ -46,10 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: response.user,
         isAuthenticated: true,
       });
-
-      // Lưu vào localStorage
-      localStorage.setItem('tokenInfo', JSON.stringify(response.token_info));
-      localStorage.setItem('user', JSON.stringify(response.user));
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -66,10 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: null,
         isAuthenticated: false,
       });
-
-      // Xóa khỏi localStorage
-      localStorage.removeItem('tokenInfo');
-      localStorage.removeItem('user');
     } catch (error) {
       console.error('Logout failed:', error);
       throw error;
@@ -81,7 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ...prev,
       user,
     }));
-    localStorage.setItem('user', JSON.stringify(user));
   };
 
   return (

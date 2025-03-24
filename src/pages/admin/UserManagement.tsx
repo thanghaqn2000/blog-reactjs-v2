@@ -1,43 +1,41 @@
-import React, { useState } from 'react';
-import AdminLayout from '@/layouts/AdminLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Plus, 
-  MoreHorizontal, 
-  Edit, 
-  Trash, 
-  Star, 
-  Filter,
-  ArrowUpDown
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { Input } from '@/components/ui/input';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { showToast } from "@/config/toast.config";
+import AdminLayout from '@/layouts/AdminLayout';
+import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+    Edit,
+    Filter,
+    MoreHorizontal,
+    Plus,
+    Search,
+    Star,
+    Trash
+} from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const sampleUsers = [
   {
@@ -187,7 +185,7 @@ const UserManagement = () => {
     setUsers([...users, newUser]);
     setIsCreateDialogOpen(false);
     createForm.reset();
-    toast.success("User created successfully");
+    showToast.success("User created successfully");
   };
 
   const handleEditUser = (data: UserFormValues) => {
@@ -209,7 +207,7 @@ const UserManagement = () => {
     setUsers(updatedUsers);
     setIsEditDialogOpen(false);
     editForm.reset();
-    toast.success("User updated successfully");
+    showToast.success("User updated successfully");
   };
 
   const handleDeleteUser = () => {
@@ -218,7 +216,7 @@ const UserManagement = () => {
     const updatedUsers = users.filter(user => user.id !== selectedUser.id);
     setUsers(updatedUsers);
     setIsDeleteDialogOpen(false);
-    toast.success("User deleted successfully");
+    showToast.success("User deleted successfully");
   };
 
   const handleUpgradeToVip = () => {
@@ -232,7 +230,7 @@ const UserManagement = () => {
     
     setUsers(updatedUsers);
     setIsUpgradeDialogOpen(false);
-    toast.success(`${selectedUser.name} has been upgraded to VIP`);
+    showToast.success(`${selectedUser.name} has been upgraded to VIP`);
   };
 
   const openEditDialog = (user: (typeof sampleUsers)[0]) => {

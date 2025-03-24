@@ -4,30 +4,49 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { showToast } from "@/config/toast.config";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Eye, EyeOff, Facebook, Home, Lock, LogIn, Mail, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface LoginProps {
-  onLogin?: (email: string, password: string) => void;
+  onLogin?: (phoneNumber: string, password: string) => void;
   onSocialLogin?: (provider: "google" | "facebook") => void;
   onRegister?: (email: string, password: string, name: string) => void;
 }
 
 const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
+  const navigate = useNavigate();
+  const { login, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [loginEmail, setLoginEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Kiểm tra và redirect nếu đã đăng nhập
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onLogin) {
-      onLogin(loginEmail, loginPassword);
+    try {
+      await login(phoneNumber, loginPassword);
+      showToast.success("Đăng nhập thành công", {
+        description: "Chào mừng bạn quay trở lại!"
+      });
+      navigate("/");
+    } catch (error) {
+      showToast.error("Đăng nhập thất bại", {
+        description: "Tài khoản hoặc mật khẩu không chính xác"
+      });
     }
   };
 
@@ -99,16 +118,16 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
               <TabsContent value="login" className="space-y-4">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Số điện thoại</Label>
+                    <Label htmlFor="phone">Số điện thoại</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input 
-                        id="email" 
-                        type="" 
-                        placeholder="name@example.com" 
+                        id="phone" 
+                        type="tel"
+                        placeholder="Nhập số điện thoại" 
                         className="pl-10 transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
                         required
                       />
                     </div>

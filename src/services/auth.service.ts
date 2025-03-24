@@ -1,8 +1,10 @@
 import { v1Api } from './axios';
 
 export interface LoginCredentials {
-  email: string;
-  password: string;
+  user: {
+    phone_number: string;
+    password: string;
+  }
 }
 
 export interface User {
@@ -25,23 +27,35 @@ export interface AuthResponse {
 
 class AuthService {
   // Đăng nhập
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    return v1Api.post('/auth/login', credentials);
+  async login(phone_number: string, password: string): Promise<AuthResponse> {
+    const credentials: LoginCredentials = {
+      user: {
+        phone_number,
+        password
+      }
+    };
+    return (await v1Api.post('/login', credentials, { withCredentials: true })).data;
   }
 
   // Đăng xuất
   async logout(): Promise<void> {
-    return v1Api.post('/auth/logout');
+    return v1Api.delete('/logout', {withCredentials: true});
   }
 
   // Làm mới token
-  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
-    return v1Api.post('/auth/refresh-token', { refreshToken });
+  async refreshToken(): Promise<AuthResponse> {
+    try {
+      const response = await v1Api.post('/refresh_tokens', {}, { withCredentials: true });
+      return response.data;
+    } catch (error) {
+      console.error('Refresh token failed:', error);
+      throw error;
+    }
   }
 
   // Lấy thông tin user hiện tại
   async getCurrentUser(): Promise<User> {
-    return v1Api.get('/auth/me');
+    return v1Api.get('/auth/me', { withCredentials: true });
   }
 
   // Đổi mật khẩu
@@ -49,12 +63,12 @@ class AuthService {
     currentPassword: string;
     newPassword: string;
   }): Promise<void> {
-    return v1Api.post('/auth/change-password', data);
+    return v1Api.post('/auth/change-password', data, { withCredentials: true });
   }
 
   // Quên mật khẩu
   async forgotPassword(email: string): Promise<void> {
-    return v1Api.post('/auth/forgot-password', { email });
+    return v1Api.post('/auth/forgot-password', { email }, { withCredentials: true });
   }
 
   // Đặt lại mật khẩu
@@ -62,7 +76,7 @@ class AuthService {
     token: string;
     newPassword: string;
   }): Promise<void> {
-    return v1Api.post('/auth/reset-password', data);
+    return v1Api.post('/auth/reset-password', data, { withCredentials: true });
   }
 }
 

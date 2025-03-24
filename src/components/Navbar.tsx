@@ -1,15 +1,30 @@
-
-import { ChevronDown, Menu, Search, User, X, LayoutDashboard } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import {
+  faBars,
+  faChevronDown,
+  faSignOutAlt,
+  faTimes,
+  faUser
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import AdminLink from './AdminLink';
 import HeaderClient from './HeaderClient';
 import { Button } from './ui/button';
-import AdminLink from './AdminLink';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, logout } = useAuth();
   
   // Handle scroll event to change navbar appearance
   useEffect(() => {
@@ -34,9 +49,10 @@ const Navbar = () => {
   
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
-      }`}
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        isScrolled ? "bg-white shadow-md" : "bg-transparent"
+      )}
     >
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 sm:h-20">
@@ -45,7 +61,10 @@ const Navbar = () => {
             to="/" 
             className="flex items-center space-x-2 font-display font-bold text-xl sm:text-2xl tracking-tight"
           >
-            <span className={`${isScrolled ? 'text-primary' : 'text-primary'}`}>Stock</span>
+            <span className={cn(
+              "text-primary",
+              isScrolled ? "text-black" : "text-white"
+            )}>Stock</span>
             <span className={isScrolled ? 'text-foreground' : 'text-foreground'}>Insights</span>
           </Link>
           
@@ -56,25 +75,50 @@ const Navbar = () => {
           
           {/* Search & Login & Mobile Menu Buttons */}
           <div className="flex items-center gap-2">
-            <button 
-              className={`p-2 rounded-full hover:bg-accent transition-colors ${!isScrolled ? 'text-white hover:bg-white/20' : 'text-foreground/80'}`}
-              aria-label="Search"
-            >
-              <Search size={20} />
-            </button>
             
-            <AdminLink isScrolled={isScrolled} />
+            {user?.is_admin && (
+              <AdminLink isScrolled={isScrolled} />
+            )}
             
-            <Link to="/login">
-              <Button 
-                variant={isScrolled ? "default" : "outline"} 
-                size="sm"
-                className={!isScrolled ? "text-black border-white hover:bg-white/20 hover:text-white" : ""}
-              >
-                <User size={16} className="mr-2" />
-                Đăng nhập
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className={cn(
+                      "ml-2 rounded-full bg-blue-100/80 hover:bg-blue-200/80 transition-colors",
+                      isScrolled ? "text-gray-600 hover:text-black" : "text-white hover:text-white/80"
+                    )}
+                  >
+                    <FontAwesomeIcon icon={faUser} className="h-8 w-8 text-blue-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <FontAwesomeIcon icon={faUser} className="mr-2 h-4 w-4" />
+                      <span>Hồ sơ</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="mt-2 flex items-center text-red-600">
+                    <FontAwesomeIcon icon={faSignOutAlt} className="mr-2 h-4 w-4" />
+                    <span>Đăng xuất</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/login">
+                <Button 
+                  variant={isScrolled ? "default" : "outline"} 
+                  size="sm"
+                  className={!isScrolled ? "text-black border-white hover:bg-white/20 hover:text-white" : ""}
+                >
+                  <FontAwesomeIcon icon={faUser} className="mr-2" />
+                  Đăng nhập
+                </Button>
+              </Link>
+            )}
             
             <button
               className={`p-2 rounded-full hover:bg-accent transition-colors md:hidden ${!isScrolled ? 'text-white hover:bg-white/20' : 'text-foreground'}`}
@@ -82,9 +126,9 @@ const Navbar = () => {
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
-                <X size={24} />
+                <FontAwesomeIcon icon={faTimes} size="lg" />
               ) : (
-                <Menu size={24} />
+                <FontAwesomeIcon icon={faBars} size="lg" />
               )}
             </button>
           </div>
@@ -148,8 +192,8 @@ const MobileDropdownLink = ({ label, children }: { label: string; children: Reac
         className="flex items-center justify-between w-full py-2 text-lg font-medium text-foreground/90 hover:text-primary transition-colors"
       >
         {label}
-        <ChevronDown 
-          size={16} 
+        <FontAwesomeIcon 
+          icon={faChevronDown} 
           className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} 
         />
       </button>
