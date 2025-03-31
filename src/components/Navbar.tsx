@@ -63,9 +63,9 @@ const Navbar = () => {
           >
             <span className={cn(
               "text-primary",
-              isScrolled ? "text-black" : "text-white"
+              isScrolled ? "text-primary" : "text-white"
             )}>Stock</span>
-            <span className={isScrolled ? 'text-foreground' : 'text-foreground'}>Insights</span>
+            <span className={isScrolled ? 'text-foreground' : 'text-white'}>Insights</span>
           </Link>
           
           {/* Desktop Navigation with Dropdowns */}
