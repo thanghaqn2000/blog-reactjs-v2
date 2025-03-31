@@ -6,10 +6,52 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showToast } from "@/config/toast.config";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/lib/utils";
+import { userService } from "@/services/v1/user.service";
+import emailValidator from "email-validator";
 import { ArrowLeft, Eye, EyeOff, Facebook, Home, Lock, LogIn, Mail, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+
+// Schema validation
+const registerSchema = z.object({
+  name: z.string().min(1, "Họ tên không được để trống"),
+  email: z.string().min(1, "Email không được để trống"),
+  phone_number: z.string().min(1, "Số điện thoại không được để trống"),
+  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+  confirmPassword: z.string().min(1, "Vui lòng nhập lại mật khẩu"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Mật khẩu không khớp",
+  path: ["confirmPassword"],
+});
+
+// Validate phone number format
+const validatePhoneNumber = (phone: string) => {
+  const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+  return phoneRegex.test(phone);
+};
+
+// Tách các message lỗi ra constant
+const ERROR_MESSAGES = {
+  required: {
+    name: "Họ tên không được để trống",
+    email: "Email không được để trống",
+    phone_number: "Số điện thoại không được để trống",
+    password: "Mật khẩu không được để trống",
+    confirmPassword: "Vui lòng nhập lại mật khẩu"
+  },
+  format: {
+    email: "Email không đúng định dạng",
+    phone_number: "Số điện thoại không đúng định dạng Việt Nam",
+    password: "Mật khẩu phải có ít nhất 6 ký tự"
+  },
+  match: {
+    confirmPassword: "Mật khẩu không khớp"
+  }
+};
 
 interface LoginProps {
   onLogin?: (phoneNumber: string, password: string) => void;
@@ -26,7 +68,18 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
+  const [registerPhoneNumber, setRegisterPhoneNumber] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
+
+  // Debounce values for email and phone number
+  const debouncedEmail = useDebounce(registerEmail, 500);
+  const debouncedPhone = useDebounce(registerPhoneNumber, 500);
 
   // Kiểm tra và redirect nếu đã đăng nhập
   useEffect(() => {
@@ -34,6 +87,70 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
       navigate("/");
     }
   }, [user, navigate]);
+
+  // Check email uniqueness
+  useEffect(() => {
+    const checkEmail = async () => {
+      if (!debouncedEmail || !emailValidator.validate(debouncedEmail)) {
+        return;
+      }
+
+      setIsCheckingEmail(true);
+      try {
+        const response = await userService.checkInfoUniqueness(debouncedEmail);
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.email;
+          setIsFormValid(Object.keys(newErrors).length === 0);
+          return newErrors;
+        });
+      } catch (error: any) {
+        if (error.response?.data?.code === 410) {
+          setErrors(prev => {
+            const newErrors = { ...prev, email: error.response.data.data.errors };
+            setIsFormValid(false);
+            return newErrors;
+          });
+        }
+      } finally {
+        setIsCheckingEmail(false);
+      }
+    };
+
+    checkEmail();
+  }, [debouncedEmail]);
+
+  // Check phone number uniqueness
+  useEffect(() => {
+    const checkPhone = async () => {
+      if (!debouncedPhone || !validatePhoneNumber(debouncedPhone)) {
+        return;
+      }
+
+      setIsCheckingPhone(true);
+      try {
+        const response = await userService.checkInfoUniqueness(undefined, debouncedPhone);
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.phone_number;
+          setIsFormValid(Object.keys(newErrors).length === 0);
+          return newErrors;
+        });
+      } catch (error: any) {
+        if (error.response?.data?.code === 410) {
+          setErrors(prev => {
+            const newErrors = { ...prev, phone_number: error.response.data.data.errors };
+            setIsFormValid(false);
+            return newErrors;
+          });
+        }
+      } finally {
+        setIsCheckingPhone(false);
+      }
+    };
+
+    checkPhone();
+  }, [debouncedPhone]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +167,92 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  // Tách logic validate từng field
+  const validateField = (field: string, value: string, confirmValue?: string) => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate required
+    if (!value) {
+      newErrors[field] = ERROR_MESSAGES.required[field as keyof typeof ERROR_MESSAGES.required];
+      return newErrors;
+    }
+
+    // Validate format
+    switch (field) {
+      case 'email':
+        if (!emailValidator.validate(value)) {
+          newErrors.email = ERROR_MESSAGES.format.email;
+        }
+        break;
+      case 'phone_number':
+        if (!validatePhoneNumber(value)) {
+          newErrors.phone_number = ERROR_MESSAGES.format.phone_number;
+        }
+        break;
+      case 'password':
+        if (value.length < 6) {
+          newErrors.password = ERROR_MESSAGES.format.password;
+        }
+        break;
+    }
+
+    // Validate match
+    if (field === 'confirmPassword' && value !== confirmValue) {
+      newErrors.confirmPassword = ERROR_MESSAGES.match.confirmPassword;
+    }
+
+    return newErrors;
+  };
+
+  const handleFieldBlur = (field: string, value: string) => {
+    const fieldErrors = validateField(field, value, field === 'confirmPassword' ? registerPassword : undefined);
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      if (Object.keys(fieldErrors).length > 0) {
+        newErrors[field] = fieldErrors[field];
+      } else {
+        delete newErrors[field];
+      }
+      setIsFormValid(Object.keys(newErrors).length === 0);
+      return newErrors;
+    });
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onRegister) {
-      onRegister(registerEmail, registerPassword, registerName);
+    
+    if (!isFormValid) {
+      return;
+    }
+
+    try {
+      await userService.registerUser({
+        user: {
+          email: registerEmail,
+          password: registerPassword,
+          phone_number: registerPhoneNumber,
+          name: registerName,
+        }
+      });
+
+      showToast.success("Đăng ký thành công", {
+        description: "Vui lòng đăng nhập để tiếp tục"
+      });
+      
+      // Reset form
+      setRegisterName("");
+      setRegisterEmail("");
+      setRegisterPassword("");
+      setConfirmPassword("");
+      setRegisterPhoneNumber("");
+      setErrors({});
+
+      // Chuyển sang tab đăng nhập
+      setActiveTab("login");
+    } catch (error) {
+      showToast.error("Đăng ký thất bại", {
+        description: "Có lỗi xảy ra, vui lòng thử lại"
+      });
     }
   };
 
@@ -78,7 +277,7 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
             </Link>
             <div className="flex items-center space-x-1">
               <Home size={20} />
-              <span className="font-semibold text-lg">StockInsights</span>
+              <span className="font-semibold text-lg">Stock Insights</span>
             </div>
           </div>
         </div>
@@ -102,7 +301,7 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-2">
                 <TabsTrigger value="login" className="flex items-center gap-1">
                   <LogIn size={16} />
@@ -118,7 +317,9 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
               <TabsContent value="login" className="space-y-4">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Số điện thoại</Label>
+                    <Label htmlFor="phone">
+                      Số điện thoại <span className="text-red-500">*</span>
+                    </Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input 
@@ -134,7 +335,9 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Mật khẩu</Label>
+                      <Label htmlFor="password">
+                        Mật khẩu <span className="text-red-500">*</span>
+                      </Label>
                       <a href="#" className="text-sm text-primary hover:underline">
                         Quên mật khẩu?
                       </a>
@@ -184,37 +387,98 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
               <TabsContent value="register" className="space-y-4">
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Họ tên</Label>
+                    <Label htmlFor="name">
+                      Họ tên <span className="text-red-500">*</span>
+                    </Label>
                     <Input 
                       id="name" 
                       placeholder="Nguyễn Văn A" 
-                      className="transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+                      className={cn(
+                        "transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary",
+                        errors.name && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      )}
                       value={registerName}
                       onChange={(e) => setRegisterName(e.target.value)}
+                      onBlur={() => handleFieldBlur('name', registerName)}
                       required
                     />
+                    {errors.name && (
+                      <p className="text-sm text-red-500">{errors.name}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
-                    <Input 
-                      id="register-email" 
-                      type="email" 
-                      placeholder="name@example.com" 
-                      className="transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
-                      value={registerEmail}
-                      onChange={(e) => setRegisterEmail(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="register-email">
+                      Email <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input 
+                        id="register-email" 
+                        type="email" 
+                        placeholder="name@example.com" 
+                        className={cn(
+                          "transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary",
+                          errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        )}
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
+                        onBlur={() => handleFieldBlur('email', registerEmail)}
+                        required
+                        disabled={isCheckingEmail}
+                      />
+                      {isCheckingEmail && (
+                        <div className="absolute right-3 top-3">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        </div>
+                      )}
+                    </div>
+                    {errors.email && (
+                      <p className="text-sm text-red-500">{errors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="register-password">Mật khẩu</Label>
+                    <Label htmlFor="register-phone">
+                      Số điện thoại <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input 
+                        id="register-phone" 
+                        type="tel" 
+                        placeholder="0912345678" 
+                        className={cn(
+                          "transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary",
+                          errors.phone_number && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        )}
+                        value={registerPhoneNumber}
+                        onChange={(e) => setRegisterPhoneNumber(e.target.value)}
+                        onBlur={() => handleFieldBlur('phone_number', registerPhoneNumber)}
+                        required
+                        disabled={isCheckingPhone}
+                      />
+                      {isCheckingPhone && (
+                        <div className="absolute right-3 top-3">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        </div>
+                      )}
+                    </div>
+                    {errors.phone_number && (
+                      <p className="text-sm text-red-500">{errors.phone_number}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">
+                      Mật khẩu <span className="text-red-500">*</span>
+                    </Label>
                     <div className="relative">
                       <Input 
                         id="register-password" 
                         type={showPassword ? "text" : "password"} 
-                        className="pr-10 transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+                        className={cn(
+                          "pr-10 transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary",
+                          errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        )}
                         value={registerPassword}
                         onChange={(e) => setRegisterPassword(e.target.value)}
+                        onBlur={() => handleFieldBlur('password', registerPassword)}
                         required
                       />
                       <button 
@@ -225,10 +489,36 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                    {errors.password && (
+                      <p className="text-sm text-red-500">{errors.password}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">
+                      Nhập lại mật khẩu <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input 
+                        id="confirm-password" 
+                        type={showPassword ? "text" : "password"} 
+                        className={cn(
+                          "pr-10 transition-all border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary",
+                          errors.confirmPassword && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        )}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onBlur={() => handleFieldBlur('confirmPassword', confirmPassword)}
+                        required
+                      />
+                    </div>
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+                    )}
                   </div>
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all"
+                    disabled={!isFormValid}
                   >
                     Đăng ký
                   </Button>

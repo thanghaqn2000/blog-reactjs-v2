@@ -48,6 +48,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "email-validator": "^2.0.4",
     "embla-carousel-react": "^8.3.0",
     "framer-motion": "^11.18.2",
     "input-otp": "^1.2.4",
@@ -66,7 +67,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
