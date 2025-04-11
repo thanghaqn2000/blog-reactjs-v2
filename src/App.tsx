@@ -1,4 +1,3 @@
-
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,21 +5,23 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Login from "./components/Login";
+import { PostsProvider } from "./contexts/PostsContext";
+import CreatePost from "./pages/admin/CreatePost";
+import Dashboard from "./pages/admin/Dashboard";
+import EditPost from "./pages/admin/EditPost";
+import HeroSlides from "./pages/admin/HeroSlides";
+import NotificationDetail from "./pages/admin/NotificationDetail";
+import NotificationsManagement from "./pages/admin/NotificationsManagement";
+import PostDetail from "./pages/admin/PostDetail";
+import Posts from "./pages/admin/Posts";
+import UserManagement from "./pages/admin/UserManagement";
 import Article from "./pages/Article";
 import Articles from "./pages/Articles";
+import AuthCallback from "./pages/AuthCallback";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/admin/Dashboard";
-import Posts from "./pages/admin/Posts";
-import CreatePost from "./pages/admin/CreatePost";
-import { PostsProvider } from "./contexts/PostsContext";
-import EditPost from "./pages/admin/EditPost";
-import PostDetail from "./pages/admin/PostDetail";
-import HeroSlides from "./pages/admin/HeroSlides";
+import Profile from "./pages/Profile";
 import VipNews from "./pages/VipNews";
-import NotificationsManagement from "./pages/admin/NotificationsManagement";
-import NotificationDetail from "./pages/admin/NotificationDetail";
-import UserManagement from "./pages/admin/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -63,13 +64,16 @@ const App = () => (
               <Route path="/policy/monetary" element={<NotFound />} />
               
               {/* Owner routes */}
-              <Route path="/owner/profile" element={<NotFound />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/owner/settings" element={<NotFound />} />
               
               {/* Original routes */}
               <Route path="/articles" element={<Articles />} />
               <Route path="/article/:id" element={<Article />} />
               <Route path="/markets" element={<NotFound />} />
+              
+              {/* Auth callback route */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

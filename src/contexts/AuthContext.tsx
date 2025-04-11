@@ -7,9 +7,12 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-interface AuthContextType extends AuthState {
-  login: (phone_number: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (phoneNumber: string, password: string) => Promise<void>;
+  verifySocialToken: (accessToken: string) => Promise<User>;
+  logout: () => void;
   updateUser: (user: User) => void;
 }
 
@@ -61,6 +64,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const verifySocialToken = async (access_token: string) => {
+    try {
+      const response = await authService.verifySocialToken(access_token);
+      // Lưu thông tin vào state
+      setAuthState({
+        tokenInfo: response.token_info,
+        user: response.user,
+        isAuthenticated: true,
+      });
+      return response.user
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
@@ -88,9 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         ...authState,
+        token: authState.tokenInfo?.access_token || null,
         login,
         logout,
         updateUser,
+        verifySocialToken
       }}
     >
       {children}

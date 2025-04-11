@@ -1,5 +1,7 @@
 import { v1Api } from "../axios";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+
 interface RegisterUserParams {
   user: {
     email: string;
@@ -28,6 +30,27 @@ interface CheckUniquenessResponse {
   };
 }
 
+interface UpdateUserParams {
+  user: {
+    email: string;
+    name: string;
+    phone_number: string;
+    password: string;
+    current_password: string;
+  }
+}
+
+interface UpdateUserResponse {
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    phone_number: string;
+    is_admin: boolean;
+    require_phone_number: boolean;
+  }
+}
+
 export const userService = {
   async registerUser(params: RegisterUserParams): Promise<RegisterUserResponse> {
     try {
@@ -49,6 +72,16 @@ export const userService = {
       return response.data;
     } catch (error) {
       console.error('Check info uniqueness failed:', error);
+      throw error;
+    }
+  },
+
+  async updateProfile(params: UpdateUserParams, userId: number): Promise<UpdateUserResponse> {
+    try {
+      const response = await v1Api.put(`/users/${userId}`, params, { withCredentials: true });
+      return response.data.data;
+    } catch (error) {
+      console.error('Update user failed:', error);
       throw error;
     }
   }

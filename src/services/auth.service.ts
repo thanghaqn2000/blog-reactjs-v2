@@ -13,6 +13,7 @@ export interface User {
   email: string;
   phone_number: string;
   is_admin: boolean;
+  require_phone_number: boolean;
 }
 
 export interface TokenInfo {
@@ -77,6 +78,16 @@ class AuthService {
     newPassword: string;
   }): Promise<void> {
     return v1Api.post('/auth/reset-password', data, { withCredentials: true });
+  }
+
+   async verifySocialToken(access_token: string): Promise<AuthResponse> {
+    try {
+      const response = await v1Api.post('/users/verify_social_token', {access_token}, { withCredentials: true });
+      return response.data.data;
+    } catch (error) {
+      console.error('Refresh token failed:', error);
+      throw error;
+    }
   }
 }
 
