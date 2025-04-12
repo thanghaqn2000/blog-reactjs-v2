@@ -4,6 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { showToast } from '@/config/toast.config';
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
@@ -14,8 +15,8 @@ import {
   faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AdminLink from './AdminLink';
 import HeaderClient from './HeaderClient';
 import { Button } from './ui/button';
@@ -25,6 +26,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const hasShownToast = useRef(false);
   
   // Handle scroll event to change navbar appearance
   useEffect(() => {
@@ -46,12 +49,19 @@ const Navbar = () => {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (user?.require_phone_number) {
+      showToast.error("Hãy cập nhật số điện thoại");
+      navigate("/profile");
+    }
+  }, [user, navigate]);
   
   return (
     <header 
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled ? "bg-white shadow-md" : "bg-transparent"
+        isScrolled ? "bg-white shadow-md" : "bg-transparent shadow-md"
       )}
     >
       <div className="container mx-auto px-4 sm:px-6">
@@ -62,10 +72,9 @@ const Navbar = () => {
             className="flex items-center space-x-2 font-display font-bold text-xl sm:text-2xl tracking-tight"
           >
             <span className={cn(
-              "text-primary",
-              isScrolled ? "text-primary" : "text-white"
+              "text-primary"
             )}>Stock</span>
-            <span className={isScrolled ? 'text-foreground' : 'text-white'}>Insights</span>
+            <span className="text-foreground">Insights</span>
           </Link>
           
           {/* Desktop Navigation with Dropdowns */}
