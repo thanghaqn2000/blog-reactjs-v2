@@ -15,7 +15,7 @@ import {
   faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AdminLink from './AdminLink';
 import HeaderClient from './HeaderClient';
@@ -27,7 +27,6 @@ const Navbar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const hasShownToast = useRef(false);
   
   // Handle scroll event to change navbar appearance
   useEffect(() => {
@@ -45,17 +44,27 @@ const Navbar = () => {
     };
   }, []);
   
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
-    if (user?.require_phone_number) {
+    if (user?.require_phone_number && !user?.phone_number) {
       showToast.error("Hãy cập nhật số điện thoại");
       navigate("/profile");
     }
   }, [user, navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      showToast.success("Đăng xuất thành công");
+      navigate("/login");
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }
+
   
   return (
     <header 
@@ -69,7 +78,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex items-center space-x-2 font-display font-bold text-xl sm:text-2xl tracking-tight"
+            className="flex items-center space-x-2 font-display font-bold text-xl sm:text-2xl tracking-tight cursor-pointer"
           >
             <span className={cn(
               "text-primary"
@@ -105,13 +114,13 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
+                    <Link to="/profile" className="flex items-center cursor-pointer">
                       <FontAwesomeIcon icon={faUser} className="mr-2 h-4 w-4" />
                       <span>Hồ sơ</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout} className="mt-2 flex items-center text-red-600">
-                    <FontAwesomeIcon icon={faSignOutAlt} className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem onClick={handleLogout} className="mt-2 flex items-center text-red-600">
+                    <FontAwesomeIcon icon={faSignOutAlt} className="mr-2 h-4 w-4 cursor-pointer" />
                     <span>Đăng xuất</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
