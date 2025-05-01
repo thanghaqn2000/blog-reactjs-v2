@@ -1,6 +1,7 @@
 import { authService, TokenInfo, User } from '@/services/auth.service';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
+
 interface AuthState {
   tokenInfo: TokenInfo | null;
   user: User | null;
@@ -25,7 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: false,
   });
 
-  // Khôi phục trạng thái đăng nhập bằng refresh token khi component mount
   useEffect(() => {
     const refreshAuth = async () => {
       try {
@@ -52,7 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authService.login(phone_number, password);
       
-      // Lưu thông tin vào state
       setAuthState({
         tokenInfo: response.token_info,
         user: response.user,
@@ -84,7 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authService.logout();
       
-      // Xóa thông tin khỏi state
       setAuthState({
         tokenInfo: null,
         user: null,
