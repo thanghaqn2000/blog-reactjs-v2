@@ -1,4 +1,5 @@
 import { authService, TokenInfo, User } from '@/services/auth.service';
+import { setAuthToken } from '@/services/axios';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 
@@ -47,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     refreshAuth();
   }, []);
+
+  // Cập nhật token trong axios khi token thay đổi
+  useEffect(() => {
+    setAuthToken(authState.tokenInfo?.access_token || null);
+  }, [authState.tokenInfo]);
 
   const login = async (phone_number: string, password: string) => {
     try {

@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { showToast } from "@/config/toast.config";
@@ -17,9 +17,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../layouts/AdminLayout';
 
 const statusColors = {
-  published: "bg-green-100 text-green-800",
+  publish: "bg-green-100 text-green-800",
   draft: "bg-gray-100 text-gray-800",
-  review: "bg-yellow-100 text-yellow-800"
+  pending: "bg-yellow-100 text-yellow-800"
 };
 
 const Posts = () => {
@@ -74,20 +74,19 @@ const Posts = () => {
         {/* Posts List */}
         <Card>
           <CardHeader>
-            <CardTitle>All Posts</CardTitle>
-            <CardDescription>View and manage all your posts</CardDescription>
+            <CardTitle>Danh sách bài viết</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium">Title</th>
-                    <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Category</th>
-                    <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Author</th>
-                    <th className="text-left py-3 px-4 font-medium">Status</th>
-                    <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Date</th>
-                    <th className="text-center py-3 px-4 font-medium">Actions</th>
+                    <th className="text-left py-3 px-4 font-medium">Tiêu đề</th>
+                    <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Danh mục</th>
+                    <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Tác giả</th>
+                    <th className="text-left py-3 px-4 font-medium">Trạng thái</th>
+                    <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Ngày tạo</th>
+                    <th className="text-center py-3 px-4 font-medium">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -110,7 +109,7 @@ const Posts = () => {
                       <td className="py-3 px-4 hidden md:table-cell">{post.author}</td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${statusColors[post.status]}`}>
-                          {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+                          {post.status}
                         </span>
                       </td>
                       <td className="py-3 px-4 hidden sm:table-cell">{post.date}</td>
@@ -142,18 +141,18 @@ const Posts = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              Confirm Deletion
+              Xác nhận xóa bài viết
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this post? This action cannot be undone.
+              Bạn có chắc chắn muốn xóa bài viết này không ?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
-              Delete
+              Xóa
             </Button>
           </DialogFooter>
         </DialogContent>

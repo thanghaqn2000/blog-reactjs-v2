@@ -1,12 +1,14 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { formatDate } from '@/config/date.config';
+import { useAuth } from '@/contexts/AuthContext';
+import { Post as ApiPost, postService } from '@/services/admin/post.service';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 export interface Post {
   id: string;
   title: string;
   excerpt: string;
   content: string;
-  status: 'published' | 'draft' | 'review';
+  status: 'publish' | 'pending';
   date: string;
   category: string;
   author: string;
@@ -14,72 +16,63 @@ export interface Post {
   featured?: boolean;
 }
 
-// Sample posts data
-const initialPosts: Post[] = [
-  { 
-    id: '1', 
-    title: 'Understanding Market Trends in 2023',
-    excerpt: 'An in-depth analysis of market trends and predictions for the upcoming year.',
-    content: '<p>This is the full content of the article about market trends...</p>',
-    status: 'published',
-    date: '2023-05-15',
-    category: 'Markets',
-    author: 'John Doe'
-  },
-  { 
-    id: '2', 
-    title: 'Cryptocurrency: The Next Decade',
-    excerpt: 'Exploring the future of cryptocurrency and its impact on global finance.',
-    content: '<p>This is the full content about cryptocurrency future...</p>',
-    status: 'draft',
-    date: '2023-05-10',
-    category: 'Crypto',
-    author: 'Jane Smith'
-  },
-  { 
-    id: '3', 
-    title: 'Investment Strategies for Beginners',
-    excerpt: 'A comprehensive guide to investment strategies for those new to the market.',
-    content: '<p>This is the full content about investment strategies...</p>',
-    status: 'published',
-    date: '2023-05-08',
-    category: 'Investment',
-    author: 'John Doe'
-  },
-  { 
-    id: '4', 
-    title: 'The Impact of AI on Financial Markets',
-    excerpt: 'How artificial intelligence is reshaping the landscape of financial markets.',
-    content: '<p>This is the full content about AI impact...</p>',
-    status: 'review',
-    date: '2023-05-05',
-    category: 'Technology',
-    author: 'Jane Smith'
-  },
-  { 
-    id: '5', 
-    title: 'Global Economic Outlook Post-Pandemic',
-    excerpt: 'Analyzing the global economic situation as we emerge from the pandemic.',
-    content: '<p>This is the full content about global economic outlook...</p>',
-    status: 'published',
-    date: '2023-05-01',
-    category: 'Economy',
-    author: 'John Doe'
-  },
-];
-
 interface PostsContextType {
   posts: Post[];
+  loading: boolean;
+  error: string | null;
+  fetchPosts: () => Promise<void>;
+  deletePost: (id: string) => void;
   addPost: (post: Omit<Post, 'id' | 'date'>) => string;
   updatePost: (post: Post) => void;
-  deletePost: (id: string) => void;
   getPost: (id: string) => Post | undefined;
 }
 
 const PostsContext = createContext<PostsContextType | undefined>(undefined);
 
 export const PostsProvider = ({ children }: { children: ReactNode }) => {
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
+
+  const convertApiPostToContextPost = (apiPost: ApiPost): Post => {
+    return {
+      id: apiPost.id.toString(),
+      title: apiPost.title,
+      excerpt: apiPost.title,
+      content: '',
+      status: apiPost.status as 'publish' | 'pending',
+      date: formatDate(apiPost.created_at),
+      category: apiPost.category,
+      author: 'Admin',
+      thumbnailUrl: apiPost.image_url
+    };
+  };
+
+  const fetchPosts = async () => {
+    if (!token) {
+      setPosts([])
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await postService.getPosts();
+      const convertedPosts = response.data.map(convertApiPostToContextPost);
+      setPosts(convertedPosts);
+      setError(null);
+    } catch (err) {
+      setError('Có lỗi xảy ra khi tải danh sách bài viết');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, [token]);
 
   const addPost = (postData: Omit<Post, 'id' | 'date'>) => {
     const id = Date.now().toString();
@@ -112,7 +105,7 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <PostsContext.Provider value={{ posts, addPost, updatePost, deletePost, getPost }}>
+    <PostsContext.Provider value={{ posts, loading, error, fetchPosts, deletePost, addPost, getPost, updatePost }}>
       {children}
     </PostsContext.Provider>
   );

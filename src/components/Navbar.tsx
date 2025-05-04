@@ -119,8 +119,8 @@ const Navbar = () => {
                       <span>Hồ sơ</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="mt-2 flex items-center text-red-600">
-                    <FontAwesomeIcon icon={faSignOutAlt} className="mr-2 h-4 w-4 cursor-pointer" />
+                  <DropdownMenuItem onClick={handleLogout} className="mt-2 flex items-center text-red-600 cursor-pointer">
+                    <FontAwesomeIcon icon={faSignOutAlt} className="mr-2 h-4 w-4" />
                     <span>Đăng xuất</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

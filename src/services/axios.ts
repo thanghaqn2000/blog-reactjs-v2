@@ -14,11 +14,27 @@ export const adminApi = axios.create({
   },
 });
 
+// Tạo một object để lưu trữ token
+const tokenStore = {
+  token: null as string | null,
+  setToken: function(newToken: string | null) {
+    this.token = newToken;
+  },
+  getToken: function() {
+    return this.token;
+  }
+};
+
+// Hàm để cập nhật token
+export const setAuthToken = (token: string | null) => {
+  tokenStore.setToken(token);
+};
+
 // Thêm interceptor cho admin API để tự động thêm token
 adminApi.interceptors.request.use((config) => {
-  const accessToken = localStorage.getItem('access_token');
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+  const token = tokenStore.getToken();
+  if (token) {
+    config.headers.JWTAuthorization = `Bearer ${token}`;
   }
   return config;
 }, (error) => {

@@ -1,13 +1,13 @@
 
 import { usePosts } from "@/contexts/PostsContext";
 import FeaturedArticles from "../components/FeaturedArticles";
+import FeaturedSavedPosts from "../components/FeaturedSavedPosts";
 import Hero from "../components/Hero";
 import MainLayout from "../layouts/MainLayout";
-import FeaturedSavedPosts from "../components/FeaturedSavedPosts";
 
 const Index = () => {
   const { posts } = usePosts();
-  const featuredPosts = posts.filter(post => post.featured && post.status === 'published');
+  const featuredPosts = posts.filter(post => post.featured && post.status === 'publish');
   
   return (
     <MainLayout>
