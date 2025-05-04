@@ -1,20 +1,22 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { showToast } from "@/config/toast.config";
 import { usePosts } from '@/contexts/PostsContext';
 import AdminLayout from '@/layouts/AdminLayout';
+import DOMPurify from 'dompurify';
 import { AlertTriangle, ArrowLeft, Edit, Trash } from 'lucide-react';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+
 
 const statusColors = {
   published: "bg-green-100 text-green-800",
@@ -62,21 +64,20 @@ const PostDetail = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Post Details</h1>
-            <p className="text-muted-foreground">View and manage post details</p>
+            <h1 className="text-2xl font-bold tracking-tight">Chi tiết bài viết</h1>
           </div>
           <div className="flex flex-row gap-2">
             <Button variant="outline" onClick={() => navigate('/admin/posts')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Posts
+              Trở về
             </Button>
             <Button variant="outline" onClick={handleEdit}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              Cập nhật
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
               <Trash className="mr-2 h-4 w-4" />
-              Delete
+              Xóa
             </Button>
           </div>
         </div>
@@ -87,7 +88,7 @@ const PostDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle>Post Information</CardTitle>
+              <CardTitle>Thông tin bài viết</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -132,7 +133,7 @@ const PostDetail = () => {
           
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Post Content</CardTitle>
+              <CardTitle>Nội dung bài viết</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Post title and featured image */}
@@ -155,7 +156,7 @@ const PostDetail = () => {
               
               {/* Post content */}
               <div className="prose max-w-none dark:prose-invert">
-                <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || 'Chưa có nội dung') }} />
               </div>
             </CardContent>
           </Card>
