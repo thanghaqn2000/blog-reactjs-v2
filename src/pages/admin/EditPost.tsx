@@ -1,54 +1,82 @@
-import React, { useState, useRef, useEffect } from 'react';
-import JoditEditor from 'jodit-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileImage, Save, ArrowLeft } from 'lucide-react';
-import AdminLayout from '@/layouts/AdminLayout';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate, useParams } from 'react-router-dom';
+import { showToast } from '@/config/toast.config';
 import { usePosts } from '@/contexts/PostsContext';
-import { toast } from 'sonner';
+import AdminLayout from '@/layouts/AdminLayout';
+import { createPostSchema } from '@/schemas/user-validation';
+import { postService } from '@/services/admin/post.service';
+import { zodResolver } from '@hookform/resolvers/zod';
+import DOMPurify from 'dompurify';
+import JoditEditor from 'jodit-react';
+import { ArrowLeft, FileImage, Save, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate, useParams } from 'react-router-dom';
+import * as z from 'zod';
+
+
+type EditPostFormData = z.infer<typeof createPostSchema>;
 
 const EditPost = () => {
   const { id } = useParams<{ id: string }>();
-  const { getPost, updatePost } = usePosts();
+  const { getPost, fetchPosts } = usePosts();
   const editor = useRef(null);
-  const [content, setContent] = useState('');
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
-  const [featured, setFeatured] = useState(false);
   const [thumbnailPreview, setThumbnailPreview] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [excerpt, setExcerpt] = useState('');
-  const [author, setAuthor] = useState('');
-  const [status, setStatus] = useState<'published' | 'draft' | 'review'>('draft');
-  const { toast: toastNotification } = useToast();
+  const [editorContent, setEditorContent] = useState('');
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Jodit configuration - modified to prevent editor from jumping
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+    watch,
+  } = useForm<EditPostFormData>({
+    resolver: zodResolver(createPostSchema),
+    defaultValues: {
+      status: 'pending',
+      content: '',
+    },
+  });
+
+  const title = watch('title');
+  const content = watch('content');
+  const category = watch('category');
+  const status = watch('status');
+
   const config = {
     readonly: false,
     height: 500,
     toolbar: true,
     spellcheck: true,
     toolbarSticky: true,
-    toolbarStickyOffset: 80, // Add an offset to avoid overlapping with other elements
+    toolbarStickyOffset: 80,
     toolbarAdaptive: true,
     showCharsCounter: true,
     showWordsCounter: true,
     showXPathInStatusbar: false,
-    askBeforePasteHTML: true,
-    askBeforePasteFromWord: true,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
     imageDefaultWidth: 300,
     imageUpload: true,
     imageResize: true,
     imageMove: true,
-    saveSelection: false, // Added to fix cursor jumping
-    autofocus: false,    // Prevent auto focusing which can cause jumps
-    useSplitMode: false, // Using full editor mode, not split mode
+    saveSelection: false,
+    autofocus: false,
+    useSplitMode: false,
     buttons: [
       'source', '|',
       'bold', 'strikethrough', 'underline', 'italic', '|',
@@ -65,33 +93,10 @@ const EditPost = () => {
     }
   };
 
-  // Changed to use onBlur instead of onChange to prevent jumping
   const handleEditorChange = (newContent: string) => {
-    setContent(newContent);
+    setEditorContent(newContent);
+    setValue('content', newContent, { shouldValidate: true });
   };
-
-  // Load post data on component mount
-  useEffect(() => {
-    if (id) {
-      const post = getPost(id);
-      if (post) {
-        setTitle(post.title);
-        setContent(post.content);
-        setExcerpt(post.excerpt);
-        setCategory(post.category);
-        setAuthor(post.author);
-        setStatus(post.status);
-        setFeatured(post.featured || false);
-        if (post.thumbnailUrl) {
-          setThumbnailPreview(post.thumbnailUrl);
-        }
-      } else {
-        // Post not found, navigate back to posts list
-        toast.error('Post not found');
-        navigate('/admin/posts');
-      }
-    }
-  }, [id, getPost, navigate]);
 
   const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -105,256 +110,292 @@ const EditPost = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (!title.trim()) {
-      toastNotification({
-        title: "Error",
-        description: "Please enter a post title",
-        variant: "destructive"
+  const handleRemoveThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview('');
+    const fileInput = document.getElementById('thumbnail') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
+
+  useEffect(() => {
+    if (id) {
+      const post = getPost(id);
+      if (post) {
+        setValue('title', post.title);
+        setValue('content', post.content);
+        setValue('category', post.category);
+        setValue('status', post.status);
+        setEditorContent(post.content);
+        if (post.thumbnailUrl) {
+          setThumbnailPreview(post.thumbnailUrl);
+        }
+      }
+    }
+  }, [id, getPost, setValue]);
+
+  const onSubmit = async (data: EditPostFormData) => {
+    if (!id) return;
+
+    console.log(data.content)
+    if (!data.content.trim() || data.content == "<p><br></p>") {
+      showToast.error('Nội dung là bắt buộc');
+      return;
+    }
+
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmUpdate = async () => {
+    if (!id) return;
+
+    try {
+      await postService.updatePost(parseInt(id), {
+        post: {
+          title: title,
+          content: content,
+          category: category,
+          status: status,
+          image: thumbnailFile || undefined
+        }
       });
-      return;
+
+      await fetchPosts();
+      showToast.success('Cập nhật bài viết thành công!');
+      navigate('/admin/posts');
+    } catch (error) {
+      showToast.error('Có lỗi xảy ra khi cập nhật bài viết');
+    } finally {
+      setIsConfirmModalOpen(false);
     }
-
-    if (!content.trim()) {
-      toastNotification({
-        title: "Error",
-        description: "Please enter some content for your post",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!id) {
-      toast.error('Post ID is missing');
-      return;
-    }
-
-    // Update post
-    updatePost({
-      id,
-      title,
-      content,
-      excerpt: excerpt || title,
-      category: category || 'Uncategorized',
-      author,
-      status,
-      date: getPost(id)?.date || new Date().toISOString().split('T')[0],
-      thumbnailUrl: thumbnailPreview || undefined,
-      featured
-    });
-
-    // Show success message
-    toast.success('Post updated successfully!');
-    
-    // Navigate to the post detail view
-    navigate(`/admin/posts/detail/${id}`);
   };
 
   return (
     <AdminLayout>
       <div className="flex flex-col space-y-6">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Edit Post</h1>
-            <p className="text-muted-foreground">Update your post content and settings</p>
+            <h1 className="text-2xl font-bold tracking-tight">Chỉnh sửa bài viết</h1>
           </div>
           <div className="flex flex-row gap-2">
             <Button variant="outline" onClick={() => navigate('/admin/posts')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Posts
+              Quay lại
             </Button>
           </div>
         </div>
 
-        <Tabs defaultValue="editor" className="w-full">
-          <TabsList className="grid w-full md:w-80 grid-cols-2">
-            <TabsTrigger value="editor">Editor</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="editor" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Post Details</CardTitle>
-                <CardDescription>
-                  Update the basic information for your post
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input 
-                      id="title"
-                      placeholder="Enter post title" 
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="excerpt">Excerpt</Label>
-                    <Input 
-                      id="excerpt"
-                      placeholder="Enter post excerpt (short description)" 
-                      value={excerpt}
-                      onChange={(e) => setExcerpt(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Input 
-                      id="category"
-                      placeholder="Enter post category" 
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <select 
-                      id="status"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as 'published' | 'draft' | 'review')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="review">In Review</option>
-                      <option value="published">Published</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="thumbnail">Featured Image</Label>
-                    <div className="flex items-center gap-4">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => document.getElementById('thumbnail')?.click()}
-                        className="flex items-center gap-2"
-                      >
-                        <FileImage className="h-4 w-4" />
-                        Choose Image
-                      </Button>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Tabs defaultValue="editor" className="w-full">
+            <TabsList className="grid w-full md:w-80 grid-cols-2">
+              <TabsTrigger value="editor">Chỉnh sửa</TabsTrigger>
+              <TabsTrigger value="preview">Xem trước</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="editor" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thông tin bài viết</CardTitle>
+                  <CardDescription>
+                    Cập nhật thông tin cho bài viết
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Tiêu đề</Label>
                       <Input 
-                        id="thumbnail"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleThumbnailChange}
-                        className="hidden"
+                        id="title"
+                        placeholder="Nhập tiêu đề bài viết" 
+                        {...register('title')}
                       />
-                      <span className="text-sm text-muted-foreground">
-                        {thumbnailFile ? thumbnailFile.name : thumbnailPreview ? 'Current image' : 'No file chosen'}
-                      </span>
+                      {errors.title && (
+                        <p className="text-sm text-red-500">{errors.title.message}</p>
+                      )}
                     </div>
-                    {thumbnailPreview && (
-                      <div className="mt-4">
-                        <p className="text-sm text-muted-foreground mb-2">Preview:</p>
-                        <img 
-                          src={thumbnailPreview} 
-                          alt="Thumbnail preview" 
-                          className="max-h-[200px] max-w-full object-contain border rounded"
+
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Danh mục</Label>
+                      <select 
+                        id="category"
+                        {...register('category')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">Chọn danh mục</option>
+                        <option value="news">Tin tức</option>
+                        <option value="finance">Tài chính</option>
+                      </select>
+                      {errors.category && (
+                        <p className="text-sm text-red-500">{errors.category.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Trạng thái</Label>
+                      <select 
+                        id="status"
+                        {...register('status')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="pending">Chờ duyệt</option>
+                        <option value="publish">Xuất bản</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="thumbnail">Ảnh đại diện</Label>
+                      <div className="flex items-center gap-4">
+                        <Button 
+                          variant="outline" 
+                          type="button"
+                          onClick={() => document.getElementById('thumbnail')?.click()}
+                          className="flex items-center gap-2"
+                        >
+                          <FileImage className="h-4 w-4" />
+                          Chọn ảnh
+                        </Button>
+                        <Input 
+                          id="thumbnail"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleThumbnailChange}
+                          className="hidden"
                         />
+                        <span className="text-sm text-muted-foreground">
+                          {thumbnailFile ? thumbnailFile.name : 'Chưa chọn ảnh'}
+                        </span>
+                      </div>
+                      {thumbnailPreview && (
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-sm text-muted-foreground">Xem trước:</p>
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              className="h-8" 
+                              onClick={handleRemoveThumbnail}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Xóa
+                            </Button>
+                          </div>
+                          <img 
+                            src={thumbnailPreview} 
+                            alt="Thumbnail preview" 
+                            className="max-h-[200px] max-w-full object-contain border rounded"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Nội dung bài viết</CardTitle>
+                  <CardDescription>
+                    Cập nhật nội dung bài viết
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <input type="hidden" {...register('content')} />
+                  <JoditEditor
+                    ref={editor}
+                    value={editorContent}
+                    config={config}
+                    onBlur={handleEditorChange}
+                    onChange={() => {}}
+                  />
+                  {errors.content && (
+                    <p className="text-sm text-red-500 mt-2">{errors.content.message}</p>
+                  )}
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => navigate('/admin/posts')}>
+                    Hủy
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="preview" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Xem trước bài viết</CardTitle>
+                  <CardDescription>
+                    Xem trước bài viết sẽ hiển thị như thế nào
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {thumbnailPreview && (
+                    <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
+                      <img 
+                        src={thumbnailPreview} 
+                        alt="Thumbnail preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <h1 className="text-3xl font-bold">{title || "Chưa có tiêu đề"}</h1>
+                    {category && (
+                      <div className="mt-2">
+                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                          {category}
+                        </span>
+                      </div>
+                    )}
+                    {status && (
+                      <div className="mt-2">
+                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-secondary/10 text-secondary">
+                          {status === 'pending' ? 'Chờ duyệt' : 'Đã xuất bản'}
+                        </span>
                       </div>
                     )}
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox"
-                        id="featured"
-                        checked={featured}
-                        onChange={(e) => setFeatured(e.target.checked)}
-                        className="h-4 w-4"
-                      />
-                      <Label htmlFor="featured">Featured Post</Label>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Featured posts will appear on the homepage
-                    </p>
+                  
+                  <div className="prose max-w-none dark:prose-invert">
+                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content || 'Chưa có nội dung') }} />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Post Content</CardTitle>
-                <CardDescription>
-                  Edit your post content using the rich text editor
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <JoditEditor
-                  ref={editor}
-                  value={content}
-                  config={config}
-                  onBlur={handleEditorChange}
-                  onChange={() => {}}
-                />
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => navigate('/admin/posts')}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit}>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="preview" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Post Preview</CardTitle>
-                <CardDescription>
-                  Preview how your post will look when published
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {thumbnailPreview && (
-                  <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
-                    <img 
-                      src={thumbnailPreview} 
-                      alt={title} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <h1 className="text-3xl font-bold">{title || "Untitled Post"}</h1>
-                  {category && (
-                    <div className="mt-2">
-                      <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                        {category}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="prose max-w-none dark:prose-invert">
-                  <div dangerouslySetInnerHTML={{ __html: content }} />
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => navigate('/admin/posts')}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit}>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => navigate('/admin/posts')}>
+                    Hủy
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </form>
       </div>
+
+      <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận cập nhật bài viết</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn cập nhật bài viết này? Bài viết sẽ được cập nhật với trạng thái: <span className="text-red-500 font-medium">{status === 'pending' ? 'Chờ duyệt' : 'Đã xuất bản'}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>
+              Hủy
+            </Button>
+            <Button onClick={handleConfirmUpdate} disabled={isSubmitting}>
+              {isSubmitting ? 'Đang cập nhật...' : 'Xác nhận cập nhật'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

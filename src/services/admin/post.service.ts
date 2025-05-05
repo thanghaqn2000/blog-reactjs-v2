@@ -6,6 +6,7 @@ export interface Post {
   image_url: string;
   category: string;
   status: string;
+  content: string;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +49,20 @@ class PostService {
 
   async createPost(params: CreatePost): Promise<CreatePostsResponse> {
     const response = await adminApi.post('/posts', params, { 
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  }
+
+  async deletePost(id: number): Promise<void> {
+    await adminApi.delete(`/posts/${id}`, { withCredentials: true });
+  }
+
+  async updatePost(id: number, params: CreatePost): Promise<CreatePostsResponse> {
+    const response = await adminApi.put(`/posts/${id}`, params, { 
       withCredentials: true,
       headers: {
         'Content-Type': 'multipart/form-data'

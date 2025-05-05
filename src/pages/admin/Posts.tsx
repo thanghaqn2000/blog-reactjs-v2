@@ -9,7 +9,6 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { showToast } from "@/config/toast.config";
 import { usePosts } from '@/contexts/PostsContext';
 import { AlertTriangle, Edit, Eye, FileText, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
@@ -44,7 +43,6 @@ const Posts = () => {
   const confirmDelete = () => {
     if (postToDelete) {
       deletePost(postToDelete);
-      showToast.success('Post deleted successfully');
       setDeleteDialogOpen(false);
       setPostToDelete(null);
     }
@@ -56,22 +54,19 @@ const Posts = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Posts</h1>
-            <p className="text-muted-foreground">Manage your blog posts and articles</p>
+            <h1 className="text-2xl font-bold tracking-tight">Quản lí bài viết</h1>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button asChild>
               <Link to="/admin/posts/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Post
+                Tạo bài viết mới
               </Link>
             </Button>
           </div>
         </div>
-        
         <Separator />
-        
-        {/* Posts List */}
+
         <Card>
           <CardHeader>
             <CardTitle>Danh sách bài viết</CardTitle>

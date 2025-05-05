@@ -1,4 +1,5 @@
 import { formatDate } from '@/config/date.config';
+import { showToast } from '@/config/toast.config';
 import { useAuth } from '@/contexts/AuthContext';
 import { Post as ApiPost, postService } from '@/services/admin/post.service';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
@@ -14,6 +15,7 @@ export interface Post {
   author: string;
   thumbnailUrl?: string;
   featured?: boolean;
+  imageFile?: File;
 }
 
 interface PostsContextType {
@@ -39,8 +41,8 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
     return {
       id: apiPost.id.toString(),
       title: apiPost.title,
-      excerpt: apiPost.title,
-      content: '',
+      excerpt: apiPost.title ?? '',
+      content: apiPost.content ?? '',
       status: apiPost.status as 'publish' | 'pending',
       date: formatDate(apiPost.created_at),
       category: apiPost.category,
@@ -86,18 +88,42 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
     return id;
   };
 
-  const updatePost = (updatedPost: Post) => {
-    setPosts(prevPosts => 
-      prevPosts.map(post => 
-        post.id === updatedPost.id ? updatedPost : post
-      )
-    );
+  const updatePost = async (updatedPost: Post) => {
+    try {
+      const response = await postService.updatePost(parseInt(updatedPost.id), {
+        post: {
+          title: updatedPost.title,
+          content: updatedPost.content,
+          category: updatedPost.category,
+          status: updatedPost.status,
+          image: updatedPost.imageFile
+        }
+      });
+
+      // Cập nhật state với dữ liệu mới từ API
+      const updatedPostFromApi = convertApiPostToContextPost(response.data[0]);
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === updatedPostFromApi.id ? updatedPostFromApi : post
+        )
+      );
+      
+      showToast.success('Cập nhật bài viết thành công!');
+    } catch (error) {
+      showToast.error('Có lỗi xảy ra khi cập nhật bài viết');
+      console.error(error);
+    }
   };
 
-  const deletePost = (id: string) => {
-    setPosts(prevPosts => 
-      prevPosts.filter(post => post.id !== id)
-    );
+  const deletePost = async (id: string) => {
+    try {
+      await postService.deletePost(parseInt(id));
+      setPosts(prevPosts => prevPosts.filter(post => post.id !== id));
+      showToast.success('Xóa bài viết thành công!');
+    } catch (error) {
+      showToast.error('Có lỗi xảy ra khi xóa bài viết');
+      console.error(error);
+    }
   };
 
   const getPost = (id: string) => {
