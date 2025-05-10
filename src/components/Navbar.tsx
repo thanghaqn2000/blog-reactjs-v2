@@ -70,7 +70,7 @@ const Navbar = () => {
     <header 
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled ? "bg-white shadow-md" : "bg-transparent shadow-md"
+        isScrolled ? "bg-white shadow-md" : "bg-white shadow-md"
       )}
     >
       <div className="container mx-auto px-4 sm:px-6">

@@ -1,6 +1,6 @@
-
-import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 export interface ArticleProps {
   id: string;
@@ -10,6 +10,8 @@ export interface ArticleProps {
   date: string;
   readTime: string;
   image: string;
+  status: string;
+  content?: string;
   author: {
     name: string;
     avatar: string;
@@ -23,11 +25,15 @@ const ArticleCard = ({
   excerpt, 
   category, 
   date, 
-  readTime, 
+  status,
   image, 
   author,
   trending = false
 }: ArticleProps) => {
+  const { user } = useAuth();
+  const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
+  const imageUrl = image || defaultImage;
+
   return (
     <Link to={`/article/${id}`} className="block group">
       <motion.article 
@@ -39,16 +45,21 @@ const ArticleCard = ({
         {/* Image container */}
         <div className="relative aspect-[16/9] overflow-hidden">
           <img 
-            src={image} 
+            src={imageUrl} 
             alt={title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           
           {/* Category chip */}
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 right-4 flex justify-between">
             <span className="chip bg-white/90 backdrop-blur-sm text-primary">
               {category}
             </span>
+            {user?.is_admin && (
+              <span className={`chip bg-white/90 backdrop-blur-sm ${status === 'pending' ? 'text-red-500' : 'text-primary'}`}>
+                {status}
+              </span>
+            )}
           </div>
           
           {/* Trending badge */}
@@ -64,7 +75,7 @@ const ArticleCard = ({
         
         {/* Content */}
         <div className="flex flex-col flex-grow p-5">
-          <h3 className="font-display font-bold text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="font-display font-bold text-base sm:text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {title}
           </h3>
           
@@ -87,8 +98,6 @@ const ArticleCard = ({
             
             <div className="flex items-center space-x-3 text-xs text-foreground/60">
               <span>{date}</span>
-              <span>•</span>
-              <span>{readTime}</span>
             </div>
           </div>
         </div>
