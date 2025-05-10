@@ -319,7 +319,7 @@ const CreatePost = () => {
                     {category && (
                       <div className="mt-2">
                         <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                          {category}
+                          {category === 'news' ? 'Tin tức' : 'Tài chính'}
                         </span>
                       </div>
                     )}
@@ -355,7 +355,7 @@ const CreatePost = () => {
           <DialogHeader>
             <DialogTitle>Xác nhận lưu bài viết</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn lưu bài viết này? Bài viết sẽ được lưu với trạng thái: {status === 'pending' ? 'Chờ duyệt' : 'Đã xuất bản'}
+              Bạn có chắc chắn muốn lưu bài viết này? Bài viết sẽ được lưu với trạng thái: <span className="text-red-500 font-bold">{status === 'pending' ? 'Chờ duyệt' : 'Xuất bản'}</span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

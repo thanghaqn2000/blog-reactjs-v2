@@ -383,7 +383,7 @@ const EditPost = () => {
           <DialogHeader>
             <DialogTitle>Xác nhận cập nhật bài viết</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn cập nhật bài viết này? Bài viết sẽ được cập nhật với trạng thái: <span className="text-red-500 font-medium">{status === 'pending' ? 'Chờ duyệt' : 'Đã xuất bản'}</span>
+              Bạn có chắc chắn muốn cập nhật bài viết này? Bài viết sẽ được cập nhật với trạng thái: <span className="text-red-500 font-bold">{status === 'pending' ? 'Chờ duyệt' : 'Đã xuất bản'}</span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
