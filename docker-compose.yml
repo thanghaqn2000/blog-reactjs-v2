@@ -1,8 +1,14 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
+  frontend:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_DOMAIN: ${VITE_DOMAIN}
+        VITE_DEFAULT_IMG_POST: ${VITE_DEFAULT_IMG_POST}
     ports:
       - "8080:80"
-    restart: unless-stopped 
+    restart: unless-stopped

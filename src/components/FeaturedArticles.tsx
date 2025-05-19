@@ -1,93 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/config/date.config";
+import { postServiceV1 } from "@/services/v1/post.service";
 import { ArrowRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import ArticleCard, { ArticleProps } from './ArticleCard';
+import ArticleCard from './ArticleCard';
 import SidebarStock from './SidebarStock';
-
-// Sample data
-const mockArticles: ArticleProps[] = [
-  {
-    id: '1',
-    title: 'The Impact of Fed Rate Decisions on Stock Market Performance',
-    excerpt: 'A comprehensive analysis of how Federal Reserve interest rate changes have historically affected equity markets.',
-    category: 'Đầu tư danh mục',
-    date: 'May 12, 2023',
-    readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'Michael Chen',
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-    },
-    trending: true
-  },
-  {
-    id: '2',
-    title: 'ESG Investing: Balancing Profit and Responsibility in Your Portfolio',
-    excerpt: 'How environmental, social, and governance factors are reshaping investment strategies for the modern investor.',
-    category: 'Đầu tư danh mục',
-    date: 'May 8, 2023',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1591033594798-43282868f85f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'Sarah Johnson',
-      avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
-    }
-  },
-  {
-    id: '3',
-    title: 'Quarterly Earnings Guide: What Numbers Really Matter',
-    excerpt: 'Beyond EPS and revenue: The key metrics that intelligent investors focus on during earnings season.',
-    category: 'Thông tin thị trường',
-    date: 'May 5, 2023',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'Robert Fernandez',
-      avatar: 'https://randomuser.me/api/portraits/men/46.jpg'
-    },
-    trending: true
-  },
-  {
-    id: '4',
-    title: 'Cryptocurrency and Traditional Markets: The Convergence',
-    excerpt: 'How digital assets are increasingly influencing and correlating with conventional financial markets.',
-    category: 'Thông tin thị trường',
-    date: 'May 3, 2023',
-    readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1516245834210-c4c142787335?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'Alex Wang',
-      avatar: 'https://randomuser.me/api/portraits/women/33.jpg'
-    }
-  },
-  {
-    id: '5',
-    title: 'Tech Stock Analysis: Valuations in a Post-Pandemic World',
-    excerpt: 'As the world adjusts to post-pandemic realities, tech stocks face new challenges and opportunities.',
-    category: 'Đầu tư danh mục',
-    date: 'Apr 28, 2023',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'David Kim',
-      avatar: 'https://randomuser.me/api/portraits/men/22.jpg'
-    }
-  },
-  {
-    id: '6',
-    title: 'The Small Cap Advantage: Finding Hidden Gems in Today\'s Market',
-    excerpt: 'Why smaller companies might offer outsized returns for investors willing to accept additional risk.',
-    category: 'Thông tin thị trường',
-    date: 'Apr 25, 2023',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1579226905180-636b76d96082?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'Emily Rodriguez',
-      avatar: 'https://randomuser.me/api/portraits/women/12.jpg'
-    }
-  }
-];
 
 // Sample data for ranked stocks
 const rankedStocks = [
@@ -108,6 +26,22 @@ const fundGrowthData = [
   { day: "Sat", value: 147.15 },
   { day: "Sun", value: 148.43 },
 ];
+const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
+
+interface Article {
+  id: string;
+  title: string;
+  excerpt: string;
+  date: string;
+  image: string;
+  category: string;
+  readTime: string;
+  status: string;
+  author: {
+    name: string;
+    avatar: string;
+  };
+}
 
 const FeaturedArticles = () => {
   const navigate = useNavigate();
@@ -115,10 +49,63 @@ const FeaturedArticles = () => {
     'Đầu tư danh mục': 3,
     'Thông tin thị trường': 3
   });
+
+  const [articles, setArticles] = useState<{
+    news: Article[];
+    finance: Article[];
+  }>({
+    news: [],
+    finance: []
+  });  
+  
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const [newsResponse, financeResponse] = await Promise.all([
+          postServiceV1.getPosts({ category: 'news', limit: 3 }),
+          postServiceV1.getPosts({ category: 'finance', limit: 3 })
+        ]);
+        setArticles({
+          news: newsResponse.data.map(post => ({
+            id: post.id.toString(),
+            title: post.title,
+            excerpt: post.title,
+            date: formatDate(post.created_at),
+            image: post.image_url || defaultImage,
+            category: post.category,
+            status: post.status,
+            readTime: '5 min read',
+            author: {
+              name: post.author || 'Admin',
+              avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+            }
+          })),
+          finance: financeResponse.data.map(post => ({
+            id: post.id.toString(),
+            title: post.title,
+            excerpt: post.title,
+            date: formatDate(post.created_at),
+            image: post.image_url,
+            category: post.category,
+            readTime: '5 min read',
+            status: post.status,
+            author: {
+              name: post.author || 'Admin',
+              avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+            }
+          }))
+        });
+      } catch (error) {
+        console.error('Error fetching articles:', error);
+      }
+    };
+
+    fetchArticles();
+  }, []);
   
   // Filter articles by category
-  const portfolioArticles = mockArticles.filter(article => article.category === 'Đầu tư danh mục');
-  const marketArticles = mockArticles.filter(article => article.category === 'Thông tin thị trường');
+  const portfolioArticles = articles.news;
+  const marketArticles = articles.finance;
   
   const loadMore = (category: string) => {
     setVisibleArticles(prev => ({
@@ -139,7 +126,7 @@ const FeaturedArticles = () => {
         {/* Section header */}
         <div className="flex items-center justify-between mb-10">
           <h2 className="section-title">
-            Latest Insights
+            Thông tin mới nhất
           </h2>
           <Link 
             to="/articles" 
@@ -162,23 +149,29 @@ const FeaturedArticles = () => {
               >
                 Đầu tư danh mục
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                {portfolioArticles.slice(0, visibleArticles['Đầu tư danh mục']).map((article, index) => (
-                  <div key={article.id} className="flex h-full">
-                    {index === visibleArticles['Đầu tư danh mục'] - 1 && 
-                     visibleArticles['Đầu tư danh mục'] < portfolioArticles.length ? (
-                      <div className="relative w-full">
-                        <ArticleCard {...article} />
-                        <div className="absolute right-3 bottom-3 bg-primary text-white p-1.5 rounded-full shadow-md hover:bg-primary/90 transition-colors">
-                          <ArrowRight size={16} />
+              {portfolioArticles.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Hiện tại bài viết đang trống
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mb-6">
+                  {portfolioArticles.slice(0, visibleArticles['Đầu tư danh mục']).map((article, index) => (
+                    <div key={article.id} className="flex h-full">
+                      {index === visibleArticles['Đầu tư danh mục'] - 1 && 
+                       visibleArticles['Đầu tư danh mục'] < portfolioArticles.length ? (
+                        <div className="relative w-full">
+                          <ArticleCard {...article} />
+                          <div className="absolute right-3 bottom-3 bg-primary text-white p-1.5 rounded-full shadow-md hover:bg-primary/90 transition-colors">
+                            <ArrowRight size={16} />
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <ArticleCard {...article} />
-                    )}
-                  </div>
-                ))}
-              </div>
+                      ) : (
+                        <ArticleCard {...article} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               
               {/* See more button */}
               {visibleArticles['Đầu tư danh mục'] < portfolioArticles.length && (
@@ -203,23 +196,29 @@ const FeaturedArticles = () => {
               >
                 Thông tin thị trường
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                {marketArticles.slice(0, visibleArticles['Thông tin thị trường']).map((article, index) => (
-                  <div key={article.id} className="flex h-full">
-                    {index === visibleArticles['Thông tin thị trường'] - 1 && 
-                     visibleArticles['Thông tin thị trường'] < marketArticles.length ? (
-                      <div className="relative w-full">
-                        <ArticleCard {...article} />
-                        <div className="absolute right-3 bottom-3 bg-primary text-white p-1.5 rounded-full shadow-md hover:bg-primary/90 transition-colors">
-                          <ArrowRight size={16} />
+              {marketArticles.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Hiện tại bài viết đang trống
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mb-6">
+                  {marketArticles.slice(0, visibleArticles['Thông tin thị trường']).map((article, index) => (
+                    <div key={article.id} className="flex h-full">
+                      {index === visibleArticles['Thông tin thị trường'] - 1 && 
+                       visibleArticles['Thông tin thị trường'] < marketArticles.length ? (
+                        <div className="relative w-full">
+                          <ArticleCard {...article} />
+                          <div className="absolute right-3 bottom-3 bg-primary text-white p-1.5 rounded-full shadow-md hover:bg-primary/90 transition-colors">
+                            <ArrowRight size={16} />
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <ArticleCard {...article} />
-                    )}
-                  </div>
-                ))}
-              </div>
+                      ) : (
+                        <ArticleCard {...article} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               
               {/* See more button */}
               {visibleArticles['Thông tin thị trường'] < marketArticles.length && (

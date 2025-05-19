@@ -1,10 +1,8 @@
-
-import { useState, useEffect } from 'react';
-import MainLayout from "../layouts/MainLayout";
-import ArticleCard, { ArticleProps } from "../components/ArticleCard";
 import { Filter, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import ArticleCard, { ArticleProps } from "../components/ArticleCard";
+import MainLayout from "../layouts/MainLayout";
 
-// Sample data (reusing the same data from FeaturedArticles for now)
 const mockArticles: ArticleProps[] = [
   {
     id: '1',
@@ -13,6 +11,7 @@ const mockArticles: ArticleProps[] = [
     category: 'Economics',
     date: 'May 12, 2023',
     readTime: '7 min read',
+    status: "pending",
     image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
     author: {
       name: 'Michael Chen',
@@ -27,6 +26,7 @@ const mockArticles: ArticleProps[] = [
     category: 'Investing',
     date: 'May 8, 2023',
     readTime: '5 min read',
+    status: "pending",
     image: 'https://images.unsplash.com/photo-1591033594798-43282868f85f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
     author: {
       name: 'Sarah Johnson',
@@ -40,6 +40,7 @@ const mockArticles: ArticleProps[] = [
     category: 'Analysis',
     date: 'May 5, 2023',
     readTime: '6 min read',
+    status: "pending",
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
     author: {
       name: 'Robert Fernandez',
@@ -54,6 +55,7 @@ const mockArticles: ArticleProps[] = [
     category: 'Cryptocurrency',
     date: 'May 3, 2023',
     readTime: '8 min read',
+    status: "pending",
     image: 'https://images.unsplash.com/photo-1516245834210-c4c142787335?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
     author: {
       name: 'Alex Wang',
@@ -67,6 +69,7 @@ const mockArticles: ArticleProps[] = [
     category: 'Technology',
     date: 'Apr 28, 2023',
     readTime: '6 min read',
+    status: "pending",
     image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
     author: {
       name: 'David Kim',
@@ -80,52 +83,13 @@ const mockArticles: ArticleProps[] = [
     category: 'Investing',
     date: 'Apr 25, 2023',
     readTime: '5 min read',
+    status: "pending",
     image: 'https://images.unsplash.com/photo-1579226905180-636b76d96082?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
     author: {
       name: 'Emily Rodriguez',
       avatar: 'https://randomuser.me/api/portraits/women/12.jpg'
     }
   },
-  {
-    id: '7',
-    title: 'Global Supply Chain Issues and Their Impact on Market Sectors',
-    excerpt: 'How ongoing disruptions are affecting different industries and what it means for investors.',
-    category: 'Economics',
-    date: 'Apr 22, 2023',
-    readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'James Wilson',
-      avatar: 'https://randomuser.me/api/portraits/men/36.jpg'
-    }
-  },
-  {
-    id: '8',
-    title: 'Inflation Concerns: How to Position Your Portfolio',
-    excerpt: 'Strategies for protecting and growing your investments during periods of rising inflation.',
-    category: 'Investing',
-    date: 'Apr 18, 2023',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1554672408-730436b60dde?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'Sophia Martinez',
-      avatar: 'https://randomuser.me/api/portraits/women/28.jpg'
-    },
-    trending: true
-  },
-  {
-    id: '9',
-    title: 'Value vs. Growth: Finding Balance in Today\'s Market',
-    excerpt: 'The age-old investment dichotomy revisited in light of current market conditions.',
-    category: 'Analysis',
-    date: 'Apr 15, 2023',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1569025690938-a00729c9e1f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80',
-    author: {
-      name: 'Thomas Lee',
-      avatar: 'https://randomuser.me/api/portraits/men/58.jpg'
-    }
-  }
 ];
 
 // All available categories for filtering
@@ -220,7 +184,7 @@ const Articles = () => {
           </div>
           
           {/* Results count */}
-          <div className="mb-6 text-sm text-foreground/70">
+          <div className="mb-6 text-sm text-foreground/70 ">
             Showing {filteredArticles.length} articles
           </div>
           

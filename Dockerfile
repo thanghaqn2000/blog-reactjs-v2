@@ -9,10 +9,22 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy source code
+# Copy source code and env file
 COPY . .
 
-# Build the app
+# Build the app with environment variables
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_DOMAIN
+ARG VITE_DEFAULT_IMG_POST
+
+ENV \
+  VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+  VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY \
+  VITE_DOMAIN=$VITE_DOMAIN \
+  VITE_DEFAULT_IMG_POST=$VITE_DEFAULT_IMG_POST \
+  NODE_ENV=production
+
 RUN npm run build
 
 # Production stage

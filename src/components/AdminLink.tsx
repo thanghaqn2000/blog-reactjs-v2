@@ -1,7 +1,6 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
 import { LayoutDashboard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 
 interface AdminLinkProps {
@@ -12,9 +11,8 @@ const AdminLink = ({ isScrolled = true }: AdminLinkProps) => {
   return (
     <Link to="/admin">
       <Button 
-        variant={isScrolled ? "outline" : "outline"} 
+        variant={"outline"} 
         size="sm"
-        className={!isScrolled ? "text-black border-white hover:bg-white/20 hover:text-white" : ""}
       >
         <LayoutDashboard size={16} className="mr-2" />
         Admin
