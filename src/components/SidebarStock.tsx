@@ -47,7 +47,7 @@ const SidebarStock = ({ rankedStocks, fundGrowthData, className = "" }: SidebarS
         <CardHeader className="pb-3">
           <CardTitle className="text-xl flex items-center">
             <TrendingUp className="mr-2 h-5 w-5 text-primary" />
-            Top Ranked Stocks
+            TOP CỔ PHIẾU MẠNH
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -55,9 +55,9 @@ const SidebarStock = ({ rankedStocks, fundGrowthData, className = "" }: SidebarS
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[80px]">Rank</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Change</TableHead>
+                <TableHead>Tên</TableHead>
+                <TableHead className="text-right">Giá</TableHead>
+                <TableHead className="text-right">Biến động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -88,7 +88,7 @@ const SidebarStock = ({ rankedStocks, fundGrowthData, className = "" }: SidebarS
         <CardHeader className="pb-3">
           <CardTitle className="text-xl flex items-center">
             <TrendingUp className="mr-2 h-5 w-5 text-primary" />
-            Fund Growth
+            HIỆU SUẤT ĐẦU TƯ
           </CardTitle>
         </CardHeader>
         <CardContent>

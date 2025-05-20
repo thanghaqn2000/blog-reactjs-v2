@@ -9,6 +9,7 @@ services:
         VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
         VITE_DOMAIN: ${VITE_DOMAIN}
         VITE_DEFAULT_IMG_POST: ${VITE_DEFAULT_IMG_POST}
+        VITE_API_URL: ${VITE_API_URL}
     ports:
       - "8080:80"
     restart: unless-stopped

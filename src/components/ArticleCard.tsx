@@ -7,6 +7,7 @@ export interface ArticleProps {
   title: string;
   excerpt: string;
   category: string;
+  description: string;
   date: string;
   readTime: string;
   image: string;
@@ -24,6 +25,7 @@ const ArticleCard = ({
   title, 
   excerpt, 
   category, 
+  description,
   date, 
   status,
   image, 
@@ -43,7 +45,7 @@ const ArticleCard = ({
         className="glass-card hover-effect overflow-hidden flex flex-col h-full"
       >
         {/* Image container */}
-        <div className="relative aspect-[16/9] overflow-hidden">
+        <div className="relative aspect-[21/9] overflow-hidden">
           <img 
             src={imageUrl} 
             alt={title}
@@ -51,7 +53,7 @@ const ArticleCard = ({
           />
           
           {/* Category chip */}
-          <div className="absolute top-4 left-4 right-4 flex justify-between">
+          <div className="absolute top-3 left-3 right-3 flex justify-between">
             <span className="chip bg-white/90 backdrop-blur-sm text-primary">
               {category}
             </span>
@@ -64,7 +66,7 @@ const ArticleCard = ({
           
           {/* Trending badge */}
           {trending && (
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-3 right-3">
               <span className="chip bg-primary text-white flex items-center space-x-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-white mr-1"></span>
                 <span>Trending</span>
@@ -74,13 +76,13 @@ const ArticleCard = ({
         </div>
         
         {/* Content */}
-        <div className="flex flex-col flex-grow p-5">
-          <h3 className="font-display font-bold text-base sm:text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+        <div className="flex flex-col flex-grow p-4">
+          <h3 className="font-display font-bold text-base mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {title}
           </h3>
           
-          <p className="text-foreground/70 text-sm mb-4 line-clamp-2">
-            {excerpt}
+          <p className="text-foreground/70 text-sm mb-3 line-clamp-5">
+            {description}
           </p>
           
           {/* Author & metadata */}
@@ -89,7 +91,7 @@ const ArticleCard = ({
               <img 
                 src={author.avatar} 
                 alt={author.name}
-                className="w-8 h-8 rounded-full object-cover border border-border"
+                className="w-7 h-7 rounded-full object-cover border border-border"
               />
               <span className="text-xs text-foreground/80 font-medium">
                 {author.name}

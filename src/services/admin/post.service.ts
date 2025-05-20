@@ -34,6 +34,7 @@ export interface GetFilterPost {
 export interface CreatePost {
   post: {
     title: string;
+    description: string;
     content: string;
     category: string;
     status: string;

@@ -1,11 +1,12 @@
 import { Filter, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import ArticleCard, { ArticleProps } from "../components/ArticleCard";
-import MainLayout from "../layouts/MainLayout";
+import ArticleCard, { ArticleProps } from "../../../components/ArticleCard";
+import MainLayout from "../../../layouts/MainLayout";
 
 const mockArticles: ArticleProps[] = [
   {
     id: '1',
+    description: 'The Impact of Fed Rate Decisions on Stock Market Performance',
     title: 'The Impact of Fed Rate Decisions on Stock Market Performance',
     excerpt: 'A comprehensive analysis of how Federal Reserve interest rate changes have historically affected equity markets.',
     category: 'Economics',
@@ -21,6 +22,7 @@ const mockArticles: ArticleProps[] = [
   },
   {
     id: '2',
+    description: 'ESG Investing: Balancing Profit and Responsibility in Your Portfolio',
     title: 'ESG Investing: Balancing Profit and Responsibility in Your Portfolio',
     excerpt: 'How environmental, social, and governance factors are reshaping investment strategies for the modern investor.',
     category: 'Investing',
@@ -35,6 +37,7 @@ const mockArticles: ArticleProps[] = [
   },
   {
     id: '3',
+    description: 'Quarterly Earnings Guide: What Numbers Really Matter',
     title: 'Quarterly Earnings Guide: What Numbers Really Matter',
     excerpt: 'Beyond EPS and revenue: The key metrics that intelligent investors focus on during earnings season.',
     category: 'Analysis',
@@ -50,6 +53,7 @@ const mockArticles: ArticleProps[] = [
   },
   {
     id: '4',
+    description: 'Cryptocurrency and Traditional Markets: The Convergence',
     title: 'Cryptocurrency and Traditional Markets: The Convergence',
     excerpt: 'How digital assets are increasingly influencing and correlating with conventional financial markets.',
     category: 'Cryptocurrency',
@@ -64,6 +68,7 @@ const mockArticles: ArticleProps[] = [
   },
   {
     id: '5',
+    description: 'Tech Stock Analysis: Valuations in a Post-Pandemic World',
     title: 'Tech Stock Analysis: Valuations in a Post-Pandemic World',
     excerpt: 'As the world adjusts to post-pandemic realities, tech stocks face new challenges and opportunities.',
     category: 'Technology',
@@ -78,6 +83,7 @@ const mockArticles: ArticleProps[] = [
   },
   {
     id: '6',
+    description: 'The Small Cap Advantage: Finding Hidden Gems in Today\'s Market',
     title: 'The Small Cap Advantage: Finding Hidden Gems in Today\'s Market',
     excerpt: 'Why smaller companies might offer outsized returns for investors willing to accept additional risk.',
     category: 'Investing',

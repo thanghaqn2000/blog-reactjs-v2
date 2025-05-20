@@ -32,6 +32,7 @@ interface Article {
   id: string;
   title: string;
   excerpt: string;
+  description: string;
   date: string;
   image: string;
   category: string;
@@ -73,6 +74,7 @@ const FeaturedArticles = () => {
             date: formatDate(post.created_at),
             image: post.image_url || defaultImage,
             category: post.category,
+            description: post.description,
             status: post.status,
             readTime: '5 min read',
             author: {
@@ -87,6 +89,7 @@ const FeaturedArticles = () => {
             date: formatDate(post.created_at),
             image: post.image_url,
             category: post.category,
+            description: post.description,
             readTime: '5 min read',
             status: post.status,
             author: {

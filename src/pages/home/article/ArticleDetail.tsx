@@ -2,12 +2,12 @@ import SidebarStock from '@/components/SidebarStock';
 import { formatDate } from '@/config/date.config';
 import { postServiceV1 } from '@/services/v1/post.service';
 import DOMPurify from 'dompurify';
-import { ArrowLeft, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArticleProps } from '../components/ArticleCard';
-import MainLayout from "../layouts/MainLayout";
+import { ArticleProps } from '../../../components/ArticleCard';
+import MainLayout from "../../../layouts/MainLayout";
 
 // Sample data for sidebar (you can move this to a separate data file later)
 const rankedStocks = [
@@ -51,6 +51,7 @@ const Article = () => {
           category: post.category,
           date: formatDate(post.created_at),
           readTime: '5 min read',
+          description: post.description,
           status: post.status,
           image: post.image_url || defaultImage,
           content: post.content,
@@ -126,7 +127,7 @@ const Article = () => {
         {/* Hero section - just the image */}
         <div className="w-full h-[50vh] relative">
           <img 
-            src={article.image} 
+            src={import.meta.env.VITE_DEFAULT_IMG_POST} 
             alt={article.title}
             className="w-full h-full object-cover"
           />
@@ -143,13 +144,17 @@ const Article = () => {
                 {article.title}
               </h1>
               
-              <div className="flex flex-wrap items-center text-foreground/70 gap-x-6 gap-y-3 text-sm mb-8">
+              <div className="flex flex-wrap items-center text-foreground/70 gap-x-8 gap-y-3 text-base mb-8">
                 <div className="flex items-center">
-                  <User size={16} className="mr-2" />
-                  <span>{article.author.name || 'Admin'}</span>
+                  <img 
+                    src={article.author.avatar} 
+                    alt={article.author.name}
+                    className="w-8 h-8 rounded-full object-cover border border-border mr-3"
+                  />
+                  <span className="font-medium">{article.author.name || 'Admin'}</span>
                 </div>
                 <div className="flex items-center">
-                  <Calendar size={16} className="mr-2" />
+                  <Calendar size={18} className="mr-2" />
                   <span>{article.date}</span>
                 </div>
               </div>
@@ -196,22 +201,6 @@ const Article = () => {
                 className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || 'Chưa có nội dung') }}
               />
-              
-              {/* Author */}
-              <div className="mt-16 pt-10 border-t border-border">
-                <div className="flex items-center">
-                  <img 
-                    src={article.author.avatar} 
-                    alt={article.author.name}
-                    className="w-14 h-14 rounded-full object-cover border border-border mr-4"
-                  />
-                  <div>
-                    <h3 className="font-bold text-lg">
-                      {article.author.name}
-                    </h3>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Sidebar */}
