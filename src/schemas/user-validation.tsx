@@ -85,6 +85,7 @@ const profileFormSchema = z
 
 const createPostSchema = z.object({
   title: z.string().min(1, 'Tiêu đề là bắt buộc'),
+  description: z.string().min(1, 'Mô tả là bắt buộc'),
   content: z.string().min(1, 'Nội dung là bắt buộc'),
   category: z.string().min(1, 'Danh mục là bắt buộc'),
   status: z.enum(['pending', 'publish']),

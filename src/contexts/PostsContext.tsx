@@ -7,6 +7,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 export interface Post {
   id: string;
   title: string;
+  description: string;
   excerpt: string;
   content: string;
   status: 'publish' | 'pending';
@@ -41,6 +42,7 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
     return {
       id: apiPost.id.toString(),
       title: apiPost.title,
+      description: apiPost.description,
       excerpt: apiPost.title ?? '',
       content: apiPost.content ?? '',
       status: apiPost.status as 'publish' | 'pending',
@@ -93,6 +95,7 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
       const response = await postService.updatePost(parseInt(updatedPost.id), {
         post: {
           title: updatedPost.title,
+          description: updatedPost.description,
           content: updatedPost.content,
           category: updatedPost.category,
           status: updatedPost.status,

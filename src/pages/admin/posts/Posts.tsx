@@ -13,7 +13,7 @@ import { usePosts } from '@/contexts/PostsContext';
 import { AlertTriangle, Edit, Eye, FileText, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AdminLayout from '../../layouts/AdminLayout';
+import AdminLayout from '../../../layouts/AdminLayout';
 
 const statusColors = {
   publish: "bg-green-100 text-green-800",

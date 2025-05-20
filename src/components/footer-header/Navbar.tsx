@@ -17,9 +17,9 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import AdminLink from './AdminLink';
+import AdminLink from '../AdminLink';
+import { Button } from '../ui/button';
 import HeaderClient from './HeaderClient';
-import { Button } from './ui/button';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);

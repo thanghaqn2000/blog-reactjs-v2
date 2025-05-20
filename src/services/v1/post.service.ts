@@ -5,6 +5,7 @@ export interface Post {
   title: string;
   image_url: string ;
   category: string;
+  description: string;
   status: string;
   author: string;
   content: string;

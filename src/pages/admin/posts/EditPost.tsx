@@ -1,3 +1,4 @@
+import PostPreview from '@/components/post/PostPreview';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,14 +18,12 @@ import AdminLayout from '@/layouts/AdminLayout';
 import { createPostSchema } from '@/schemas/user-validation';
 import { postService } from '@/services/admin/post.service';
 import { zodResolver } from '@hookform/resolvers/zod';
-import DOMPurify from 'dompurify';
 import JoditEditor from 'jodit-react';
 import { ArrowLeft, FileImage, Save, Trash2 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as z from 'zod';
-
 
 type EditPostFormData = z.infer<typeof createPostSchema>;
 
@@ -56,6 +55,7 @@ const EditPost = () => {
   const content = watch('content');
   const category = watch('category');
   const status = watch('status');
+  const description = watch('description');
 
   const config = {
     readonly: false,
@@ -122,6 +122,7 @@ const EditPost = () => {
       const post = getPost(id);
       if (post) {
         setValue('title', post.title);
+        setValue('description', post.description);
         setValue('content', post.content);
         setValue('category', post.category);
         setValue('status', post.status);
@@ -152,6 +153,7 @@ const EditPost = () => {
       await postService.updatePost(parseInt(id), {
         post: {
           title: title,
+          description: description,
           content: content,
           category: category,
           status: status,
@@ -210,6 +212,18 @@ const EditPost = () => {
                       />
                       {errors.title && (
                         <p className="text-sm text-red-500">{errors.title.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Mô tả</Label>
+                      <Input 
+                        id="description"
+                        placeholder="Nhập mô tả bài viết" 
+                        {...register('description')}
+                      />
+                      {errors.description && (
+                        <p className="text-sm text-red-500">{errors.description.message}</p>
                       )}
                     </div>
 
@@ -323,56 +337,17 @@ const EditPost = () => {
             </TabsContent>
             
             <TabsContent value="preview" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Xem trước bài viết</CardTitle>
-                  <CardDescription>
-                    Xem trước bài viết sẽ hiển thị như thế nào
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {thumbnailPreview && (
-                    <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
-                      <img 
-                        src={thumbnailPreview} 
-                        alt="Thumbnail preview" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <h1 className="text-3xl font-bold">{title || "Chưa có tiêu đề"}</h1>
-                    {category && (
-                      <div className="mt-2">
-                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                          {category}
-                        </span>
-                      </div>
-                    )}
-                    {status && (
-                      <div className="mt-2">
-                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-secondary/10 text-secondary">
-                          {status === 'pending' ? 'Chờ duyệt' : 'Đã xuất bản'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="prose max-w-none dark:prose-invert">
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content || 'Chưa có nội dung') }} />
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button variant="outline" onClick={() => navigate('/admin/posts')}>
-                    Hủy
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
-                  </Button>
-                </CardFooter>
-              </Card>
+              <PostPreview
+                title={title}
+                description={description}
+                content={content}
+                category={category}
+                status={status}
+                thumbnailPreview={thumbnailPreview}
+                isSubmitting={isSubmitting}
+                onSave={handleSubmit(onSubmit)}
+                onCancel={() => navigate('/admin/posts')}
+              />
             </TabsContent>
           </Tabs>
         </form>
