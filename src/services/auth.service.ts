@@ -7,23 +7,35 @@ export interface LoginCredentials {
   }
 }
 
+export interface TokenInfo {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+}
+
 export interface User {
   id: number;
   name: string;
   email: string;
   phone_number: string;
-  is_admin: boolean;
+  avatar?: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
   require_phone_number: boolean;
-}
-
-export interface TokenInfo {
-  access_token: string;
-  expired_at: string;
+  avatar_url: string;
 }
 
 export interface AuthResponse {
   token_info: TokenInfo;
   user: User;
+}
+
+export interface FirebaseUserInfo {
+  name: string | null;
+  email: string | null;
+  photoURL: string | null;
+  uid: string;
 }
 
 class AuthService {
@@ -80,9 +92,11 @@ class AuthService {
     return v1Api.post('/auth/reset-password', data, { withCredentials: true });
   }
 
-   async verifySocialToken(access_token: string): Promise<AuthResponse> {
+  async verifySocialToken(userInfo: FirebaseUserInfo): Promise<AuthResponse> {
     try {
-      const response = await v1Api.post('/users/verify_social_token', {access_token}, { withCredentials: true });
+      const response = await v1Api.post('/users/verify_social_token', {
+        user_info: userInfo
+      }, { withCredentials: true });
       return response.data.data;
     } catch (error) {
       console.error('Refresh token failed:', error);

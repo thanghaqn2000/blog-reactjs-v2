@@ -1,30 +1,80 @@
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/config/toast.config";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { auth, facebookProvider, googleProvider } from "@/lib/firebase";
+import { FacebookAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Facebook } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
 interface SocialLoginProps {
   onSocialLogin: (provider: "google" | "facebook") => void;
 }
-const domain_url = import.meta.env.VITE_DOMAIN;
 
 const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
+  const { verifySocialToken } = useAuth();
+
   const handleGoogleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${domain_url}/auth/callback`
-        }
-      });
-
-      if (error) {
-        throw error;
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      // Lấy ID token chứa metadata của user
+      const idToken = credential?.idToken;
+      
+      // Lấy thông tin user từ Firebase
+      const user = result.user;
+      const userInfo = {
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        uid: user.uid,
+        id_token: idToken
+      };
+      
+      if (idToken) {
+        // Gửi ID token lên server để xác thực
+        await verifySocialToken(userInfo);
+        showToast.success("Đăng nhập thành công", {
+          description: `Chào mừng ${user.displayName} quay trở lại!`
+        });
+      } else {
+        throw new Error("Không thể lấy token từ Google");
       }
     } catch (error) {
       showToast.error("Đăng nhập thất bại", {
         description: "Có lỗi xảy ra khi đăng nhập với Google"
+      });
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, facebookProvider);
+      const credential = FacebookAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken;
+      const idToken = await result.user.getIdToken();
+      // Lấy thông tin user từ Firebase
+      const user = result.user;
+      const userInfo = {
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        uid: user.uid,
+        access_token: accessToken,
+        id_token: idToken
+      };
+      
+      if (accessToken) {
+        // Gửi access token và thông tin user lên server
+        await verifySocialToken(userInfo);
+        showToast.success("Đăng nhập thành công", {
+          description: `Chào mừng ${user.displayName} quay trở lại!`
+        });
+      } else {
+        throw new Error("Không thể lấy token từ Facebook");
+      }
+    } catch (error) {
+      showToast.error("Đăng nhập thất bại", {
+        description: "Có lỗi xảy ra khi đăng nhập với Facebook"
       });
     }
   };
@@ -55,7 +105,7 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
         <Button 
           variant="outline" 
           type="button" 
-          onClick={() => onSocialLogin("facebook")}
+          onClick={handleFacebookLogin}
           className="flex items-center justify-center gap-2 bg-[#1877F2] text-white hover:bg-[#1877F2]/90 transition-all"
         >
           <Facebook className="h-5 w-5" />
@@ -66,4 +116,4 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
   );
 };
 
-export default SocialLogin; 
+export default SocialLogin;
