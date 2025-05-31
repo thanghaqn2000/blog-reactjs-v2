@@ -1,8 +1,6 @@
-import { authService, TokenInfo, User } from '@/services/auth.service';
+import { authService, FirebaseUserInfo, TokenInfo, User } from '@/services/auth.service';
 import { setAuthToken } from '@/services/axios';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-
-
 interface AuthState {
   tokenInfo: TokenInfo | null;
   user: User | null;
@@ -13,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (phoneNumber: string, password: string) => Promise<void>;
-  verifySocialToken: (accessToken: string) => Promise<User>;
+  verifySocialToken: (userInfo: FirebaseUserInfo) => Promise<User>;
   logout: () => void;
   updateUser: (user: User) => void;
 }
@@ -69,9 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const verifySocialToken = async (access_token: string) => {
+  const verifySocialToken = async (userInfo: FirebaseUserInfo) => {
     try {
-      const response = await authService.verifySocialToken(access_token);
+      const response = await authService.verifySocialToken(userInfo);
       // Lưu thông tin vào state
       setAuthState({
         tokenInfo: response.token_info,

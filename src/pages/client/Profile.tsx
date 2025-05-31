@@ -143,7 +143,7 @@ const Profile = () => {
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center space-y-4">
                     <Avatar className="h-24 w-24">
-                      <AvatarImage src="/placeholder.svg" alt="Profile" />
+                      <AvatarImage src={user?.avatar_url || "/placeholder.svg"} alt="Profile" />
                       <AvatarFallback>
                         <UserIcon className="h-12 w-12" />
                       </AvatarFallback>
