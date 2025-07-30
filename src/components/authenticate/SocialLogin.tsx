@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/config/toast.config";
 import { useAuth } from "@/contexts/AuthContext";
-import { auth, facebookProvider, googleProvider } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { FacebookAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Facebook } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
@@ -15,7 +15,13 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      // Tạo provider mới với custom parameters để force chọn tài khoản
+      const googleProviderWithPrompt = new GoogleAuthProvider();
+      googleProviderWithPrompt.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      const result = await signInWithPopup(auth, googleProviderWithPrompt);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       // Lấy ID token chứa metadata của user
       const idToken = credential?.idToken;
@@ -48,7 +54,13 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
 
   const handleFacebookLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, facebookProvider);
+      // Tạo provider mới với custom parameters để force chọn tài khoản
+      const facebookProviderWithPrompt = new FacebookAuthProvider();
+      facebookProviderWithPrompt.setCustomParameters({
+        auth_type: 'reauthenticate'
+      });
+      
+      const result = await signInWithPopup(auth, facebookProviderWithPrompt);
       const credential = FacebookAuthProvider.credentialFromResult(result);
       const accessToken = credential?.accessToken;
       const idToken = await result.user.getIdToken();
