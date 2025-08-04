@@ -19,7 +19,6 @@ import Profile from "./pages/client/Profile";
 import Article from "./pages/home/article/ArticleDetail";
 import Articles from "./pages/home/article/ArticleList";
 import AuthCallback from "./pages/home/AuthCallback";
-import AuthHandler from "./pages/home/AuthHandler";
 import Index from "./pages/home/Index";
 import NotFound from "./pages/home/NotFound";
 import VipNews from "./pages/home/VipNews";
@@ -75,8 +74,6 @@ const App = () => (
               
               {/* Auth callback route */}
               <Route path="/auth/callback" element={<AuthCallback />} />
-              {/* Firebase Auth handler route */}
-              <Route path="/__/auth/handler" element={<AuthHandler />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
