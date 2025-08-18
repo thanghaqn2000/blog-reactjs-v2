@@ -3,6 +3,7 @@ import { adminApi } from '../axios';
 export interface Post {
   id: number;
   title: string;
+  description: string;
   image_url: string;
   category: string;
   status: string;
@@ -25,6 +26,11 @@ export interface CreatePostsResponse {
   limit: number;
 }
 
+export interface PresignUrlResponse {
+  url: string;
+  key: string;
+}
+
 export interface GetFilterPost {
   page?: number;
   limit?: number;
@@ -38,8 +44,13 @@ export interface CreatePost {
     content: string;
     category: string;
     status: string;
-    image?: File;
+    image_key?: string;
   };
+}
+
+export interface PresignUrl {
+  filename: string;
+  content_type: string;
 }
 
 class PostService {
@@ -69,6 +80,11 @@ class PostService {
         'Content-Type': 'multipart/form-data'
       }
     });
+    return response.data;
+  }
+
+  async presignUrl(params: PresignUrl): Promise<PresignUrlResponse> {
+    const response = await adminApi.post(`/posts/presign`, params, { withCredentials: true });
     return response.data;
   }
 }

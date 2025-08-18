@@ -33,6 +33,7 @@ const EditPost = () => {
   const editor = useRef(null);
   const [thumbnailPreview, setThumbnailPreview] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [presignKey, setPresignKey] = useState('');
   const [editorContent, setEditorContent] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ const EditPost = () => {
     setValue('content', newContent, { shouldValidate: true });
   };
 
-  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setThumbnailFile(file);
@@ -107,12 +108,39 @@ const EditPost = () => {
         setThumbnailPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Gọi API presignUrl
+      try {
+        const response = await postService.presignUrl({
+          filename: file.name,
+          content_type: file.type
+        });
+        setPresignKey(response.key);
+
+        // Upload ảnh lên S3
+        const uploadResponse = await fetch(response.url, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+
+        if (uploadResponse.ok) {
+          showToast.success('Upload ảnh thành công!');
+        } else {
+          showToast.error('Có lỗi xảy ra khi upload ảnh lên S3');
+        }
+      } catch (error) {
+        showToast.error('Có lỗi xảy ra khi tạo URL upload ảnh');
+      }
     }
   };
 
   const handleRemoveThumbnail = () => {
     setThumbnailFile(null);
     setThumbnailPreview('');
+    setPresignKey('');
     const fileInput = document.getElementById('thumbnail') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -157,7 +185,7 @@ const EditPost = () => {
           content: content,
           category: category,
           status: status,
-          image: thumbnailFile || undefined
+          image_key: presignKey
         }
       });
 

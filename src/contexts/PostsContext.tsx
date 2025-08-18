@@ -19,14 +19,14 @@ export interface Post {
   imageFile?: File;
 }
 
+
+
 interface PostsContextType {
   posts: Post[];
   loading: boolean;
   error: string | null;
   fetchPosts: () => Promise<void>;
   deletePost: (id: string) => void;
-  addPost: (post: Omit<Post, 'id' | 'date'>) => string;
-  updatePost: (post: Post) => void;
   getPost: (id: string) => Post | undefined;
 }
 
@@ -37,6 +37,7 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { token } = useAuth();
+
 
   const convertApiPostToContextPost = (apiPost: ApiPost): Post => {
     return {
@@ -78,45 +79,9 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
     fetchPosts();
   }, [token]);
 
-  const addPost = (postData: Omit<Post, 'id' | 'date'>) => {
-    const id = Date.now().toString();
-    const newPost: Post = {
-      ...postData,
-      id,
-      date: new Date().toISOString().split('T')[0]
-    };
-    
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-    return id;
-  };
 
-  const updatePost = async (updatedPost: Post) => {
-    try {
-      const response = await postService.updatePost(parseInt(updatedPost.id), {
-        post: {
-          title: updatedPost.title,
-          description: updatedPost.description,
-          content: updatedPost.content,
-          category: updatedPost.category,
-          status: updatedPost.status,
-          image: updatedPost.imageFile
-        }
-      });
 
-      // Cập nhật state với dữ liệu mới từ API
-      const updatedPostFromApi = convertApiPostToContextPost(response.data[0]);
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post.id === updatedPostFromApi.id ? updatedPostFromApi : post
-        )
-      );
-      
-      showToast.success('Cập nhật bài viết thành công!');
-    } catch (error) {
-      showToast.error('Có lỗi xảy ra khi cập nhật bài viết');
-      console.error(error);
-    }
-  };
+
 
   const deletePost = async (id: string) => {
     try {
@@ -129,12 +94,14 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+
+
   const getPost = (id: string) => {
     return posts.find(post => post.id === id);
   };
 
   return (
-    <PostsContext.Provider value={{ posts, loading, error, fetchPosts, deletePost, addPost, getPost, updatePost }}>
+    <PostsContext.Provider value={{ posts, loading, error, fetchPosts, deletePost, getPost }}>
       {children}
     </PostsContext.Provider>
   );
