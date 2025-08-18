@@ -19,7 +19,7 @@ import { createPostSchema } from '@/schemas/user-validation';
 import { postService } from '@/services/admin/post.service';
 import { zodResolver } from '@hookform/resolvers/zod';
 import JoditEditor from 'jodit-react';
-import { ArrowLeft, FileImage, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileImage, Loader2, Save, Trash2 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +31,8 @@ const CreatePost = () => {
   const editor = useRef(null);
   const [thumbnailPreview, setThumbnailPreview] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [presignKey, setPresignKey] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [editorContent, setEditorContent] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -97,21 +99,52 @@ const CreatePost = () => {
     setValue('content', newContent, { shouldValidate: true });
   };
 
-  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setThumbnailFile(file);
+      setIsUploading(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         setThumbnailPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Gọi API presignUrl
+      try {
+        const response = await postService.presignUrl({
+          filename: file.name,
+          content_type: file.type
+        });
+        setPresignKey(response.key);
+
+        // Upload ảnh lên S3
+        const uploadResponse = await fetch(response.url, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+
+        if (uploadResponse.ok) {
+          showToast.success('Upload ảnh thành công!');
+        } else {
+          showToast.error('Có lỗi xảy ra khi upload ảnh lên S3');
+        }
+      } catch (error) {
+        showToast.error('Có lỗi xảy ra khi tạo URL upload ảnh');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
   const handleRemoveThumbnail = () => {
     setThumbnailFile(null);
     setThumbnailPreview('');
+    setPresignKey('');
+    setIsUploading(false);
     const fileInput = document.getElementById('thumbnail') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -129,7 +162,7 @@ const CreatePost = () => {
           content: content,
           status: status,
           category: category,
-          image: thumbnailFile || undefined
+          image_key: presignKey
         }
       });
       
@@ -235,9 +268,14 @@ const CreatePost = () => {
                           type="button"
                           onClick={() => document.getElementById('thumbnail')?.click()}
                           className="flex items-center gap-2"
+                          disabled={isUploading}
                         >
-                          <FileImage className="h-4 w-4" />
-                          Chọn ảnh
+                          {isUploading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FileImage className="h-4 w-4" />
+                          )}
+                          {isUploading ? 'Đang upload...' : 'Chọn ảnh'}
                         </Button>
                         <Input 
                           id="thumbnail"
@@ -246,8 +284,13 @@ const CreatePost = () => {
                           onChange={handleThumbnailChange}
                           className="hidden"
                         />
-                        <span className="text-sm text-muted-foreground">
-                          {thumbnailFile ? thumbnailFile.name : 'Chưa chọn ảnh'}
+                        <span className="text-sm text-muted-foreground flex items-center gap-2">
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="h-10 w-10 animate-spin" />
+                              Đang upload ảnh...
+                            </>
+                          ) : thumbnailFile ? thumbnailFile.name : 'Chưa chọn ảnh'}
                         </span>
                       </div>
                       {thumbnailPreview && (
