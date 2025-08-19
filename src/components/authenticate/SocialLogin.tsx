@@ -86,6 +86,7 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
         throw new Error("Không thể lấy token từ Facebook");
       }
     } catch (error) {
+      console.log(error);
       showToast.error("Đăng nhập thất bại", {
         description: "Có lỗi xảy ra khi đăng nhập với Facebook"
       });
