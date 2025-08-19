@@ -5,11 +5,13 @@ interface AuthState {
   tokenInfo: TokenInfo | null;
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  isLoading: boolean;
   login: (phoneNumber: string, password: string) => Promise<void>;
   verifySocialToken: (userInfo: FirebaseUserInfo) => Promise<User>;
   logout: () => void;
@@ -23,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenInfo: null,
     user: null,
     isAuthenticated: false,
+    isLoading: true, // Bắt đầu với loading = true
   });
 
   useEffect(() => {
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           tokenInfo: response.token_info,
           user: response.user,
           isAuthenticated: true,
+          isLoading: false, // Kết thúc loading
         });
       } catch (error) {
         console.error('Failed to refresh token:', error);
@@ -40,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           tokenInfo: null,
           user: null,
           isAuthenticated: false,
+          isLoading: false, // Kết thúc loading
         });
       }
     };
@@ -60,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tokenInfo: response.token_info,
         user: response.user,
         isAuthenticated: true,
+        isLoading: false,
       });
     } catch (error) {
       console.error('Login failed:', error);
@@ -75,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tokenInfo: response.token_info,
         user: response.user,
         isAuthenticated: true,
+        isLoading: false,
       });
       return response.user
     } catch (error) {
@@ -91,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tokenInfo: null,
         user: null,
         isAuthenticated: false,
+        isLoading: false,
       });
     } catch (error) {
       console.error('Logout failed:', error);

@@ -25,7 +25,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   
   // Handle scroll event to change navbar appearance
@@ -96,8 +96,9 @@ const Navbar = () => {
             {user?.is_admin && (
               <AdminLink isScrolled={isScrolled} />
             )}
-            
-            {user ? (
+            {isLoading ? (
+              <div className="ml-2 w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+            ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 

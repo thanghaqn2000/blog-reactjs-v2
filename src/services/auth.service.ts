@@ -20,6 +20,7 @@ export interface User {
   phone_number: string;
   avatar?: string;
   role: string;
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
   require_phone_number: boolean;

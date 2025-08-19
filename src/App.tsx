@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
@@ -40,17 +41,17 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               
               {/* Admin routes */}
-              <Route path="/admin" element={<Dashboard />} />
-              <Route path="/admin/users" element={<UserManagement />} />
-              <Route path="/admin/posts" element={<Posts />} />
-              <Route path="/admin/posts/create" element={<CreatePost />} />
-              <Route path="/admin/posts/edit/:id" element={<EditPost />} />
-              <Route path="/admin/posts/detail/:id" element={<PostDetail />} />
-              <Route path="/admin/hero-slides" element={<HeroSlides />} />
-              <Route path="/admin/analytics" element={<Dashboard />} />
-              <Route path="/admin/notifications" element={<NotificationsManagement />} />
-              <Route path="/admin/notifications/:id" element={<NotificationDetail />} />
-              <Route path="/admin/settings" element={<Dashboard />} />
+              <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
+              <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+              <Route path="/admin/posts" element={<AdminRoute><Posts /></AdminRoute>} />
+              <Route path="/admin/posts/create" element={<AdminRoute><CreatePost /></AdminRoute>} />
+              <Route path="/admin/posts/edit/:id" element={<AdminRoute><EditPost /></AdminRoute>} />
+              <Route path="/admin/posts/detail/:id" element={<AdminRoute><PostDetail /></AdminRoute>} />
+              <Route path="/admin/hero-slides" element={<AdminRoute><HeroSlides /></AdminRoute>} />
+              <Route path="/admin/analytics" element={<AdminRoute><Dashboard /></AdminRoute>} />
+              <Route path="/admin/notifications" element={<AdminRoute><NotificationsManagement /></AdminRoute>} />
+              <Route path="/admin/notifications/:id" element={<AdminRoute><NotificationDetail /></AdminRoute>} />
+              <Route path="/admin/settings" element={<AdminRoute><Dashboard /></AdminRoute>} />
               
               {/* VIP News route */}
               <Route path="/vip-news" element={<VipNews />} />
@@ -74,6 +75,9 @@ const App = () => (
               
               {/* Auth callback route */}
               <Route path="/auth/callback" element={<AuthCallback />} />
+              
+              {/* 404 route */}
+              <Route path="/404" element={<NotFound />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
