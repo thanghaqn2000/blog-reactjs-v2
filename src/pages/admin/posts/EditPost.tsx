@@ -19,7 +19,7 @@ import { createPostSchema } from '@/schemas/user-validation';
 import { postService } from '@/services/admin/post.service';
 import { zodResolver } from '@hookform/resolvers/zod';
 import JoditEditor from 'jodit-react';
-import { ArrowLeft, FileImage, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileImage, Loader2, Save, Trash2 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -34,6 +34,7 @@ const EditPost = () => {
   const [thumbnailPreview, setThumbnailPreview] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [presignKey, setPresignKey] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [editorContent, setEditorContent] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -103,6 +104,7 @@ const EditPost = () => {
     const file = event.target.files?.[0];
     if (file) {
       setThumbnailFile(file);
+      setIsUploading(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         setThumbnailPreview(reader.result as string);
@@ -133,6 +135,8 @@ const EditPost = () => {
         }
       } catch (error) {
         showToast.error('Có lỗi xảy ra khi tạo URL upload ảnh');
+      } finally {
+        setIsUploading(false);
       }
     }
   };
@@ -141,6 +145,7 @@ const EditPost = () => {
     setThumbnailFile(null);
     setThumbnailPreview('');
     setPresignKey('');
+    setIsUploading(false);
     const fileInput = document.getElementById('thumbnail') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -291,9 +296,14 @@ const EditPost = () => {
                           type="button"
                           onClick={() => document.getElementById('thumbnail')?.click()}
                           className="flex items-center gap-2"
+                          disabled={isUploading}
                         >
-                          <FileImage className="h-4 w-4" />
-                          Chọn ảnh
+                          {isUploading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FileImage className="h-4 w-4" />
+                          )}
+                          {isUploading ? 'Đang upload...' : 'Chọn ảnh'}
                         </Button>
                         <Input 
                           id="thumbnail"
@@ -302,8 +312,13 @@ const EditPost = () => {
                           onChange={handleThumbnailChange}
                           className="hidden"
                         />
-                        <span className="text-sm text-muted-foreground">
-                          {thumbnailFile ? thumbnailFile.name : 'Chưa chọn ảnh'}
+                        <span className="text-sm text-muted-foreground flex items-center gap-2">
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="h-10 w-10 animate-spin" />
+                              Đang upload ảnh...
+                            </>
+                          ) : thumbnailFile ? thumbnailFile.name : 'Chưa chọn ảnh'}
                         </span>
                       </div>
                       {thumbnailPreview && (
