@@ -12,6 +12,13 @@ export interface Post {
   updated_at: string;
 }
 
+export interface ChartStock {
+  id: number;
+  rank: string;
+  name: string;
+  price: string;
+}
+
 export interface GetPostsResponse {
   data: Post[];
   total: number;
@@ -26,6 +33,12 @@ export interface CreatePostsResponse {
   limit: number;
 }
 
+export interface GetChartStockResponse {
+  data: ChartStock[];
+  total: number;
+  page: number;
+  limit: number;
+}
 export interface PresignUrlResponse {
   url: string;
   key: string;
@@ -85,6 +98,11 @@ class PostService {
 
   async presignUrl(params: PresignUrl): Promise<PresignUrlResponse> {
     const response = await adminApi.post(`/posts/presign`, params, { withCredentials: true });
+    return response.data;
+  }
+
+  async getChartStock(params?: GetFilterPost): Promise<GetChartStockResponse> {
+    const response = await adminApi.get('/charts', { params, withCredentials: true });
     return response.data;
   }
 }
