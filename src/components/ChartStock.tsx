@@ -1,8 +1,18 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer } from '@/components/ui/chart';
-import { postService, type ChartStock as ChartStockData } from '@/services/admin/post.service';
-import { TrendingUp } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {
+  ref as dbRef,
+  onValue
+} from "firebase/database";
+import { useEffect, useState } from "react";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import { ChartContainer } from "@/components/ui/chart";
+import { postService, type ChartStock as ChartStockData } from "@/services/admin/post.service";
+import { TrendingUp } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -11,7 +21,9 @@ import {
   Tooltip,
   XAxis,
   YAxis
-} from 'recharts';
+} from "recharts";
+
+import { database } from "@/lib/firebase";
 
 interface ChartStockProps {
   className?: string;
@@ -21,26 +33,36 @@ const ChartStock = ({ className = "" }: ChartStockProps) => {
   const [chartData, setChartData] = useState<ChartStockData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchChartData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await postService.getChartStock();
-        setChartData(response.data);
-      } catch (error) {
-        console.error('Failed to fetch chart data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchChartData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await postService.getChartStock();
+      setChartData(response.data);
+    } catch (error) {
+      console.error("Failed to fetch chart data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchChartData();
+
+    const lastUpdatedRef = dbRef(database, "charts/last_updated_at");
+    const unsubscribe = onValue(lastUpdatedRef, (snapshot) => {
+      const updatedValue = snapshot.val();
+      if (updatedValue) {
+        console.log("Realtime update:", updatedValue);
+        fetchChartData();
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // Transform data for chart (convert price string to number)
-  const transformedData = chartData.map(item => ({
+  const transformedData = chartData.map((item) => ({
     ...item,
-    price: parseFloat(item.price)
+    price: parseFloat(item.price),
   }));
 
   return (
@@ -63,9 +85,9 @@ const ChartStock = ({ className = "" }: ChartStockProps) => {
               price: {
                 theme: {
                   light: "#8B5CF6",
-                  dark: "#9b87f5"
-                }
-              }
+                  dark: "#9b87f5",
+                },
+              },
             }}
           >
             <ResponsiveContainer width="100%" height="100%">
@@ -103,11 +125,7 @@ const ChartStock = ({ className = "" }: ChartStockProps) => {
                     return null;
                   }}
                 />
-                <Bar
-                  dataKey="price"
-                  fill="#8B5CF6"
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="price" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
