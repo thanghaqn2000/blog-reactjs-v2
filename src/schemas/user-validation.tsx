@@ -91,6 +91,34 @@ const createPostSchema = z.object({
   status: z.enum(['pending', 'publish']),
 });
 
+const createNotificationSchema = z.object({
+  title: z.string().min(1, 'Tiêu đề là bắt buộc'),
+  content: z.string().min(1, 'Nội dung là bắt buộc'),
+  link: z.string().url('Link không đúng định dạng').optional().or(z.literal('')),
+  type: z.enum(['sent_now', 'scheduled']),
+  scheduled_at: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.type === 'scheduled' && !data.scheduled_at) {
+    ctx.addIssue({
+      path: ['scheduled_at'],
+      message: 'Thời gian gửi là bắt buộc khi lên lịch',
+      code: z.ZodIssueCode.custom,
+    });
+  }
+  
+  if (data.type === 'scheduled' && data.scheduled_at) {
+    const scheduledDate = new Date(data.scheduled_at);
+    const now = new Date();
+    
+    if (scheduledDate <= now) {
+      ctx.addIssue({
+        path: ['scheduled_at'],
+        message: 'Thời gian gửi phải ở tương lai',
+        code: z.ZodIssueCode.custom,
+      });
+    }
+  }
+});
 
-export { createPostSchema, profileFormSchema, registerSchema };
+export { createNotificationSchema, createPostSchema, profileFormSchema, registerSchema };
 
