@@ -9,6 +9,7 @@ import Login from "./components/authenticate/Login";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
 import HeroSlides from "./pages/admin/HeroSlides";
+import CreateNotification from "./pages/admin/notifications/CreateNotification";
 import NotificationDetail from "./pages/admin/notifications/NotificationDetail";
 import NotificationsManagement from "./pages/admin/notifications/NotificationsManagement";
 import CreatePost from "./pages/admin/posts/CreatePost";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/admin/hero-slides" element={<AdminRoute><HeroSlides /></AdminRoute>} />
               <Route path="/admin/analytics" element={<AdminRoute><Dashboard /></AdminRoute>} />
               <Route path="/admin/notifications" element={<AdminRoute><NotificationsManagement /></AdminRoute>} />
+              <Route path="/admin/notifications/create" element={<AdminRoute><CreateNotification /></AdminRoute>} />
               <Route path="/admin/notifications/:id" element={<AdminRoute><NotificationDetail /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><Dashboard /></AdminRoute>} />
               

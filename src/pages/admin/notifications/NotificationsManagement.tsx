@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import AdminLayout from '@/layouts/AdminLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Check, Bell, BellOff, Info, Trash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Separator } from '@/components/ui/separator';
-import { useNavigate } from 'react-router-dom';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
+import { BellOff, Check, Info, Plus, Trash } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const sampleNotifications = [
   {
@@ -120,6 +119,13 @@ const NotificationsManagement = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => navigate('/admin/notifications/create')}
+              className="flex items-center gap-2"
+            >
+              <Plus size={16} />
+              <span>Create Notification</span>
+            </Button>
             <Button 
               variant="outline" 
               size="sm" 
