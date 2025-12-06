@@ -2,18 +2,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from '@/components/ui/dialog';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -25,13 +25,13 @@ import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-    Edit,
-    Filter,
-    MoreHorizontal,
-    Plus,
-    Search,
-    Star,
-    Trash
+  Edit,
+  Filter,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Star,
+  Trash
 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -282,11 +282,11 @@ const UserManagement = () => {
           <CardHeader>
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage users, assign roles, and set permissions</CardDescription>
+                <CardTitle>Quản lí người dùng</CardTitle>
+                <CardDescription>Quản lí người dùng, gán vai trò, và thiết lập quyền hạn</CardDescription>
               </div>
               <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Add User
+                <Plus className="mr-2 h-4 w-4" /> Thêm người dùng
               </Button>
             </div>
           </CardHeader>
@@ -296,7 +296,7 @@ const UserManagement = () => {
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search users..."
+                    placeholder="Tìm kiếm người dùng..."
                     className="pl-8"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -306,44 +306,44 @@ const UserManagement = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm">
                       <Filter className="mr-2 h-4 w-4" />
-                      Filter
+                      Lọc
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-[200px]">
                     <div className="grid gap-3 p-3">
                       <div>
-                        <div className="font-medium mb-1 text-xs">Role</div>
+                        <div className="font-medium mb-1 text-xs">Vai trò</div>
                         <select 
                           className="w-full rounded-md border border-input bg-transparent p-1 text-sm"
                           value={filterRole}
                           onChange={(e) => setFilterRole(e.target.value)}
                         >
-                          <option value="all">All Roles</option>
-                          <option value="user">User</option>
-                          <option value="admin">Admin</option>
-                          <option value="editor">Editor</option>
+                          <option value="all">Tất cả vai trò</option>
+                          <option value="user">Người dùng</option>
+                          <option value="admin">Quản trị viên</option>
+                          <option value="editor">Biên tập viên</option>
                         </select>
                       </div>
                       <div>
-                        <div className="font-medium mb-1 text-xs">Status</div>
+                        <div className="font-medium mb-1 text-xs">Trạng thái</div>
                         <select 
                           className="w-full rounded-md border border-input bg-transparent p-1 text-sm"
                           value={filterStatus}
                           onChange={(e) => setFilterStatus(e.target.value)}
                         >
-                          <option value="all">All Status</option>
+                          <option value="all">Tất cả trạng thái</option>
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
                         </select>
                       </div>
                       <div>
-                        <div className="font-medium mb-1 text-xs">VIP Status</div>
+                        <div className="font-medium mb-1 text-xs">Trạng thái VIP</div>
                         <select 
                           className="w-full rounded-md border border-input bg-transparent p-1 text-sm"
                           value={filterVip}
                           onChange={(e) => setFilterVip(e.target.value)}
                         >
-                          <option value="all">All Users</option>
+                          <option value="all">Tất cả người dùng</option>
                           <option value="vip">VIP</option>
                           <option value="non-vip">Non-VIP</option>
                         </select>

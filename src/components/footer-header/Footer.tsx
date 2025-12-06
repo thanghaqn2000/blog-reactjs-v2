@@ -1,4 +1,6 @@
 
+import { faFacebook, faInstagram, faLinkedin, faTiktok } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -13,46 +15,46 @@ const Footer = () => {
               <span>Insights</span>
             </Link>
             <p className="text-sm text-foreground/70 mb-6">
-              In-depth analysis and insights to help you navigate the financial markets with confidence.
+              Phân tích sâu sắc và thông tin để giúp bạn điều hướng thị trường tài chính với độ tin cậy.
             </p>
             <div className="flex space-x-4">
-              <SocialLink href="#" icon="twitter" />
-              <SocialLink href="#" icon="linkedin" />
-              <SocialLink href="#" icon="facebook" />
-              <SocialLink href="#" icon="instagram" />
+              <SocialLink href="#" icon={faFacebook} color="text-blue-600" />
+              <SocialLink href="#" icon={faLinkedin} color="text-blue-700" />
+              <SocialLink href="#" icon={faInstagram} color="text-sky-500" />
+              <SocialLink href="#" icon={faTiktok} color="text-red-600" />
             </div>
           </div>
           
           {/* Quick Links */}
           <div>
-            <h3 className="font-medium text-base mb-4">Quick Links</h3>
+            <h3 className="font-medium text-base mb-4">Liên kết nhanh</h3>
             <ul className="space-y-3">
               <FooterLink to="/" label="Home" />
-              <FooterLink to="/articles" label="Articles" />
-              <FooterLink to="/markets" label="Markets" />
-              <FooterLink to="/analysis" label="Analysis" />
+              <FooterLink to="/articles" label="Bài viết" />
+              <FooterLink to="/markets" label="Thị trường" />
+              <FooterLink to="/analysis" label="Phân tích" />
             </ul>
           </div>
           
           {/* Resources */}
           <div>
-            <h3 className="font-medium text-base mb-4">Resources</h3>
+            <h3 className="font-medium text-base mb-4">Tài nguyên</h3>
             <ul className="space-y-3">
-              <FooterLink to="/glossary" label="Financial Glossary" />
-              <FooterLink to="/tools" label="Calculators & Tools" />
-              <FooterLink to="/newsletter" label="Newsletter" />
-              <FooterLink to="/faq" label="FAQ" />
+              <FooterLink to="/glossary" label="Từ vựng tài chính" />
+              <FooterLink to="/tools" label="Công cụ tính toán" />
+              <FooterLink to="/newsletter" label="Bản tin" />
+              <FooterLink to="/faq" label="Câu hỏi thường gặp" />
             </ul>
           </div>
           
           {/* Company */}
           <div>
-            <h3 className="font-medium text-base mb-4">Company</h3>
+            <h3 className="font-medium text-base mb-4">Công ty</h3>
             <ul className="space-y-3">
-              <FooterLink to="/about" label="About Us" />
-              <FooterLink to="/contact" label="Contact" />
-              <FooterLink to="/privacy" label="Privacy Policy" />
-              <FooterLink to="/terms" label="Terms of Service" />
+              <FooterLink to="/about" label="Về chúng tôi" />
+              <FooterLink to="/contact" label="Liên hệ" />
+              <FooterLink to="/privacy" label="Chính sách riêng tư" />
+              <FooterLink to="/terms" label="Điều khoản dịch vụ" />
             </ul>
           </div>
         </div>
@@ -60,18 +62,18 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-border mt-10 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-foreground/60 mb-4 md:mb-0">
-            © {new Date().getFullYear()} Stock Insights. All rights reserved.
+            © {new Date().getFullYear()} Stock Insights. Tất cả quyền được bảo lưu.
           </p>
           
           <div className="flex items-center space-x-6">
             <Link to="/privacy" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
-              Privacy
+              Chính sách riêng tư
             </Link>
             <Link to="/terms" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
-              Terms
+              Điều khoản dịch vụ
             </Link>
             <Link to="/cookies" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
-              Cookies
+              Cookie
             </Link>
           </div>
         </div>
@@ -81,16 +83,16 @@ const Footer = () => {
 };
 
 // Social Icon Link
-const SocialLink = ({ href, icon }: { href: string; icon: string }) => {
+const SocialLink = ({ href, icon, color = "text-gray-600" }: { href: string; icon: any; color?: string }) => {
   return (
     <a 
       href={href} 
-      className="w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-primary hover:text-white transition-colors"
+      className={`w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-primary hover:text-white transition-colors ${color}`}
       target="_blank" 
       rel="noopener noreferrer"
       aria-label={`Follow us on ${icon}`}
     >
-      <IconPlaceholder name={icon} />
+      <FontAwesomeIcon icon={icon as any} />
     </a>
   );
 };

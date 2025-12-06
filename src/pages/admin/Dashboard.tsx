@@ -1,13 +1,13 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Users, FileText, TrendingUp } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import AdminLayout from '../../layouts/AdminLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Separator } from '@/components/ui/separator';
+import { BarChart3, FileText, TrendingUp, Users } from 'lucide-react';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts';
+import AdminLayout from '../../layouts/AdminLayout';
 
 // Sample data for dashboard
 const sampleData = [
@@ -44,19 +44,19 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">Overview of your site statistics and content</p>
+            <h1 className="text-2xl font-bold tracking-tight">Trang quản trị</h1>
+            <p className="text-muted-foreground">Tổng quan về thống kê và nội dung của trang web</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button asChild variant="outline">
               <Link to="/">
-                View Site
+                Xem trang chủ
               </Link>
             </Button>
             <Button asChild>
               <Link to="/admin/posts/create">
                 <FileText className="mr-2 h-4 w-4" />
-                New Post
+                Tạo bài viết mới
               </Link>
             </Button>
           </div>
@@ -67,28 +67,28 @@ const Dashboard = () => {
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard 
-            title="Total Users" 
+            title="Tổng số người dùng" 
             value="3,721" 
             change="+12%" 
             icon={Users} 
             trend="up" 
           />
           <StatCard 
-            title="Total Posts" 
+            title="Tổng số bài viết" 
             value="254" 
             change="+8%" 
             icon={FileText} 
             trend="up" 
           />
           <StatCard 
-            title="Page Views" 
+            title="Lượt xem trang" 
             value="145.8K" 
             change="+24%" 
             icon={BarChart3} 
             trend="up" 
           />
           <StatCard 
-            title="Conversion Rate" 
+            title="Tỷ lệ chuyển đổi" 
             value="3.42%" 
             change="-2%" 
             icon={TrendingUp} 

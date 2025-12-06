@@ -39,7 +39,7 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
           scrolledStyle
         )}
       >
-        Home
+        Trang chủ
       </Link>
       
       <div 
@@ -58,7 +58,7 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
             asChild
           >
             <div>
-              Investment
+              Đầu tư
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1">
                 <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -67,12 +67,12 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
           <DropdownMenuContent className="bg-white shadow-lg rounded-md min-w-[200px]">
             <DropdownMenuItem asChild>
               <Link to="/investment/stocks" className="px-3 py-2 cursor-pointer">
-                Stocks
+                Cổ phiếu chứng khoán
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/investment/crypto" className="px-3 py-2 cursor-pointer">
-                Cryptocurrency
+                Tiền điện tử
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -95,7 +95,7 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
             asChild
           >
             <div>
-              Policy
+              Chính sách
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1">
                 <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -104,12 +104,12 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
           <DropdownMenuContent className="bg-white shadow-lg rounded-md min-w-[200px]">
             <DropdownMenuItem asChild>
               <Link to="/policy/fiscal" className="px-3 py-2 cursor-pointer">
-                Fiscal Policy
+                Chính sách tài khóa
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/policy/monetary" className="px-3 py-2 cursor-pointer">
-                Monetary Policy
+                Chính sách tiền tệ
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -132,7 +132,7 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
             asChild
           >
             <div>
-              Owner
+              Quản lý
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1">
                 <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -141,12 +141,12 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
           <DropdownMenuContent className="bg-white shadow-lg rounded-md min-w-[200px]">
             <DropdownMenuItem asChild>
               <Link to="/owner/profile" className="px-3 py-2 cursor-pointer">
-                Profile
+                Hồ sơ
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/owner/settings" className="px-3 py-2 cursor-pointer">
-                Settings
+                Cài đặt
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -161,7 +161,7 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
           scrolledStyle
         )}
       >
-        Articles
+        Bài viết
       </Link>
       
       <Link 
@@ -172,7 +172,7 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
           scrolledStyle
         )}
       >
-        Markets
+        Thị trường
       </Link>
     </nav>
   );

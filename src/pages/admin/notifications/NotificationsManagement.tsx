@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import AdminLayout from '@/layouts/AdminLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Check, Bell, BellOff, Info, Trash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Separator } from '@/components/ui/separator';
-import { useNavigate } from 'react-router-dom';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
+import { BellOff, Check, Info, Trash } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const sampleNotifications = [
   {
@@ -59,9 +58,9 @@ const NotificationsManagement = () => {
   const navigate = useNavigate();
 
   const filters = [
-    { label: 'All', value: 'all' },
-    { label: 'Unread', value: 'unread' },
-    { label: 'Read', value: 'read' }
+    { label: 'Tất cả', value: 'all' },
+    { label: 'Chưa đọc', value: 'unread' },
+    { label: 'Đã đọc', value: 'read' }
   ];
 
   const filteredNotifications = notifications.filter(notification => {
@@ -114,9 +113,9 @@ const NotificationsManagement = () => {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Notifications</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Quản lí thông báo</h2>
             <p className="text-muted-foreground">
-              Manage and view all system notifications
+              Quản lí và xem tất cả thông báo hệ thống
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -127,7 +126,7 @@ const NotificationsManagement = () => {
               className="flex items-center gap-1"
             >
               <Check size={16} />
-              <span>Mark all as read</span>
+              <span>Đánh dấu tất cả là đã đọc</span>
             </Button>
             <Button 
               variant="outline" 
@@ -136,16 +135,16 @@ const NotificationsManagement = () => {
               className="flex items-center gap-1"
             >
               <Trash size={16} />
-              <span>Clear all</span>
+              <span>Xóa tất cả</span>
             </Button>
           </div>
         </div>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle>All Notifications</CardTitle>
+            <CardTitle>Tất cả thông báo</CardTitle>
             <CardDescription>
-              You have {notifications.filter(n => !n.read).length} unread notifications
+              Bạn có {notifications.filter(n => !n.read).length} thông báo chưa đọc
             </CardDescription>
             <div className="flex items-center gap-2 mt-2">
               {filters.map(filter => (
@@ -164,11 +163,11 @@ const NotificationsManagement = () => {
             {filteredNotifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <BellOff className="w-12 h-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold">No notifications</h3>
+                <h3 className="text-lg font-semibold">Không có thông báo</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   {currentFilter === 'all' 
-                    ? "You don't have any notifications yet." 
-                    : `You don't have any ${currentFilter} notifications.`}
+                    ? "Bạn không có thông báo nào." 
+                    : `Bạn không có thông báo ${currentFilter} nào.`}
                 </p>
               </div>
             ) : (
@@ -176,11 +175,11 @@ const NotificationsManagement = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead className="hidden md:table-cell">Description</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Tiêu đề</TableHead>
+                    <TableHead className="hidden md:table-cell">Mô tả</TableHead>
+                    <TableHead>Ngày</TableHead>
+                    <TableHead>Loại</TableHead>
+                    <TableHead className="text-right">Hành động</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

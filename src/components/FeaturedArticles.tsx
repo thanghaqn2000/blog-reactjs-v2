@@ -135,7 +135,7 @@ const FeaturedArticles = () => {
             to="/articles" 
             className="hidden sm:flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
-            <span>View all articles</span>
+            <span>Xem tất cả bài viết</span>
             <ArrowRight size={16} className="ml-1" />
           </Link>
         </div>
