@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { showToast } from "@/config/toast.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/lib/firebase";
-import { FacebookAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { FacebookAuthProvider, fetchSignInMethodsForEmail, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Facebook } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
@@ -45,11 +45,39 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
       } else {
         throw new Error("Không thể lấy token từ Google");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      showToast.error("Đăng nhập thất bại", {
-        description: "Có lỗi xảy ra khi đăng nhập với Google"
-      });
+      
+      // Xử lý lỗi account đã tồn tại với provider khác
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        const email = error.customData?.email;
+        
+        if (email) {
+          try {
+            // Kiểm tra xem email đã đăng ký với provider nào
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            const providerName = methods[0]?.includes('google') ? 'Google' : 
+                                methods[0]?.includes('facebook') ? 'Facebook' : 
+                                'một phương thức khác';
+            
+            showToast.error("Tài khoản đã tồn tại", {
+              description: `Email ${email} đã được đăng ký bằng ${providerName}. Vui lòng đăng nhập bằng ${providerName}.`
+            });
+          } catch (fetchError) {
+            showToast.error("Tài khoản đã tồn tại", {
+              description: "Email này đã được đăng ký với phương thức khác. Vui lòng thử phương thức đăng nhập khác."
+            });
+          }
+        } else {
+          showToast.error("Tài khoản đã tồn tại", {
+            description: "Email này đã được đăng ký với phương thức khác. Vui lòng thử phương thức đăng nhập khác."
+          });
+        }
+      } else {
+        showToast.error("Đăng nhập thất bại", {
+          description: "Có lỗi xảy ra khi đăng nhập với Google"
+        });
+      }
     }
   };
 
@@ -85,11 +113,39 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
       } else {
         throw new Error("Không thể lấy token từ Facebook");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      showToast.error("Đăng nhập thất bại", {
-        description: "Có lỗi xảy ra khi đăng nhập với Facebook"
-      });
+      
+      // Xử lý lỗi account đã tồn tại với provider khác
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        const email = error.customData?.email;
+        
+        if (email) {
+          try {
+            // Kiểm tra xem email đã đăng ký với provider nào
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            const providerName = methods[0]?.includes('google') ? 'Google' : 
+                                methods[0]?.includes('facebook') ? 'Facebook' : 
+                                'một phương thức khác';
+            
+            showToast.error("Tài khoản đã tồn tại", {
+              description: `Email ${email} đã được đăng ký bằng ${providerName}. Vui lòng đăng nhập bằng ${providerName}.`
+            });
+          } catch (fetchError) {
+            showToast.error("Tài khoản đã tồn tại", {
+              description: "Email này đã được đăng ký với phương thức khác. Vui lòng thử phương thức đăng nhập khác."
+            });
+          }
+        } else {
+          showToast.error("Tài khoản đã tồn tại", {
+            description: "Email này đã được đăng ký với phương thức khác. Vui lòng thử phương thức đăng nhập khác."
+          });
+        }
+      } else {
+        showToast.error("Đăng nhập thất bại", {
+          description: "Có lỗi xảy ra khi đăng nhập với Facebook"
+        });
+      }
     }
   };
 

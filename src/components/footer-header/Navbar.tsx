@@ -157,26 +157,26 @@ const Navbar = () => {
         <div className="md:hidden bg-white/95 backdrop-blur-md animate-fade-in">
           <div className="container mx-auto px-4 py-4">
             <nav className="flex flex-col space-y-2">
-              <MobileNavLink to="/" label="Home" className='text-black'/>
+              <MobileNavLink to="/" label="Trang chủ" className='text-black'/>
               
               <MobileDropdownLink label="Investment">
-                <MobileNavLink to="/investment/stocks" label="Stocks" className="pl-4" />
-                <MobileNavLink to="/investment/crypto" label="Cryptocurrency" className="pl-4" />
+                <MobileNavLink to="/investment/stocks" label="Cổ phiếu chứng khoán" className="pl-4" />
+                <MobileNavLink to="/investment/crypto" label="Tiền điện tử" className="pl-4" />
               </MobileDropdownLink>
               
-              <MobileDropdownLink label="Policy">
-                <MobileNavLink to="/policy/fiscal" label="Fiscal Policy" className="pl-4" />
-                <MobileNavLink to="/policy/monetary" label="Monetary Policy" className="pl-4" />
+              <MobileDropdownLink label="Chính sách">
+                <MobileNavLink to="/policy/fiscal" label="Chính sách tài khóa" className="pl-4" />
+                <MobileNavLink to="/policy/monetary" label="Chính sách tiền tệ" className="pl-4" />
               </MobileDropdownLink>
               
-              <MobileDropdownLink label="Owner">
-                <MobileNavLink to="/owner/profile" label="Profile" className="pl-4" />
-                <MobileNavLink to="/owner/settings" label="Settings" className="pl-4" />
+              <MobileDropdownLink label="Quản lý">
+                <MobileNavLink to="/owner/profile" label="Hồ sơ" className="pl-4" />
+                <MobileNavLink to="/owner/settings" label="Cài đặt" className="pl-4" />
               </MobileDropdownLink>
               
-              <MobileNavLink to="/articles" label="Articles" />
-              <MobileNavLink to="/markets" label="Markets" />
-              <MobileNavLink to="/admin" label="Admin Dashboard" />
+              <MobileNavLink to="/articles" label="Bài viết" />
+              <MobileNavLink to="/markets" label="Thị trường" />
+              <MobileNavLink to="/admin" label="Trang quản trị" />
               <MobileNavLink to="/login" label="Đăng nhập" />
             </nav>
           </div>

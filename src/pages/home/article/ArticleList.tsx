@@ -9,7 +9,7 @@ const mockArticles: ArticleProps[] = [
     description: 'The Impact of Fed Rate Decisions on Stock Market Performance',
     title: 'The Impact of Fed Rate Decisions on Stock Market Performance',
     excerpt: 'A comprehensive analysis of how Federal Reserve interest rate changes have historically affected equity markets.',
-    category: 'Economics',
+    category: 'Kinh tế',
     date: 'May 12, 2023',
     readTime: '7 min read',
     status: "pending",
@@ -25,7 +25,7 @@ const mockArticles: ArticleProps[] = [
     description: 'ESG Investing: Balancing Profit and Responsibility in Your Portfolio',
     title: 'ESG Investing: Balancing Profit and Responsibility in Your Portfolio',
     excerpt: 'How environmental, social, and governance factors are reshaping investment strategies for the modern investor.',
-    category: 'Investing',
+    category: 'Đầu tư',
     date: 'May 8, 2023',
     readTime: '5 min read',
     status: "pending",
@@ -40,7 +40,7 @@ const mockArticles: ArticleProps[] = [
     description: 'Quarterly Earnings Guide: What Numbers Really Matter',
     title: 'Quarterly Earnings Guide: What Numbers Really Matter',
     excerpt: 'Beyond EPS and revenue: The key metrics that intelligent investors focus on during earnings season.',
-    category: 'Analysis',
+    category: 'Phân tích',
     date: 'May 5, 2023',
     readTime: '6 min read',
     status: "pending",
@@ -56,7 +56,7 @@ const mockArticles: ArticleProps[] = [
     description: 'Cryptocurrency and Traditional Markets: The Convergence',
     title: 'Cryptocurrency and Traditional Markets: The Convergence',
     excerpt: 'How digital assets are increasingly influencing and correlating with conventional financial markets.',
-    category: 'Cryptocurrency',
+    category: 'Tiền điện tử',
     date: 'May 3, 2023',
     readTime: '8 min read',
     status: "pending",
@@ -71,7 +71,7 @@ const mockArticles: ArticleProps[] = [
     description: 'Tech Stock Analysis: Valuations in a Post-Pandemic World',
     title: 'Tech Stock Analysis: Valuations in a Post-Pandemic World',
     excerpt: 'As the world adjusts to post-pandemic realities, tech stocks face new challenges and opportunities.',
-    category: 'Technology',
+    category: 'Công nghệ',
     date: 'Apr 28, 2023',
     readTime: '6 min read',
     status: "pending",
@@ -86,7 +86,7 @@ const mockArticles: ArticleProps[] = [
     description: 'The Small Cap Advantage: Finding Hidden Gems in Today\'s Market',
     title: 'The Small Cap Advantage: Finding Hidden Gems in Today\'s Market',
     excerpt: 'Why smaller companies might offer outsized returns for investors willing to accept additional risk.',
-    category: 'Investing',
+    category: 'Đầu tư',
     date: 'Apr 25, 2023',
     readTime: '5 min read',
     status: "pending",
@@ -132,10 +132,10 @@ const Articles = () => {
           {/* Page header */}
           <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
             <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Stock Market Articles & Insights
+              Bài viết về tài chính
             </h1>
             <p className="text-foreground/70 text-lg">
-              Explore our collection of articles, analysis, and expert opinions on financial markets.
+              Khám phá bộ sưu tập bài viết, phân tích và ý kiến chuyên gia về thị trường tài chính.
             </p>
           </div>
           
@@ -146,7 +146,7 @@ const Articles = () => {
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60" />
               <input
                 type="text"
-                placeholder="Search articles..."
+                placeholder="Tìm kiếm bài viết..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
@@ -157,7 +157,7 @@ const Articles = () => {
             <div className="flex items-center space-x-3">
               <div className="flex items-center text-sm text-foreground/80">
                 <Filter size={16} className="mr-2" />
-                <span>Filter:</span>
+                <span>Lọc:</span>
               </div>
               
               <div className="flex flex-wrap gap-2">
@@ -169,7 +169,7 @@ const Articles = () => {
                       : 'bg-secondary text-foreground/80 hover:bg-secondary/80'
                   } transition-colors`}
                 >
-                  All
+                  Tất cả
                 </button>
                 
                 {categories.map(category => (
@@ -203,7 +203,7 @@ const Articles = () => {
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-lg text-foreground/70">No articles found matching your criteria.</p>
+              <p className="text-lg text-foreground/70">Không tìm thấy bài viết phù hợp với tiêu chí của bạn.</p>
               <button
                 onClick={() => {
                   setSearchTerm('');
@@ -211,7 +211,7 @@ const Articles = () => {
                 }}
                 className="mt-4 inline-flex items-center justify-center h-10 px-4 rounded-md bg-secondary text-foreground/80 font-medium hover:bg-secondary/80 transition-colors"
               >
-                Clear filters
+                Xóa bộ lọc
               </button>
             </div>
           )}

@@ -315,19 +315,19 @@ const HeroSlides = () => {
     <AdminLayout>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Hero Slides Manager</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Quản lí slide</h1>
           <div className="flex items-center gap-2">
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
-                  <Plus className="mr-2 h-4 w-4" /> Create New Slide
+                  <Plus className="mr-2 h-4 w-4" /> Tạo slide mới
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Create New Slide</DialogTitle>
+                  <DialogTitle>Tạo slide mới</DialogTitle>
                   <DialogDescription>
-                    Add a new slide to your hero carousel. Upload an image and provide details below.
+                    Thêm một slide mới vào carousel của bạn. Tải lên hình ảnh và cung cấp chi tiết bên dưới.
                   </DialogDescription>
                 </DialogHeader>
                 
@@ -335,7 +335,7 @@ const HeroSlides = () => {
                   <form onSubmit={newSlideForm.handleSubmit(createNewSlide)} className="space-y-4">
                     {/* Image Upload */}
                     <div className="space-y-2">
-                      <Label>Slide Image</Label>
+                      <Label>Hình ảnh slide</Label>
                       <div className="mb-2">
                         <AspectRatio ratio={16 / 9} className="bg-muted overflow-hidden rounded-md border">
                           {newSlideImage ? (
@@ -357,7 +357,7 @@ const HeroSlides = () => {
                           className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
                         >
                           <ImagePlus className="mr-2 h-4 w-4" />
-                          Upload Image
+                          Tải lên hình ảnh
                         </Label>
                         <Input 
                           id="new-slide-image" 
@@ -374,7 +374,7 @@ const HeroSlides = () => {
                             onClick={removeNewSlideImage}
                           >
                             <X className="mr-2 h-4 w-4" />
-                            Remove Image
+                            Xóa hình ảnh
                           </Button>
                         )}
                       </div>
@@ -386,9 +386,9 @@ const HeroSlides = () => {
                       name="heading"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Heading</FormLabel>
+                          <FormLabel>Tiêu đề</FormLabel>
                           <FormControl>
-                            <Input placeholder="Slide heading" {...field} />
+                            <Input placeholder="Tiêu đề slide" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -400,9 +400,9 @@ const HeroSlides = () => {
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>Mô tả</FormLabel>
                           <FormControl>
-                            <Input placeholder="Slide description" {...field} />
+                            <Input placeholder="Mô tả slide" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -419,7 +419,7 @@ const HeroSlides = () => {
                             <Input placeholder="Image alt text" {...field} />
                           </FormControl>
                           <FormDescription>
-                            Describe the image for accessibility
+                            Mô tả hình ảnh cho truy cập bằng văn bản
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -428,7 +428,7 @@ const HeroSlides = () => {
                     
                     <DialogFooter>
                       <Button type="submit" className="w-full">
-                        Create Slide
+                        Tạo slide
                       </Button>
                     </DialogFooter>
                   </form>
@@ -437,15 +437,15 @@ const HeroSlides = () => {
             </Dialog>
             
             <Button onClick={handleSaveAll}>
-              <Save className="mr-2 h-4 w-4" /> Save All Changes
+              <Save className="mr-2 h-4 w-4" /> Lưu tất cả thay đổi
             </Button>
           </div>
         </div>
 
         <Tabs defaultValue="slides" className="w-full">
           <TabsList>
-            <TabsTrigger value="slides">Slides Management</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="slides">Quản lí slide</TabsTrigger>
+            <TabsTrigger value="preview">Xem trước</TabsTrigger>
           </TabsList>
           
           <TabsContent value="slides" className="space-y-4">
@@ -454,7 +454,7 @@ const HeroSlides = () => {
               <div className="md:col-span-1 space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Slides</CardTitle>
+                    <CardTitle>Quản lí slide</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
@@ -510,12 +510,12 @@ const HeroSlides = () => {
                 {activeSlide ? (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Edit Slide</CardTitle>
+                      <CardTitle>Chỉnh sửa slide</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {/* Image Upload */}
                       <div className="space-y-2">
-                        <Label>Slide Image</Label>
+                        <Label>Hình ảnh slide</Label>
                         <div className="mb-4">
                           <AspectRatio ratio={16 / 9} className="bg-muted overflow-hidden rounded-md border">
                             {previewImage && (
@@ -533,7 +533,7 @@ const HeroSlides = () => {
                             className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
                           >
                             <ImagePlus className="mr-2 h-4 w-4" />
-                            Upload Image
+                            Tải lên hình ảnh
                           </Label>
                           <Input 
                             id="image-upload" 
@@ -549,7 +549,7 @@ const HeroSlides = () => {
                               onClick={removeUploadedImage}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Remove Uploaded
+                              Xóa hình ảnh đã tải lên
                             </Button>
                           )}
                         </div>
@@ -563,9 +563,9 @@ const HeroSlides = () => {
                             name="heading"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Heading</FormLabel>
+                                <FormLabel>Tiêu đề</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Slide heading" {...field} />
+                                  <Input placeholder="Tiêu đề slide" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -577,9 +577,9 @@ const HeroSlides = () => {
                             name="description"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Description</FormLabel>
+                                <FormLabel>Mô tả</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Slide description" {...field} />
+                                  <Input placeholder="Mô tả slide" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -591,12 +591,12 @@ const HeroSlides = () => {
                             name="alt"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Alt Text</FormLabel>
+                                <FormLabel>Mô tả hình ảnh</FormLabel>
                                 <FormControl>
                                   <Input placeholder="Image alt text" {...field} />
                                 </FormControl>
                                 <FormDescription>
-                                  Describe the image for accessibility
+                                  Mô tả hình ảnh cho truy cập bằng văn bản
                                 </FormDescription>
                                 <FormMessage />
                               </FormItem>
@@ -604,7 +604,7 @@ const HeroSlides = () => {
                           />
                           
                           <Button type="submit" className="w-full">
-                            Update Slide
+                            Cập nhật slide
                           </Button>
                         </form>
                       </Form>
@@ -615,7 +615,7 @@ const HeroSlides = () => {
                     <CardContent className="pt-6">
                       <div className="flex flex-col items-center justify-center h-[300px] text-center">
                         <p className="text-muted-foreground">
-                          Select a slide from the list to edit or create a new slide
+                          Chọn một slide từ danh sách để chỉnh sửa hoặc tạo slide mới
                         </p>
                       </div>
                     </CardContent>
@@ -629,7 +629,7 @@ const HeroSlides = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <h3 className="font-medium">Preview how slides will appear:</h3>
+                  <h3 className="font-medium">Xem trước cách slide sẽ hiển thị:</h3>
                   <div className="border rounded-lg overflow-hidden">
                     <AspectRatio ratio={16 / 9} className="bg-muted">
                       {activeSlide && (
@@ -653,14 +653,14 @@ const HeroSlides = () => {
                       {!activeSlide && (
                         <div className="flex items-center justify-center h-full">
                           <p className="text-muted-foreground">
-                            Select a slide to preview
+                            Chọn một slide để xem trước
                           </p>
                         </div>
                       )}
                     </AspectRatio>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    <p>Note: The preview shows approximately how the slide will look on the home page.</p>
+                    <p>Lưu ý: Xem trước cho biết sắp xếp cách slide sẽ hiển thị trên trang chủ.</p>
                   </div>
                 </div>
               </CardContent>

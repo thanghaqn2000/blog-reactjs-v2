@@ -6,6 +6,8 @@ import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
+import ChatPlugin from "./components/ChatPlugin";
+import { ChatProvider } from "./contexts/ChatContext";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
 import HeroSlides from "./pages/admin/HeroSlides";
@@ -30,60 +32,63 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <PostsProvider>
-        <Toaster />
-        <Sonner position="top-right" />
-        <BrowserRouter>
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              
-              {/* Authentication routes */}
-              <Route path="/login" element={<Login />} />
-              
-              {/* Admin routes */}
-              <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
-              <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
-              <Route path="/admin/posts" element={<AdminRoute><Posts /></AdminRoute>} />
-              <Route path="/admin/posts/create" element={<AdminRoute><CreatePost /></AdminRoute>} />
-              <Route path="/admin/posts/edit/:id" element={<AdminRoute><EditPost /></AdminRoute>} />
-              <Route path="/admin/posts/detail/:id" element={<AdminRoute><PostDetail /></AdminRoute>} />
-              <Route path="/admin/hero-slides" element={<AdminRoute><HeroSlides /></AdminRoute>} />
-              <Route path="/admin/analytics" element={<AdminRoute><Dashboard /></AdminRoute>} />
-              <Route path="/admin/notifications" element={<AdminRoute><NotificationsManagement /></AdminRoute>} />
-              <Route path="/admin/notifications/:id" element={<AdminRoute><NotificationDetail /></AdminRoute>} />
-              <Route path="/admin/settings" element={<AdminRoute><Dashboard /></AdminRoute>} />
-              
-              {/* VIP News route */}
-              <Route path="/vip-news" element={<VipNews />} />
-              
-              {/* Investment routes */}
-              <Route path="/investment/stocks" element={<NotFound />} />
-              <Route path="/investment/crypto" element={<NotFound />} />
-              
-              {/* Policy routes */}
-              <Route path="/policy/fiscal" element={<NotFound />} />
-              <Route path="/policy/monetary" element={<NotFound />} />
-              
-              {/* Owner routes */}
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/owner/settings" element={<NotFound />} />
-              
-              {/* Original routes */}
-              <Route path="/articles" element={<Articles />} />
-              <Route path="/article/:id" element={<Article />} />
-              <Route path="/markets" element={<NotFound />} />
-              
-              {/* Auth callback route */}
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              
-              {/* 404 route */}
-              <Route path="/404" element={<NotFound />} />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AnimatePresence>
-        </BrowserRouter>
+        <ChatProvider>
+          <Toaster />
+          <Sonner position="top-right" />
+          <BrowserRouter>
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                
+                {/* Authentication routes */}
+                <Route path="/login" element={<Login />} />
+                
+                {/* Admin routes */}
+                <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
+                <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+                <Route path="/admin/posts" element={<AdminRoute><Posts /></AdminRoute>} />
+                <Route path="/admin/posts/create" element={<AdminRoute><CreatePost /></AdminRoute>} />
+                <Route path="/admin/posts/edit/:id" element={<AdminRoute><EditPost /></AdminRoute>} />
+                <Route path="/admin/posts/detail/:id" element={<AdminRoute><PostDetail /></AdminRoute>} />
+                <Route path="/admin/hero-slides" element={<AdminRoute><HeroSlides /></AdminRoute>} />
+                <Route path="/admin/analytics" element={<AdminRoute><Dashboard /></AdminRoute>} />
+                <Route path="/admin/notifications" element={<AdminRoute><NotificationsManagement /></AdminRoute>} />
+                <Route path="/admin/notifications/:id" element={<AdminRoute><NotificationDetail /></AdminRoute>} />
+                <Route path="/admin/settings" element={<AdminRoute><Dashboard /></AdminRoute>} />
+                
+                {/* VIP News route */}
+                <Route path="/vip-news" element={<VipNews />} />
+                
+                {/* Investment routes */}
+                <Route path="/investment/stocks" element={<NotFound />} />
+                <Route path="/investment/crypto" element={<NotFound />} />
+                
+                {/* Policy routes */}
+                <Route path="/policy/fiscal" element={<NotFound />} />
+                <Route path="/policy/monetary" element={<NotFound />} />
+                
+                {/* Owner routes */}
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/owner/settings" element={<NotFound />} />
+                
+                {/* Original routes */}
+                <Route path="/articles" element={<Articles />} />
+                <Route path="/article/:id" element={<Article />} />
+                <Route path="/markets" element={<NotFound />} />
+                
+                {/* Auth callback route */}
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                
+                {/* 404 route */}
+                <Route path="/404" element={<NotFound />} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AnimatePresence>
+            <ChatPlugin />
+          </BrowserRouter>
+        </ChatProvider>
       </PostsProvider>
     </TooltipProvider>
   </QueryClientProvider>

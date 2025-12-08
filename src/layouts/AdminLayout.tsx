@@ -1,20 +1,20 @@
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { cn } from '@/lib/utils';
+import { BarChart3, Bell, ChevronLeft, FileText, Image, LayoutDashboard, LogOut, Menu, Settings, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, LayoutDashboard, Users, Settings, BarChart3, FileText, Bell, LogOut, Menu, X, Image } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { cn } from '@/lib/utils';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuGroup, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -91,7 +91,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           {!collapsed && (
             <Link to="/admin" className="flex items-center gap-2 font-display font-semibold text-primary">
               <LayoutDashboard size={20} />
-              <span>Admin Dashboard</span>
+              <span>Trang quản trị</span>
             </Link>
           )}
           <Button 
@@ -109,13 +109,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Sidebar Content */}
         <nav className="flex-1 overflow-auto py-4">
           <div className="px-3 space-y-1">
-            <NavItem icon={LayoutDashboard} label="Dashboard" to="/admin" collapsed={collapsed} />
-            <NavItem icon={Users} label="Users" to="/admin/users" collapsed={collapsed} />
-            <NavItem icon={FileText} label="Posts" to="/admin/posts" collapsed={collapsed} />
-            <NavItem icon={Image} label="Hero Slides" to="/admin/hero-slides" collapsed={collapsed} />
-            <NavItem icon={BarChart3} label="Analytics" to="/admin/analytics" collapsed={collapsed} />
-            <NavItem icon={Bell} label="Notifications" to="/admin/notifications" collapsed={collapsed} />
-            <NavItem icon={Settings} label="Settings" to="/admin/settings" collapsed={collapsed} />
+            <NavItem icon={LayoutDashboard} label="Trang chủ" to="/admin" collapsed={collapsed} />
+            <NavItem icon={Users} label="Quản lí người dùng" to="/admin/users" collapsed={collapsed} />
+            <NavItem icon={FileText} label="Quản lí bài viết" to="/admin/posts" collapsed={collapsed} />
+            <NavItem icon={Image} label="Quản lí hình ảnh" to="/admin/hero-slides" collapsed={collapsed} />
+            <NavItem icon={BarChart3} label="Quản lí thống kê" to="/admin/analytics" collapsed={collapsed} />
+            <NavItem icon={Bell} label="Quản lí thông báo" to="/admin/notifications" collapsed={collapsed} />
+            <NavItem icon={Settings} label="Quản lí cài đặt" to="/admin/settings" collapsed={collapsed} />
           </div>
         </nav>
 
@@ -133,7 +133,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             ) : (
               <>
                 <LogOut size={18} />
-                <span>Back to Site</span>
+                <span>Quay về trang chủ</span>
               </>
             )}
           </Link>
@@ -144,7 +144,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-white px-4 md:hidden">
         <Link to="/admin" className="flex items-center gap-2 font-display font-semibold text-primary">
           <LayoutDashboard size={20} />
-          <span>Admin Dashboard</span>
+          <span>Trang quản trị</span>
         </Link>
         
         {/* Mobile Notification Icon */}
@@ -169,7 +169,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <div className="flex h-16 items-center justify-between border-b px-4">
               <Link to="/admin" className="flex items-center gap-2 font-display font-semibold text-primary">
                 <LayoutDashboard size={20} />
-                <span>Admin Dashboard</span>
+                <span>Trang quản trị</span>
               </Link>
               <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
                 <X size={20} />
@@ -177,13 +177,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
             <nav className="flex-1 overflow-auto py-4">
               <div className="px-3 space-y-1">
-                <NavItem icon={LayoutDashboard} label="Dashboard" to="/admin" collapsed={false} />
+                <NavItem icon={LayoutDashboard} label="Trang chủ" to="/admin" collapsed={false} />
                 <NavItem icon={Users} label="Users" to="/admin/users" collapsed={false} />
-                <NavItem icon={FileText} label="Posts" to="/admin/posts" collapsed={false} />
-                <NavItem icon={Image} label="Hero Slides" to="/admin/hero-slides" collapsed={false} />
-                <NavItem icon={BarChart3} label="Analytics" to="/admin/analytics" collapsed={false} />
-                <NavItem icon={Bell} label="Notifications" to="/admin/notifications" collapsed={false} />
-                <NavItem icon={Settings} label="Settings" to="/admin/settings" collapsed={false} />
+                <NavItem icon={FileText} label="Quản lí bài viết" to="/admin/posts" collapsed={false} />
+                <NavItem icon={Image} label="Quản lí hình ảnh" to="/admin/hero-slides" collapsed={false} />
+                <NavItem icon={BarChart3} label="Quản lí thống kê" to="/admin/analytics" collapsed={false} />
+                <NavItem icon={Bell} label="Quản lí thông báo" to="/admin/notifications" collapsed={false} />
+                <NavItem icon={Settings} label="Quản lí cài đặt" to="/admin/settings" collapsed={false} />
               </div>
             </nav>
             <div className="mt-auto border-t p-3">
@@ -192,7 +192,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 className="flex items-center gap-2 rounded-md py-2 px-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <LogOut size={18} />
-                <span>Back to Site</span>
+                <span>Quay về trang chủ</span>
               </Link>
             </div>
           </div>
