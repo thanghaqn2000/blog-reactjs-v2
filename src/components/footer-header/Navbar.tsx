@@ -1,18 +1,18 @@
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { showToast } from '@/config/toast.config';
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
-  faBars,
-  faChevronDown,
-  faSignOutAlt,
-  faTimes,
-  faUser
+    faBars,
+    faChevronDown,
+    faSignOutAlt,
+    faTimes,
+    faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from 'react';
@@ -175,6 +175,7 @@ const Navbar = () => {
               </MobileDropdownLink>
               
               <MobileNavLink to="/articles" label="Bài viết" />
+              <MobileNavLink to="/chat" label="Chat AI" />
               <MobileNavLink to="/markets" label="Thị trường" />
               <MobileNavLink to="/admin" label="Trang quản trị" />
               <MobileNavLink to="/login" label="Đăng nhập" />

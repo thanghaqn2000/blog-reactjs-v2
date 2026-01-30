@@ -1,10 +1,18 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-interface Message {
+export interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface ChatContextType {
@@ -18,9 +26,31 @@ interface ChatContextType {
   setShowQuickReplies: (value: boolean) => void;
   isLoading: boolean;
   setIsLoading: (value: boolean) => void;
+  // New multi-conversation support
+  conversations: Conversation[];
+  currentConversationId: string | null;
+  createNewConversation: () => void;
+  switchConversation: (conversationId: string) => void;
+  deleteConversation: (conversationId: string) => void;
+  updateConversationTitle: (conversationId: string, title: string) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+const createDefaultConversation = (): Conversation => ({
+  id: Date.now().toString(),
+  title: 'Cuộc hội thoại mới',
+  messages: [
+    {
+      id: '1',
+      text: 'Xin chào! Tôi là trợ lý ảo. Tôi có thể giúp gì cho bạn?',
+      sender: 'bot',
+      timestamp: new Date(),
+    },
+  ],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+});
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(() => {
@@ -30,47 +60,112 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [isVisible, setIsVisible] = useState(false);
 
-  const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = localStorage.getItem('chatMessages');
-    const savedTime = localStorage.getItem('chatMessagesTime');
-    
-    if (saved && savedTime) {
-      const savedTimestamp = parseInt(savedTime);
-      const currentTime = Date.now();
-      const oneHourInMs = 60 * 60 * 1000; // 1 giờ = 3600000 ms
-      
-      // Kiểm tra xem đã quá 1 tiếng chưa
-      if (currentTime - savedTimestamp < oneHourInMs) {
+  // Multi-conversation support
+  const [conversations, setConversations] = useState<Conversation[]>(() => {
+    const saved = localStorage.getItem('chatConversations');
+    if (saved) {
+      try {
         const parsed = JSON.parse(saved);
-        // Convert timestamp strings back to Date objects
-        return parsed.map((msg: Message) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp),
+        return parsed.map((conv: Conversation) => ({
+          ...conv,
+          createdAt: new Date(conv.createdAt),
+          updatedAt: new Date(conv.updatedAt),
+          messages: conv.messages.map((msg: Message) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+          })),
         }));
-      } else {
-        // Đã quá 1 tiếng, xóa lịch sử
-        localStorage.removeItem('chatMessages');
-        localStorage.removeItem('chatMessagesTime');
+      } catch (error) {
+        console.error('Failed to parse conversations:', error);
       }
     }
-    
-    // Return tin nhắn chào mừng mặc định
-    return [
-      {
-        id: '1',
-        text: 'Xin chào! Tôi là trợ lý ảo. Tôi có thể giúp gì cho bạn?',
-        sender: 'bot',
-        timestamp: new Date(),
-      },
-    ];
+    // Create default conversation
+    return [createDefaultConversation()];
   });
 
-  const [showQuickReplies, setShowQuickReplies] = useState(() => {
-    const saved = localStorage.getItem('chatShowQuickReplies');
-    return saved ? JSON.parse(saved) : true;
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(() => {
+    const saved = localStorage.getItem('currentConversationId');
+    return saved || (conversations.length > 0 ? conversations[0].id : null);
   });
 
+  // Legacy states for backward compatibility
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get messages from current conversation (derived state)
+  const currentConversation = conversations.find(c => c.id === currentConversationId);
+  const messages = currentConversation?.messages || [];
+
+  // Custom setMessages that updates the conversation directly
+  const setMessages = (
+    updater: Message[] | ((prev: Message[]) => Message[])
+  ) => {
+    setConversations(prev => 
+      prev.map(conv => {
+        if (conv.id !== currentConversationId) return conv;
+        
+        const currentMessages = conv.messages;
+        const newMessages = typeof updater === 'function' 
+          ? updater(currentMessages)
+          : updater;
+        
+        // Auto-update title from first user message
+        const shouldUpdateTitle = conv.messages.length === 1 && newMessages.length > 1;
+        const newTitle = shouldUpdateTitle
+          ? newMessages.find(m => m.sender === 'user')?.text.slice(0, 30) + '...' || conv.title
+          : conv.title;
+        
+        return {
+          ...conv,
+          messages: newMessages,
+          title: newTitle,
+          updatedAt: new Date(),
+        };
+      })
+    );
+  };
+
+  // Create new conversation
+  const createNewConversation = () => {
+    const newConv = createDefaultConversation();
+    setConversations(prev => [newConv, ...prev]);
+    setCurrentConversationId(newConv.id);
+    setShowQuickReplies(true);
+  };
+
+  // Switch conversation
+  const switchConversation = (conversationId: string) => {
+    setCurrentConversationId(conversationId);
+    setShowQuickReplies(false);
+  };
+
+  // Delete conversation
+  const deleteConversation = (conversationId: string) => {
+    setConversations(prev => {
+      const filtered = prev.filter(c => c.id !== conversationId);
+      // If deleting current conversation, switch to another
+      if (conversationId === currentConversationId) {
+        if (filtered.length > 0) {
+          setCurrentConversationId(filtered[0].id);
+        } else {
+          // Create new conversation if no conversations left
+          const newConv = createDefaultConversation();
+          setCurrentConversationId(newConv.id);
+          return [newConv];
+        }
+      }
+      return filtered;
+    });
+  };
+
+  // Update conversation title
+  const updateConversationTitle = (conversationId: string, title: string) => {
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === conversationId ? { ...conv, title, updatedAt: new Date() } : conv
+      )
+    );
+  };
 
   // Auto show chat after 2 seconds on first load
   useEffect(() => {
@@ -86,57 +181,22 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Kiểm tra và tự động xóa lịch sử chat sau 1 tiếng
+  // Persist conversations to localStorage
   useEffect(() => {
-    const checkAndClearOldMessages = () => {
-      const savedTime = localStorage.getItem('chatMessagesTime');
-      if (savedTime) {
-        const savedTimestamp = parseInt(savedTime);
-        const currentTime = Date.now();
-        const oneHourInMs = 60 * 60 * 1000; // 1 giờ
-        
-        // Nếu đã quá 1 tiếng, reset về tin nhắn chào mừng
-        if (currentTime - savedTimestamp >= oneHourInMs) {
-          setMessages([
-            {
-              id: '1',
-              text: 'Xin chào! Tôi là trợ lý ảo. Tôi có thể giúp gì cho bạn?',
-              sender: 'bot',
-              timestamp: new Date(),
-            },
-          ]);
-          setShowQuickReplies(true);
-          localStorage.removeItem('chatMessages');
-          localStorage.removeItem('chatMessagesTime');
-        }
-      }
-    };
+    localStorage.setItem('chatConversations', JSON.stringify(conversations));
+  }, [conversations]);
 
-    // Kiểm tra ngay lập tức
-    checkAndClearOldMessages();
-
-    // Kiểm tra mỗi 1 phút
-    const interval = setInterval(checkAndClearOldMessages, 60000);
-
-    return () => clearInterval(interval);
-  }, [setMessages, setShowQuickReplies]);
+  // Persist current conversation ID
+  useEffect(() => {
+    if (currentConversationId) {
+      localStorage.setItem('currentConversationId', currentConversationId);
+    }
+  }, [currentConversationId]);
 
   // Persist isOpen to localStorage
   useEffect(() => {
     localStorage.setItem('chatIsOpen', JSON.stringify(isOpen));
   }, [isOpen]);
-
-  // Persist messages to localStorage với timestamp
-  useEffect(() => {
-    localStorage.setItem('chatMessages', JSON.stringify(messages));
-    // Lưu timestamp hiện tại để theo dõi thời gian
-    localStorage.setItem('chatMessagesTime', Date.now().toString());
-  }, [messages]);
-
-  // Persist showQuickReplies to localStorage
-  useEffect(() => {
-    localStorage.setItem('chatShowQuickReplies', JSON.stringify(showQuickReplies));
-  }, [showQuickReplies]);
 
   return (
     <ChatContext.Provider
@@ -151,6 +211,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setShowQuickReplies,
         isLoading,
         setIsLoading,
+        conversations,
+        currentConversationId,
+        createNewConversation,
+        switchConversation,
+        deleteConversation,
+        updateConversationTitle,
       }}
     >
       {children}

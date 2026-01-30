@@ -6,7 +6,6 @@ import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
-import ChatPlugin from "./components/ChatPlugin";
 import { ChatProvider } from "./contexts/ChatContext";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
@@ -18,6 +17,7 @@ import EditPost from "./pages/admin/posts/EditPost";
 import PostDetail from "./pages/admin/posts/PostDetail";
 import Posts from "./pages/admin/posts/Posts";
 import UserManagement from "./pages/admin/users/UserManagement";
+import ChatPage from "./pages/client/ChatPage";
 import Profile from "./pages/client/Profile";
 import Article from "./pages/home/article/ArticleDetail";
 import Articles from "./pages/home/article/ArticleList";
@@ -71,6 +71,9 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/owner/settings" element={<NotFound />} />
                 
+                {/* Chat route */}
+                <Route path="/chat" element={<ChatPage />} />
+                
                 {/* Original routes */}
                 <Route path="/articles" element={<Articles />} />
                 <Route path="/article/:id" element={<Article />} />
@@ -86,7 +89,6 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnimatePresence>
-            <ChatPlugin />
           </BrowserRouter>
         </ChatProvider>
       </PostsProvider>
