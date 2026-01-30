@@ -6,6 +6,7 @@ import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { ChatProvider } from "./contexts/ChatContext";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
@@ -71,8 +72,8 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/owner/settings" element={<NotFound />} />
                 
-                {/* Chat route */}
-                <Route path="/chat" element={<ChatPage />} />
+                {/* Chat route - Protected */}
+                <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 
                 {/* Original routes */}
                 <Route path="/articles" element={<Articles />} />

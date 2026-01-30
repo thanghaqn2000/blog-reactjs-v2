@@ -1,202 +1,253 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  chatbotService,
+  ChatMessage,
+  Conversation,
+  QuotaInfo
+} from '@/services/chatbot.service';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-export interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-}
-
-export interface Conversation {
-  id: string;
-  title: string;
-  messages: Message[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type { Conversation, ChatMessage as Message };
 
 interface ChatContextType {
+  // Legacy states for backward compatibility
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
   isVisible: boolean;
   setIsVisible: (value: boolean) => void;
-  messages: Message[];
-  setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
+  messages: ChatMessage[];
+  setMessages: (messages: ChatMessage[]) => void;
   showQuickReplies: boolean;
   setShowQuickReplies: (value: boolean) => void;
   isLoading: boolean;
   setIsLoading: (value: boolean) => void;
-  // New multi-conversation support
+  
+  // New API-based states
+  quota: QuotaInfo | null;
   conversations: Conversation[];
-  currentConversationId: string | null;
-  createNewConversation: () => void;
-  switchConversation: (conversationId: string) => void;
-  deleteConversation: (conversationId: string) => void;
-  updateConversationTitle: (conversationId: string, title: string) => void;
+  currentConversationId: number | null;
+  
+  // Actions
+  refreshQuota: () => Promise<void>;
+  refreshConversations: () => Promise<void>;
+  createNewConversation: (title?: string) => Promise<void>;
+  switchConversation: (conversationId: number) => Promise<void>;
+  deleteConversation: (conversationId: number) => Promise<void>;
+  updateConversationTitle: (conversationId: number, title: string) => Promise<void>;
+  sendMessage: (content: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-const createDefaultConversation = (): Conversation => ({
-  id: Date.now().toString(),
-  title: 'Cuộc hội thoại mới',
-  messages: [
-    {
-      id: '1',
-      text: 'Xin chào! Tôi là trợ lý ảo. Tôi có thể giúp gì cho bạn?',
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-});
-
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isOpen, setIsOpen] = useState(() => {
-    const saved = localStorage.getItem('chatIsOpen');
-    return saved ? JSON.parse(saved) : true;
-  });
-
-  const [isVisible, setIsVisible] = useState(false);
-
-  // Multi-conversation support
-  const [conversations, setConversations] = useState<Conversation[]>(() => {
-    const saved = localStorage.getItem('chatConversations');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return parsed.map((conv: Conversation) => ({
-          ...conv,
-          createdAt: new Date(conv.createdAt),
-          updatedAt: new Date(conv.updatedAt),
-          messages: conv.messages.map((msg: Message) => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp),
-          })),
-        }));
-      } catch (error) {
-        console.error('Failed to parse conversations:', error);
-      }
-    }
-    // Create default conversation
-    return [createDefaultConversation()];
-  });
-
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(() => {
-    const saved = localStorage.getItem('currentConversationId');
-    return saved || (conversations.length > 0 ? conversations[0].id : null);
-  });
-
-  // Legacy states for backward compatibility
+  // Get auth state
+  const { token } = useAuth();
+  
+  // Legacy states
+  const [isOpen, setIsOpen] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // API-based states
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  // Get messages from current conversation (derived state)
-  const currentConversation = conversations.find(c => c.id === currentConversationId);
-  const messages = currentConversation?.messages || [];
+  // Load quota on mount
+  const refreshQuota = useCallback(async () => {
+    try {
+      const quotaData = await chatbotService.getQuota();
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to load quota:', error);
+    }
+  }, []);
 
-  // Custom setMessages that updates the conversation directly
-  const setMessages = (
-    updater: Message[] | ((prev: Message[]) => Message[])
-  ) => {
-    setConversations(prev => 
-      prev.map(conv => {
-        if (conv.id !== currentConversationId) return conv;
-        
-        const currentMessages = conv.messages;
-        const newMessages = typeof updater === 'function' 
-          ? updater(currentMessages)
-          : updater;
-        
-        // Auto-update title from first user message
-        const shouldUpdateTitle = conv.messages.length === 1 && newMessages.length > 1;
-        const newTitle = shouldUpdateTitle
-          ? newMessages.find(m => m.sender === 'user')?.text.slice(0, 30) + '...' || conv.title
-          : conv.title;
-        
-        return {
-          ...conv,
-          messages: newMessages,
-          title: newTitle,
-          updatedAt: new Date(),
-        };
-      })
-    );
-  };
+  // Load conversations on mount
+  const refreshConversations = useCallback(async () => {
+    try {
+      const convs = await chatbotService.getConversations();
+      setConversations(convs);
+      
+      // If no current conversation, select the first one
+      // Use functional update to avoid stale closure
+      setCurrentConversationId(prevId => {
+        if (!prevId && convs.length > 0) {
+          return convs[0].id;
+        }
+        return prevId;
+      });
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+    }
+  }, []);
+
+  // Load messages when conversation changes
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (currentConversationId) {
+        try {
+          const conv = await chatbotService.getConversation(currentConversationId);
+          setMessages(conv.messages || []);
+        } catch (error) {
+          console.error('Failed to load messages:', error);
+          setMessages([]);
+        }
+      } else {
+        setMessages([]);
+      }
+    };
+
+    loadMessages();
+  }, [currentConversationId]);
+
+  // Initial load - only when authenticated (has token)
+  useEffect(() => {
+    if (token) {
+      refreshQuota();
+      refreshConversations();
+    }
+  }, [token, refreshQuota, refreshConversations]);
 
   // Create new conversation
-  const createNewConversation = () => {
-    const newConv = createDefaultConversation();
-    setConversations(prev => [newConv, ...prev]);
-    setCurrentConversationId(newConv.id);
-    setShowQuickReplies(true);
+  const createNewConversation = async (title?: string) => {
+    try {
+      const newConv = await chatbotService.createConversation(title);
+      setConversations(prev => [newConv, ...prev]);
+      setCurrentConversationId(newConv.id);
+      setShowQuickReplies(true);
+      setMessages([]);
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
+      throw error;
+    }
   };
 
   // Switch conversation
-  const switchConversation = (conversationId: string) => {
+  const switchConversation = async (conversationId: number) => {
     setCurrentConversationId(conversationId);
     setShowQuickReplies(false);
   };
 
   // Delete conversation
-  const deleteConversation = (conversationId: string) => {
-    setConversations(prev => {
-      const filtered = prev.filter(c => c.id !== conversationId);
+  const deleteConversation = async (conversationId: number) => {
+    try {
+      await chatbotService.deleteConversation(conversationId);
+      
+      // Calculate remaining conversations before state update
+      const remaining = conversations.filter(c => c.id !== conversationId);
+      
+      // Remove from local state
+      setConversations(remaining);
+      
       // If deleting current conversation, switch to another
       if (conversationId === currentConversationId) {
-        if (filtered.length > 0) {
-          setCurrentConversationId(filtered[0].id);
+        if (remaining.length > 0) {
+          setCurrentConversationId(remaining[0].id);
         } else {
-          // Create new conversation if no conversations left
-          const newConv = createDefaultConversation();
-          setCurrentConversationId(newConv.id);
-          return [newConv];
+          setCurrentConversationId(null);
+          setMessages([]);
         }
       }
-      return filtered;
-    });
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      throw error;
+    }
   };
 
   // Update conversation title
-  const updateConversationTitle = (conversationId: string, title: string) => {
-    setConversations(prev =>
-      prev.map(conv =>
-        conv.id === conversationId ? { ...conv, title, updatedAt: new Date() } : conv
-      )
-    );
+  const updateConversationTitle = async (conversationId: number, title: string) => {
+    try {
+      const updatedConv = await chatbotService.updateConversationTitle(conversationId, title);
+      
+      // Update local state
+      setConversations(prev =>
+        prev.map(conv => conv.id === conversationId ? updatedConv : conv)
+      );
+    } catch (error) {
+      console.error('Failed to update conversation title:', error);
+      throw error;
+    }
   };
 
-  // Auto show chat after 2 seconds on first load
-  useEffect(() => {
-    const hasShown = localStorage.getItem('chatHasShown');
-    if (!hasShown) {
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-        localStorage.setItem('chatHasShown', 'true');
-      }, 2000);
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(true);
+  // Send message
+  const sendMessage = async (content: string) => {
+    try {
+      // Check quota first
+      if (!quota || quota.remaining <= 0) {
+        throw new Error('QUOTA_EXCEEDED');
+      }
+
+      setIsLoading(true);
+
+      // Lazy create conversation if needed
+      let convId = currentConversationId;
+      if (!convId) {
+        const newConv = await chatbotService.createConversation();
+        convId = newConv.id;
+        setCurrentConversationId(newConv.id);
+        setConversations(prev => [newConv, ...prev]);
+      }
+
+      // Optimistic UI - add user message immediately
+      const tempUserMsg: ChatMessage = {
+        id: `temp-${Date.now()}`,
+        role: 'user',
+        content,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, tempUserMsg]);
+
+      // Send message to API
+      const response = await chatbotService.sendMessage(convId, content);
+
+      // Handle different responses
+      if (chatbotService.isQuotaExceeded(response)) {
+        // Quota exceeded
+        setMessages(prev => prev.filter(m => m.id !== tempUserMsg.id));
+        setQuota(response.quota);
+        throw new Error('QUOTA_EXCEEDED');
+      } else if (chatbotService.isOpenAIFailed(response)) {
+        // OpenAI failed
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === tempUserMsg.id
+              ? { ...response.user_message, status: 'failed' as const }
+              : m
+          )
+        );
+        throw new Error('OPENAI_FAILED');
+      } else if (chatbotService.isSuccess(response)) {
+        // Success
+        setMessages(prev =>
+          prev.filter(m => m.id !== tempUserMsg.id).concat([
+            response.user_message,
+            response.assistant_message,
+          ])
+        );
+
+        // Update quota
+        if (quota) {
+          setQuota({
+            ...quota,
+            used: quota.used + 1,
+            remaining: quota.remaining - 1,
+          });
+        }
+
+        // Refresh conversations to update message count
+        refreshConversations();
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
-  // Persist conversations to localStorage
-  useEffect(() => {
-    localStorage.setItem('chatConversations', JSON.stringify(conversations));
-  }, [conversations]);
-
-  // Persist current conversation ID
-  useEffect(() => {
-    if (currentConversationId) {
-      localStorage.setItem('currentConversationId', currentConversationId);
-    }
-  }, [currentConversationId]);
-
-  // Persist isOpen to localStorage
-  useEffect(() => {
-    localStorage.setItem('chatIsOpen', JSON.stringify(isOpen));
-  }, [isOpen]);
+  };
 
   return (
     <ChatContext.Provider
@@ -211,12 +262,16 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setShowQuickReplies,
         isLoading,
         setIsLoading,
+        quota,
         conversations,
         currentConversationId,
+        refreshQuota,
+        refreshConversations,
         createNewConversation,
         switchConversation,
         deleteConversation,
         updateConversationTitle,
+        sendMessage,
       }}
     >
       {children}
@@ -231,4 +286,3 @@ export const useChatContext = () => {
   }
   return context;
 };
-
