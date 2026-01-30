@@ -30,6 +30,17 @@ export const setAuthToken = (token: string | null) => {
   tokenStore.setToken(token);
 };
 
+// Thêm interceptor cho v1 API để tự động thêm token
+v1Api.interceptors.request.use((config) => {
+  const token = tokenStore.getToken();
+  if (token) {
+    config.headers.JWTAuthorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
 // Thêm interceptor cho admin API để tự động thêm token
 adminApi.interceptors.request.use((config) => {
   const token = tokenStore.getToken();
