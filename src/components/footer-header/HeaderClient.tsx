@@ -1,9 +1,9 @@
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useState } from 'react';
@@ -162,6 +162,17 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
         )}
       >
         Bài viết
+      </Link>
+      
+      <Link 
+        to="/chat" 
+        className={cn(
+          menuItemStyle,
+          location.pathname.includes('/chat') ? activeStyle : "",
+          scrolledStyle
+        )}
+      >
+        Chat AI
       </Link>
       
       <Link 
