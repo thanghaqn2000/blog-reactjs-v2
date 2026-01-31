@@ -46,7 +46,6 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
         throw new Error("Không thể lấy token từ Google");
       }
     } catch (error: any) {
-      console.log(error);
       
       // Xử lý lỗi account đã tồn tại với provider khác
       if (error.code === 'auth/account-exists-with-different-credential') {
@@ -114,7 +113,6 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
         throw new Error("Không thể lấy token từ Facebook");
       }
     } catch (error: any) {
-      console.log(error);
       
       // Xử lý lỗi account đã tồn tại với provider khác
       if (error.code === 'auth/account-exists-with-different-credential') {

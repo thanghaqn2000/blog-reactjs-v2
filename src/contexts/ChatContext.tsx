@@ -3,9 +3,10 @@ import {
   chatbotService,
   ChatMessage,
   Conversation,
-  QuotaInfo
+  QuotaInfo,
+  StreamingCallbacks
 } from '@/services/chatbot.service';
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 export type { Conversation, ChatMessage as Message };
 
@@ -27,6 +28,10 @@ interface ChatContextType {
   conversations: Conversation[];
   currentConversationId: number | null;
   
+  // Streaming states
+  isStreaming: boolean;
+  streamingContent: string;
+  
   // Actions
   refreshQuota: () => Promise<void>;
   refreshConversations: () => Promise<void>;
@@ -35,6 +40,7 @@ interface ChatContextType {
   deleteConversation: (conversationId: number) => Promise<void>;
   updateConversationTitle: (conversationId: number, title: string) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
+  cancelStreaming: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -54,6 +60,13 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  
+  // Streaming states
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const currentTempUserIdRef = useRef<string | null>(null);
+  const currentRealUserIdRef = useRef<string | null>(null);
 
   // Load quota on mount
   const refreshQuota = useCallback(async () => {
@@ -90,7 +103,17 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       if (currentConversationId) {
         try {
           const conv = await chatbotService.getConversation(currentConversationId);
-          setMessages(conv.messages || []);
+          
+          // ✅ Cleanup old pending messages from backend
+          const cleanedMessages = (conv.messages || []).map(m => {
+            // If user message is still pending (shouldn't happen, but just in case)
+            if (m.role === 'user' && m.status === 'pending') {
+              return { ...m, status: 'success' as const };
+            }
+            return m;
+          });
+          
+          setMessages(cleanedMessages);
         } catch (error) {
           console.error('Failed to load messages:', error);
           setMessages([]);
@@ -172,8 +195,45 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Send message
+  // Cancel streaming
+  const cancelStreaming = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    // ✅ FIX: Cleanup ALL states when cancelling
+    setIsStreaming(false);
+    setStreamingContent('');
+    setIsLoading(false);
+    
+    // ✅ FIX: Remove temp message AND update ALL pending user messages
+    setMessages(prev => {
+      // First, filter out temp message if exists
+      let filtered = prev;
+      if (currentTempUserIdRef.current) {
+        filtered = prev.filter(m => m.id !== currentTempUserIdRef.current);
+      }
+      
+      // Then, update ALL remaining pending user messages to success
+      return filtered.map(m => {
+        if (m.role === 'user' && m.status === 'pending') {
+          return { ...m, status: 'success' as const };
+        }
+        return m;
+      });
+    });
+    
+    // Clear refs
+    currentTempUserIdRef.current = null;
+    currentRealUserIdRef.current = null;
+  }, []);
+
+  // Send message with streaming
   const sendMessage = async (content: string) => {
+    // Generate temporary ID for optimistic UI
+    const tempUserId = `temp-user-${Date.now()}`;
+    
     try {
       // Check quota first
       if (!quota || quota.remaining <= 0) {
@@ -181,6 +241,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setIsLoading(true);
+      setIsStreaming(true);
+      setStreamingContent('');
 
       // Lazy create conversation if needed
       let convId = currentConversationId;
@@ -191,9 +253,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setConversations(prev => [newConv, ...prev]);
       }
 
-      // Optimistic UI - add user message immediately
+      // ✅ FIX 1: Add optimistic user message immediately
       const tempUserMsg: ChatMessage = {
-        id: `temp-${Date.now()}`,
+        id: tempUserId,
         role: 'user',
         content,
         status: 'pending',
@@ -201,51 +263,150 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       };
       setMessages(prev => [...prev, tempUserMsg]);
 
-      // Send message to API
-      const response = await chatbotService.sendMessage(convId, content);
+      // ✅ Track temp user ID for cleanup on cancel
+      currentTempUserIdRef.current = tempUserId;
 
-      // Handle different responses
-      if (chatbotService.isQuotaExceeded(response)) {
-        // Quota exceeded
-        setMessages(prev => prev.filter(m => m.id !== tempUserMsg.id));
-        setQuota(response.quota);
-        throw new Error('QUOTA_EXCEEDED');
-      } else if (chatbotService.isOpenAIFailed(response)) {
-        // OpenAI failed
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === tempUserMsg.id
-              ? { ...response.user_message, status: 'failed' as const }
-              : m
-          )
-        );
-        throw new Error('OPENAI_FAILED');
-      } else if (chatbotService.isSuccess(response)) {
-        // Success
-        setMessages(prev =>
-          prev.filter(m => m.id !== tempUserMsg.id).concat([
-            response.user_message,
-            response.assistant_message,
-          ])
-        );
+      // Create abort controller for cancellation
+      abortControllerRef.current = new AbortController();
 
-        // Update quota
-        if (quota) {
-          setQuota({
-            ...quota,
-            used: quota.used + 1,
-            remaining: quota.remaining - 1,
+      // Define streaming callbacks
+      const callbacks: StreamingCallbacks = {
+        onUserMessage: (data) => {          
+          // ✅ Track real user message ID for cancel handling
+          const realUserId = data.id.toString();
+          currentRealUserIdRef.current = realUserId;
+          
+          // Replace temp user message with real one from backend
+          setMessages(prev => 
+            prev.map(m => 
+              m.id === tempUserId 
+                ? {
+                    id: realUserId,
+                    conversation_id: data.conversation_id,
+                    role: data.role,
+                    content: data.content,
+                    status: data.status,
+                    created_at: data.created_at,
+                  }
+                : m
+            )
+          );
+        },
+
+        onChunk: (data) => {
+          // Append chunk to streaming content
+          setStreamingContent(prev => prev + data.content);
+        },
+
+        onDone: (data) => {
+          
+          // ✅ FIX 2: Update user message status and add assistant message
+          setMessages(prev => {
+            // Filter out temp message if still exists
+            const withoutTemp = prev.filter(m => m.id !== tempUserId);
+            
+            // ✅ FIX: Convert both IDs to string for comparison (type-safe)
+            const userMsgId = String(data.user_message.id);
+            const hasUserMsg = withoutTemp.some(m => String(m.id) === userMsgId);
+            
+            if (hasUserMsg) {
+              // Update existing user message and add assistant
+              return [
+                ...withoutTemp.map(m => 
+                  String(m.id) === userMsgId ? data.user_message : m
+                ),
+                data.assistant_message
+              ];
+            } else {
+              // Add both messages (shouldn't happen if onUserMessage worked)
+              return [...withoutTemp, data.user_message, data.assistant_message];
+            }
           });
-        }
 
-        // Refresh conversations to update message count
-        refreshConversations();
+          // ✅ Update quota ONLY on success (as per requirement)
+          if (quota) {
+            setQuota({
+              ...quota,
+              used: quota.used + 1,
+              remaining: quota.remaining - 1,
+            });
+          }
+
+          // Clear streaming state
+          setStreamingContent('');
+          setIsStreaming(false);
+          setIsLoading(false);
+          
+          // ✅ Clear ID refs (message already replaced)
+          currentTempUserIdRef.current = null;
+          currentRealUserIdRef.current = null;
+
+          // Refresh conversations to update message count
+          refreshConversations();
+        },
+
+        onError: (data) => {
+          console.error('❌ Streaming error:', data);
+          
+          // Remove temp user message on error
+          setMessages(prev => prev.filter(m => m.id !== tempUserId));
+          
+          // Clear streaming state
+          setStreamingContent('');
+          setIsStreaming(false);
+          setIsLoading(false);
+          
+          // ✅ Clear ID refs
+          currentTempUserIdRef.current = null;
+          currentRealUserIdRef.current = null;
+
+          // Throw error to be caught by caller
+          if (data.error === 'Quota exceeded') {
+            throw new Error('QUOTA_EXCEEDED');
+          } else if (data.error === 'OpenAI Service Error') {
+            throw new Error('OPENAI_FAILED');
+          } else {
+            throw new Error(data.message || 'Unknown error');
+          }
+        },
+      };
+
+      // Start streaming
+      const result = await chatbotService.streamMessage(
+        convId,
+        content,
+        callbacks,
+        abortControllerRef.current
+      );
+
+      // Handle result
+      if (!result.success) {
+        if (result.error === 'CANCELLED') {
+          // User cancelled - just cleanup (already done in onError)
+          return;
+        }
+        // Other errors handled in callbacks
       }
+
+      // Clean up abort controller
+      abortControllerRef.current = null;
+
     } catch (error) {
       console.error('Failed to send message:', error);
-      throw error;
-    } finally {
+      
+      // ✅ FIX 3: Remove temp message on error
+      setMessages(prev => prev.filter(m => m.id !== tempUserId));
+      
+      // Cleanup on error
+      setStreamingContent('');
+      setIsStreaming(false);
       setIsLoading(false);
+      
+      // ✅ Clear ID refs
+      currentTempUserIdRef.current = null;
+      currentRealUserIdRef.current = null;
+      
+      throw error;
     }
   };
 
@@ -265,6 +426,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         quota,
         conversations,
         currentConversationId,
+        isStreaming,
+        streamingContent,
         refreshQuota,
         refreshConversations,
         createNewConversation,
@@ -272,6 +435,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         deleteConversation,
         updateConversationTitle,
         sendMessage,
+        cancelStreaming,
       }}
     >
       {children}

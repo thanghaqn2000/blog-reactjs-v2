@@ -52,7 +52,6 @@ const ChartStock = ({ className = "" }: ChartStockProps) => {
     const unsubscribe = onValue(lastUpdatedRef, (snapshot) => {
       const updatedValue = snapshot.val();
       if (updatedValue) {
-        console.log("Realtime update:", updatedValue);
         fetchChartData();
       }
     });
