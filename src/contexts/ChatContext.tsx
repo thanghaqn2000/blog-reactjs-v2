@@ -99,10 +99,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Load messages when conversation changes
   useEffect(() => {
+    let isCancelled = false;
+    
     const loadMessages = async () => {
       if (currentConversationId) {
         try {
           const conv = await chatbotService.getConversation(currentConversationId);
+          
+          // Don't update state if component unmounted or conversation changed
+          if (isCancelled) return;
           
           // ✅ Cleanup old pending messages from backend
           const cleanedMessages = (conv.messages || []).map(m => {
@@ -115,15 +120,24 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           
           setMessages(cleanedMessages);
         } catch (error) {
-          console.error('Failed to load messages:', error);
-          setMessages([]);
+          if (!isCancelled) {
+            console.error('Failed to load messages:', error);
+            setMessages([]);
+          }
         }
       } else {
-        setMessages([]);
+        if (!isCancelled) {
+          setMessages([]);
+        }
       }
     };
 
     loadMessages();
+    
+    // Cleanup function to prevent state updates after unmount/conversation change
+    return () => {
+      isCancelled = true;
+    };
   }, [currentConversationId]);
 
   // Initial load - only when authenticated (has token)
@@ -150,6 +164,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Switch conversation
   const switchConversation = async (conversationId: number) => {
+    // ✅ FIX: Cancel streaming before switching conversation
+    if (isStreaming) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      setIsStreaming(false);
+      setStreamingContent('');
+      setIsLoading(false);
+      currentTempUserIdRef.current = null;
+      currentRealUserIdRef.current = null;
+    }
+    
     setCurrentConversationId(conversationId);
     setShowQuickReplies(false);
   };
@@ -157,6 +184,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   // Delete conversation
   const deleteConversation = async (conversationId: number) => {
     try {
+      // ✅ FIX: Cancel any ongoing streaming before deleting
+      if (conversationId === currentConversationId && isStreaming) {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          abortControllerRef.current = null;
+        }
+        setIsStreaming(false);
+        setStreamingContent('');
+        setIsLoading(false);
+        currentTempUserIdRef.current = null;
+        currentRealUserIdRef.current = null;
+      }
+      
       await chatbotService.deleteConversation(conversationId);
       
       // Calculate remaining conversations before state update
@@ -348,8 +388,22 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         onError: (data) => {
           console.error('❌ Streaming error:', data);
           
-          // Remove temp user message on error
-          setMessages(prev => prev.filter(m => m.id !== tempUserId));
+          // ✅ FIX: Cleanup temp OR mark real message as failed
+          setMessages(prev => {
+            let next = prev;
+            // Try to remove temp message first
+            if (currentTempUserIdRef.current) {
+              next = next.filter(m => m.id !== currentTempUserIdRef.current);
+            }
+            // If temp was replaced with real ID, mark it as failed
+            const realId = currentRealUserIdRef.current;
+            if (realId) {
+              next = next.map(m =>
+                String(m.id) === realId ? { ...m, status: 'failed' as const } : m
+              );
+            }
+            return next;
+          });
           
           // Clear streaming state
           setStreamingContent('');
@@ -382,10 +436,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       // Handle result
       if (!result.success) {
         if (result.error === 'CANCELLED') {
-          // User cancelled - just cleanup (already done in onError)
+          // User cancelled - just cleanup (already done in cancelStreaming)
           return;
         }
-        // Other errors handled in callbacks
+        // Other errors (CALLBACK_ERROR, etc.) already handled in callbacks
+        // No additional action needed - error was thrown and caught above
       }
 
       // Clean up abort controller
@@ -394,8 +449,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Failed to send message:', error);
       
-      // ✅ FIX 3: Remove temp message on error
-      setMessages(prev => prev.filter(m => m.id !== tempUserId));
+      // ✅ FIX: Cleanup temp OR mark real message as failed
+      setMessages(prev => {
+        // Remove temp message
+        let next = prev.filter(m => m.id !== tempUserId);
+        // If temp was replaced with real ID, mark it as failed
+        const realId = currentRealUserIdRef.current;
+        if (realId) {
+          next = next.map(m =>
+            String(m.id) === realId ? { ...m, status: 'failed' as const } : m
+          );
+        }
+        return next;
+      });
       
       // Cleanup on error
       setStreamingContent('');

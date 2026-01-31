@@ -83,7 +83,7 @@ export interface StreamingCallbacks {
 
 export interface StreamingResult {
   success: boolean;
-  error?: string;
+  error?: string; // 'CANCELLED' | 'CALLBACK_ERROR' | other error messages
   fallbackUsed?: boolean;
 }
 
@@ -136,6 +136,10 @@ class ChatbotService {
   /**
    * Send message with SSE streaming
    * POST /api/v1/conversations/:conversation_id/messages/stream
+   * 
+   * IMPORTANT: If a callback throws an exception (e.g., onError), the stream is
+   * immediately cancelled and returns { success: false, error: 'CALLBACK_ERROR' }
+   * WITHOUT triggering fallback. This prevents duplicate messages and quota waste.
    * 
    * @param conversationId - The conversation ID
    * @param content - Message content
@@ -208,9 +212,20 @@ class ChatbotService {
           if (data) {
             try {
               const parsedData = JSON.parse(data);
-              this.handleSSEEvent(eventName, parsedData, callbacks);
+              
+              // ✅ FIX: Catch callback errors separately to prevent unintended fallback
+              try {
+                this.handleSSEEvent(eventName, parsedData, callbacks);
+              } catch (callbackError) {
+                console.error('Callback error (stopping stream, no fallback):', callbackError);
+                // Cancel reader to stop streaming
+                await reader.cancel();
+                // Return failure WITHOUT fallback (callback error shouldn't retry)
+                return { success: false, error: 'CALLBACK_ERROR' };
+              }
             } catch (parseError) {
               console.error('Failed to parse SSE data:', parseError);
+              // JSON parse errors are tolerated - continue processing other events
             }
           }
         }

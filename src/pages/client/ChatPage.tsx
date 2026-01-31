@@ -63,6 +63,7 @@ const ChatPage = () => {
   const [retryMessage, setRetryMessage] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConvId, setDeleteConvId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -99,9 +100,25 @@ const ChatPage = () => {
   }, [messages, streamingContent, scrollToBottom]);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    // Cleanup all pending operations when conversation changes
+    return () => {
+      // Clear any pending scroll timeouts
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
+    };
+  }, [currentConversationId]);
+
+  useEffect(() => {
+    // Small delay to ensure DOM is ready after conversation switch
+    const focusTimer = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
+    
+    return () => clearTimeout(focusTimer);
   }, [currentConversationId]);
 
   const handleSendMessage = async (messageOverride?: string) => {
@@ -201,13 +218,50 @@ const ChatPage = () => {
   };
 
   const confirmDeleteConversation = async () => {
-    if (deleteConvId) {
+    if (deleteConvId !== null && !isDeleting) {
+      setIsDeleting(true);
+      
+      // First, close dialog immediately to start unmount animation
+      setShowDeleteDialog(false);
+      
       try {
+        // Wait for dialog animation to complete and DOM cleanup
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Force cleanup any stuck portal elements (defensive)
+        const portals = document.querySelectorAll('[data-radix-alert-dialog-portal]');
+        portals.forEach(portal => {
+          if (portal.parentNode) {
+            portal.parentNode.removeChild(portal);
+          }
+        });
+        
+        // Force cleanup any stuck overlays
+        const overlays = document.querySelectorAll('[data-radix-alert-dialog-overlay]');
+        overlays.forEach(overlay => {
+          if (overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+          }
+        });
+        
+        // Reset body styles that might have been set by dialog
+        document.body.style.pointerEvents = '';
+        document.body.style.overflow = '';
+        
         await deleteConversation(deleteConvId);
-        setShowDeleteDialog(false);
-        setDeleteConvId(null);
+        
+        // Additional delay before allowing new interactions
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error) {
         console.error('Failed to delete conversation:', error);
+        // Reset body styles even on error
+        document.body.style.pointerEvents = '';
+        document.body.style.overflow = '';
+        alert('Có lỗi xảy ra khi xóa cuộc hội thoại. Vui lòng thử lại.');
+      } finally {
+        // Cleanup
+        setIsDeleting(false);
+        setDeleteConvId(null);
       }
     }
   };
@@ -540,8 +594,18 @@ const ChatPage = () => {
       </AlertDialog>
 
       {/* Delete Conversation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+      {showDeleteDialog && (
+        <AlertDialog 
+          open={true}
+          onOpenChange={(open) => {
+            // Only allow closing if not currently deleting
+            if (!open && !isDeleting) {
+              setShowDeleteDialog(false);
+              setDeleteConvId(null);
+            }
+          }}
+        >
+          <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-red-600" />
@@ -559,21 +623,33 @@ const ChatPage = () => {
             <Button 
               variant="outline" 
               onClick={() => {
-                setShowDeleteDialog(false);
-                setDeleteConvId(null);
+                if (!isDeleting) {
+                  setShowDeleteDialog(false);
+                  setDeleteConvId(null);
+                }
               }}
+              disabled={isDeleting}
             >
               Hủy
             </Button>
             <Button 
               variant="destructive"
               onClick={confirmDeleteConversation}
+              disabled={deleteConvId === null || isDeleting}
             >
-              Xóa
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang xóa...
+                </>
+              ) : (
+                'Xóa'
+              )}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+        </AlertDialog>
+      )}
     </>
   );
 };
