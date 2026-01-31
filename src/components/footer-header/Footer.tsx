@@ -11,8 +11,7 @@ const Footer = () => {
           {/* Logo & Info */}
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="flex items-center space-x-2 font-display font-bold text-xl tracking-tight mb-4">
-              <span className="text-primary">Stock</span>
-              <span>Insights</span>
+              <span className="text-primary">ORCA</span>
             </Link>
             <p className="text-sm text-foreground/70 mb-6">
               Phân tích sâu sắc và thông tin để giúp bạn điều hướng thị trường tài chính với độ tin cậy.
@@ -38,23 +37,20 @@ const Footer = () => {
           
           {/* Resources */}
           <div>
-            <h3 className="font-medium text-base mb-4">Tài nguyên</h3>
+            <h3 className="font-medium text-base mb-4">Danh mục</h3>
             <ul className="space-y-3">
-              <FooterLink to="/glossary" label="Từ vựng tài chính" />
-              <FooterLink to="/tools" label="Công cụ tính toán" />
-              <FooterLink to="/newsletter" label="Bản tin" />
-              <FooterLink to="/faq" label="Câu hỏi thường gặp" />
+              <FooterLink to="/glossary" label="Bản tin" />
+              <FooterLink to="/tools" label="Đầu tư" />
+              <FooterLink to="/newsletter" label="Siêu trợ lí AI" />
             </ul>
           </div>
           
           {/* Company */}
           <div>
-            <h3 className="font-medium text-base mb-4">Công ty</h3>
+            <h3 className="font-medium text-base mb-4">Về ORCA</h3>
             <ul className="space-y-3">
               <FooterLink to="/about" label="Về chúng tôi" />
               <FooterLink to="/contact" label="Liên hệ" />
-              <FooterLink to="/privacy" label="Chính sách riêng tư" />
-              <FooterLink to="/terms" label="Điều khoản dịch vụ" />
             </ul>
           </div>
         </div>
@@ -62,10 +58,10 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-border mt-10 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-foreground/60 mb-4 md:mb-0">
-            © {new Date().getFullYear()} Stock Insights. Tất cả quyền được bảo lưu.
+            © {new Date().getFullYear()} ORCA. Tất cả quyền được bảo lưu.
           </p>
           
-          <div className="flex items-center space-x-6">
+          {/* <div className="flex items-center space-x-6">
             <Link to="/privacy" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
               Chính sách riêng tư
             </Link>
@@ -75,7 +71,7 @@ const Footer = () => {
             <Link to="/cookies" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
               Cookie
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

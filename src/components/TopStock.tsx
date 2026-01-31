@@ -7,7 +7,8 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { ArrowDownRight, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { ArrowDownRight, ArrowRight, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Types
 interface RankedStock {
@@ -61,6 +62,13 @@ const TopStock = ({ rankedStocks }: TopStockProps) => {
             ))}
           </TableBody>
         </Table>
+        <Link
+          to="/investment/stocks"
+          className="mt-4 flex items-center justify-center sm:justify-end text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          <span>Xem thêm</span>
+          <ArrowRight size={16} className="ml-1" />
+        </Link>
       </CardContent>
     </Card>
   );
