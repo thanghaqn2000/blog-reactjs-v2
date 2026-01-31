@@ -1,4 +1,3 @@
-import ChartStock from './ChartStock';
 import TopStock from './TopStock';
 
 // Types
@@ -24,7 +23,7 @@ const SidebarStock = ({ rankedStocks, className = "" }: SidebarStockProps) => {
   return (
     <div className={`space-y-6 ${className}`}>
       <TopStock rankedStocks={rankedStocks} />
-      <ChartStock />
+      {/* <ChartStock /> */}
     </div>
   );
 };

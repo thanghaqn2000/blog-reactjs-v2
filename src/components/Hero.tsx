@@ -193,13 +193,13 @@ const Hero = () => {
                 to="/articles" 
                 className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary text-white font-medium shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all"
               >
-                Browse Articles
+                Báo cáo
               </Link>
               <Link 
                 to="/markets" 
                 className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-white text-primary font-medium shadow-md hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all"
               >
-                <span>Live Markets</span>
+                <span>Tín hiệu</span>
                 <ArrowRight size={16} className="ml-2" />
               </Link>
             </div>

@@ -1,9 +1,9 @@
 
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useState } from 'react';
@@ -41,7 +41,17 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
       >
         Trang chủ
       </Link>
-      
+
+      <Link 
+        to="/markets" 
+        className={cn(
+          menuItemStyle,
+          location.pathname.includes('/markets') ? activeStyle : "",
+          scrolledStyle
+        )}
+      >
+        Thị trường
+      </Link>
       <div 
         className="relative" 
         onMouseEnter={() => handleMouseEnter('investment')} 
@@ -77,82 +87,7 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-      
-      <div 
-        className="relative" 
-        onMouseEnter={() => handleMouseEnter('policy')} 
-        onMouseLeave={handleMouseLeave}
-      >
-        <DropdownMenu open={openDropdown === 'policy'}>
-          <DropdownMenuTrigger 
-            className={cn(
-              menuItemStyle,
-              "flex items-center gap-1",
-              location.pathname.includes('/policy') ? activeStyle : "",
-              scrolledStyle
-            )}
-            asChild
-          >
-            <div>
-              Chính sách
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1">
-                <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white shadow-lg rounded-md min-w-[200px]">
-            <DropdownMenuItem asChild>
-              <Link to="/policy/fiscal" className="px-3 py-2 cursor-pointer">
-                Chính sách tài khóa
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/policy/monetary" className="px-3 py-2 cursor-pointer">
-                Chính sách tiền tệ
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      
-      <div 
-        className="relative" 
-        onMouseEnter={() => handleMouseEnter('owner')} 
-        onMouseLeave={handleMouseLeave}
-      >
-        <DropdownMenu open={openDropdown === 'owner'}>
-          <DropdownMenuTrigger 
-            className={cn(
-              menuItemStyle,
-              "flex items-center gap-1",
-              location.pathname.includes('/owner') ? activeStyle : "",
-              scrolledStyle
-            )}
-            asChild
-          >
-            <div>
-              Quản lý
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1">
-                <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white shadow-lg rounded-md min-w-[200px]">
-            <DropdownMenuItem asChild>
-              <Link to="/owner/profile" className="px-3 py-2 cursor-pointer">
-                Hồ sơ
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/owner/settings" className="px-3 py-2 cursor-pointer">
-                Cài đặt
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      
+      </div> 
       <Link 
         to="/articles" 
         className={cn(
@@ -174,16 +109,15 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
       >
         Chat AI
       </Link>
-      
       <Link 
-        to="/markets" 
+        to="/" 
         className={cn(
           menuItemStyle,
-          location.pathname.includes('/markets') ? activeStyle : "",
+          location.pathname.includes('/chat') ? activeStyle : "",
           scrolledStyle
         )}
       >
-        Thị trường
+        Phản hồi của khách hàng
       </Link>
     </nav>
   );
