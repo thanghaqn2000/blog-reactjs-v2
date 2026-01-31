@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import VipUpgradeModal from '@/components/VipUpgradeModal';
 import { useChatContext } from '@/contexts/ChatContext';
 import {
@@ -29,6 +30,7 @@ import {
   PanelLeftClose,
   Pencil,
   Send,
+  Square,
   Trash2,
   User
 } from 'lucide-react';
@@ -38,6 +40,8 @@ const ChatPage = () => {
   const {
     messages,
     isLoading,
+    isStreaming,
+    streamingContent,
     conversations,
     currentConversationId,
     createNewConversation,
@@ -45,6 +49,7 @@ const ChatPage = () => {
     deleteConversation,
     updateConversationTitle,
     sendMessage,
+    cancelStreaming,
     quota,
   } = useChatContext();
 
@@ -56,9 +61,12 @@ const ChatPage = () => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [retryMessage, setRetryMessage] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConvId, setDeleteConvId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Auto scroll to bottom with debounce
@@ -89,12 +97,28 @@ const ChatPage = () => {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [messages, scrollToBottom]);
+  }, [messages, streamingContent, scrollToBottom]);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    // Cleanup all pending operations when conversation changes
+    return () => {
+      // Clear any pending scroll timeouts
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
+    };
+  }, [currentConversationId]);
+
+  useEffect(() => {
+    // Small delay to ensure DOM is ready after conversation switch
+    const focusTimer = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
+    
+    return () => clearTimeout(focusTimer);
   }, [currentConversationId]);
 
   const handleSendMessage = async (messageOverride?: string) => {
@@ -119,6 +143,10 @@ const ChatPage = () => {
     // Only clear input if not using override
     if (messageOverride === undefined) {
       setInputMessage('');
+      // Reset textarea height
+      if (inputRef.current) {
+        inputRef.current.style.height = 'auto';
+      }
     }
 
     try {
@@ -150,11 +178,22 @@ const ChatPage = () => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
+    // Shift+Enter allows new line
+  };
+
+  // Auto-resize textarea
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value);
+    
+    // Auto-resize
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
   };
 
   const handleEditConversation = (convId: number, currentTitle: string) => {
@@ -173,12 +212,56 @@ const ChatPage = () => {
     setEditingConvId(null);
   };
 
-  const handleDeleteConversation = async (convId: number) => {
-    if (confirm('Bạn có chắc muốn xóa cuộc hội thoại này?')) {
+  const handleDeleteConversation = (convId: number) => {
+    setDeleteConvId(convId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (deleteConvId !== null && !isDeleting) {
+      setIsDeleting(true);
+      
+      // First, close dialog immediately to start unmount animation
+      setShowDeleteDialog(false);
+      
       try {
-        await deleteConversation(convId);
+        // Wait for dialog animation to complete and DOM cleanup
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Force cleanup any stuck portal elements (defensive)
+        const portals = document.querySelectorAll('[data-radix-alert-dialog-portal]');
+        portals.forEach(portal => {
+          if (portal.parentNode) {
+            portal.parentNode.removeChild(portal);
+          }
+        });
+        
+        // Force cleanup any stuck overlays
+        const overlays = document.querySelectorAll('[data-radix-alert-dialog-overlay]');
+        overlays.forEach(overlay => {
+          if (overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+          }
+        });
+        
+        // Reset body styles that might have been set by dialog
+        document.body.style.pointerEvents = '';
+        document.body.style.overflow = '';
+        
+        await deleteConversation(deleteConvId);
+        
+        // Additional delay before allowing new interactions
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error) {
         console.error('Failed to delete conversation:', error);
+        // Reset body styles even on error
+        document.body.style.pointerEvents = '';
+        document.body.style.overflow = '';
+        alert('Có lỗi xảy ra khi xóa cuộc hội thoại. Vui lòng thử lại.');
+      } finally {
+        // Cleanup
+        setIsDeleting(false);
+        setDeleteConvId(null);
       }
     }
   };
@@ -329,7 +412,7 @@ const ChatPage = () => {
                 className="h-8 w-8 rounded-full object-cover"
               />
               <div>
-                <h1 className="text-lg font-semibold">Chuyên viên tư vấn AI</h1>
+                <h1 className="text-lg font-semibold">ORCA AI</h1>
                 {quota && (
                   <p className="text-xs text-gray-500">
                     Lượt nhắn: {quota.remaining}/{quota.total_limit} tin nhắn còn lại
@@ -363,10 +446,10 @@ const ChatPage = () => {
                     <div
                       className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                         message.role === 'user'
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-gray-100 text-gray-900'
                           : message.status === 'failed'
                           ? 'bg-red-50 border border-red-200 text-gray-900'
-                          : 'bg-gray-100 text-gray-900'
+                          : 'bg-white border border-gray-200 text-gray-900'
                       }`}
                     >
                       <p className="text-sm whitespace-pre-wrap leading-relaxed">
@@ -379,7 +462,7 @@ const ChatPage = () => {
                         </div>
                       )}
                       {message.status === 'pending' && (
-                        <div className="flex items-center gap-1 mt-2 text-xs text-white/80">
+                        <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           <span>Đang gửi...</span>
                         </div>
@@ -387,14 +470,34 @@ const ChatPage = () => {
                     </div>
 
                     {message.role === 'user' && (
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center">
                         <User className="h-4 w-4 text-white" />
                       </div>
                     )}
                   </div>
                 ))}
                 
-                {isLoading && messages.length > 0 && messages[messages.length - 1]?.role === 'user' && (
+                {/* Streaming Message (Typing Effect) */}
+                {isStreaming && streamingContent && (
+                  <div className="flex justify-start gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden">
+                      <img 
+                        src="/bot-ai.jpeg" 
+                        alt="Bot AI" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="bg-gray-100 rounded-2xl px-4 py-3 max-w-[80%] relative">
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                        {streamingContent}
+                        <span className="inline-block w-2 h-4 ml-1 bg-gray-600 animate-pulse"></span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading State (before streaming starts) */}
+                {isLoading && !streamingContent && messages.length > 0 && messages[messages.length - 1]?.role === 'user' && (
                   <div className="flex justify-start gap-4">
                     <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden">
                       <img 
@@ -417,28 +520,41 @@ const ChatPage = () => {
             <div className="max-w-3xl mx-auto">
               <div className="flex gap-3 items-end">
                 <div className="flex-1 relative">
-                  <Input
+                  <Textarea
                     ref={inputRef}
                     value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onChange={handleTextareaChange}
+                    onKeyDown={handleKeyPress}
                     placeholder="Nhập tin nhắn của bạn..."
-                    disabled={isLoading || !quota || quota.remaining === 0}
-                    className="pr-12 py-6 rounded-xl border-gray-300 focus:border-blue-500"
+                    disabled={isLoading || !quota}
+                    className="min-h-[56px] max-h-[200px] py-4 px-4 rounded-xl border-gray-300 focus:border-blue-500 resize-none overflow-y-auto"
+                    rows={1}
                   />
                 </div>
-                <Button
-                  onClick={() => handleSendMessage()}
-                  disabled={isLoading || !inputMessage.trim() || !quota || quota.remaining === 0}
-                  size="icon"
-                  className="h-12 w-12 rounded-xl"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                </Button>
+                {isStreaming ? (
+                  <Button
+                    onClick={cancelStreaming}
+                    variant="destructive"
+                    size="icon"
+                    className="h-12 w-12 rounded-xl"
+                    title="Dừng tạo"
+                  >
+                    <Square className="h-5 w-5" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleSendMessage()}
+                    disabled={isLoading || !inputMessage.trim() || !quota}
+                    size="icon"
+                    className="h-12 w-12 rounded-xl"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </Button>
+                )}
               </div>
               <p className="text-xs text-gray-500 mt-2 text-center">
                 Trợ lý AI có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng.
@@ -476,6 +592,64 @@ const ChatPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Conversation Dialog */}
+      {showDeleteDialog && (
+        <AlertDialog 
+          open={true}
+          onOpenChange={(open) => {
+            // Only allow closing if not currently deleting
+            if (!open && !isDeleting) {
+              setShowDeleteDialog(false);
+              setDeleteConvId(null);
+            }
+          }}
+        >
+          <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Xóa cuộc hội thoại
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              Bạn có chắc chắn muốn xóa cuộc hội thoại này?
+              <br />
+              <span className="text-red-600 font-medium">
+                Hành động này không thể hoàn tác.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (!isDeleting) {
+                  setShowDeleteDialog(false);
+                  setDeleteConvId(null);
+                }
+              }}
+              disabled={isDeleting}
+            >
+              Hủy
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={confirmDeleteConversation}
+              disabled={deleteConvId === null || isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang xóa...
+                </>
+              ) : (
+                'Xóa'
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+        </AlertDialog>
+      )}
     </>
   );
 };

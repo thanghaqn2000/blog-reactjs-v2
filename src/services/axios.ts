@@ -15,7 +15,7 @@ export const adminApi = axios.create({
 });
 
 // Tạo một object để lưu trữ token
-const tokenStore = {
+export const tokenStore = {
   token: null as string | null,
   setToken: function(newToken: string | null) {
     this.token = newToken;

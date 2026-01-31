@@ -170,7 +170,6 @@ const EditPost = () => {
   const onSubmit = async (data: EditPostFormData) => {
     if (!id) return;
 
-    console.log(data.content)
     if (!data.content.trim() || data.content == "<p><br></p>") {
       showToast.error('Nội dung là bắt buộc');
       return;
