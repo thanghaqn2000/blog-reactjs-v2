@@ -76,6 +76,8 @@ const FeaturedArticles = () => {
             category: post.category,
             description: post.description,
             status: post.status,
+            date_post: post.date_post,
+            sub_type: post.sub_type,
             readTime: '5 min read',
             author: {
               name: post.author || 'Admin',
@@ -92,6 +94,8 @@ const FeaturedArticles = () => {
             description: post.description,
             readTime: '5 min read',
             status: post.status,
+            date_post: formatDate(post.date_post),
+            sub_type: post.sub_type,
             author: {
               name: post.author || 'Admin',
               avatar: 'https://randomuser.me/api/portraits/men/32.jpg'

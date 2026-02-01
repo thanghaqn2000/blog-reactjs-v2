@@ -2,7 +2,7 @@ import SidebarStock from '@/components/SidebarStock';
 import { formatDate } from '@/config/date.config';
 import { postServiceV1 } from '@/services/v1/post.service';
 import DOMPurify from 'dompurify';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, Crown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -48,11 +48,12 @@ const Article = () => {
           title: post.title,
           excerpt: post.title,
           category: post.category,
-          date: formatDate(post.created_at),
+          date: formatDate(post.date_post || post.created_at),
           readTime: '5 min read',
           description: post.description,
           status: post.status,
           image: post.image_url || defaultImage,
+          sub_type: post.sub_type,
           content: post.content,
           author: {
             name: post.author || 'Admin',
@@ -139,8 +140,16 @@ const Article = () => {
         <div className="bg-background pt-10">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-5xl">
-              <div className="chip bg-primary text-white mb-4">
-                {article.category}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <div className="chip bg-primary text-white">
+                  {article.category}
+                </div>
+                {article.sub_type === 'vip' && (
+                  <div className="chip bg-amber-600 text-white flex items-center gap-1.5">
+                    <Crown size={14} className="shrink-0" />
+                    VIP
+                  </div>
+                )}
               </div>
               <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
                 {article.title}

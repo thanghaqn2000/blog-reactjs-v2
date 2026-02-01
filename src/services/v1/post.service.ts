@@ -11,6 +11,8 @@ export interface Post {
   content: string;
   created_at: string;
   updated_at: string;
+  date_post?: string;
+  sub_type?: string;
 }
 
 export interface GetFilterPost {

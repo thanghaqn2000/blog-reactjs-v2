@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   faBars,
   faChevronDown,
+  faCrown,
   faSignOutAlt,
   faTimes,
   faUser
@@ -107,9 +108,10 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    size="icon"
+                    size={(user?.is_admin || user?.is_vip) ? "sm" : "icon"}
                     className={cn(
-                      "ml-2 rounded-full overflow-hidden p-0 transition-colors",
+                      "ml-2 flex items-center rounded-full overflow-hidden transition-colors",
+                      (user?.is_admin || user?.is_vip) ? "gap-2 py-1 pl-1 pr-2" : "p-0",
                       isScrolled ? "bg-blue-100/80 hover:bg-blue-200/80 text-gray-600 hover:text-black" : "bg-blue-100/80 hover:bg-blue-200/80 text-white hover:text-white/80"
                     )}
                   >
@@ -117,10 +119,25 @@ const Navbar = () => {
                       <img
                         src={user.avatar_url}
                         alt=""
-                        className="h-8 w-8 rounded-full object-cover"
+                        className="h-8 w-8 rounded-full object-cover shrink-0"
                       />
                     ) : (
-                      <FontAwesomeIcon icon={faUser} className="h-8 w-8 text-blue-500" />
+                      <span className="shrink-0">
+                        <FontAwesomeIcon icon={faUser} className="h-8 w-8 text-blue-500" />
+                      </span>
+                    )}
+                    {(user?.is_admin || user?.is_vip) && (
+                    <span className="flex flex-col items-center leading-tight">
+                      <FontAwesomeIcon 
+                        icon={faCrown} 
+                        className="h-3 w-3 text-amber-600" 
+                      />
+                      <span 
+                        className="text-[12px] font-bold text-amber-600 whitespace-nowrap "
+                      >
+                        Premium (VIP)
+                      </span>
+                    </span>
                     )}
                   </Button>
                 </DropdownMenuTrigger>

@@ -17,6 +17,8 @@ export interface Post {
   thumbnailUrl?: string;
   featured?: boolean;
   imageFile?: File;
+  sub_type?: string;
+  date_post?: string;
 }
 
 
@@ -50,7 +52,9 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
       date: formatDate(apiPost.created_at),
       category: apiPost.category,
       author: 'Admin',
-      thumbnailUrl: apiPost.image_url
+      thumbnailUrl: apiPost.image_url,
+      sub_type: apiPost.sub_type,
+      date_post: apiPost.date_post
     };
   };
 

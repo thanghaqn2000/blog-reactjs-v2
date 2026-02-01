@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
+import { Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export interface ArticleProps {
@@ -13,23 +14,26 @@ export interface ArticleProps {
   image: string;
   status: string;
   content?: string;
+  sub_type?: string;
   author: {
     name: string;
     avatar: string;
   };
   trending?: boolean;
+  date_post?: string;
 }
 
 const ArticleCard = ({ 
   id, 
   title, 
-  excerpt, 
+  date_post, 
   category, 
   description,
   date, 
   status,
   image, 
   author,
+  sub_type,
   trending = false
 }: ArticleProps) => {
   const { user } = useAuth();
@@ -53,10 +57,18 @@ const ArticleCard = ({
           />
           
           {/* Category chip */}
-          <div className="absolute top-3 left-3 right-3 flex justify-between">
-            <span className="chip bg-white/90 backdrop-blur-sm text-primary">
-              {category}
-            </span>
+          <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="chip bg-white/90 backdrop-blur-sm text-primary">
+                {category}
+              </span>
+              {sub_type === 'vip' && (
+                <span className="chip bg-amber-600 text-white flex items-center gap-1.5">
+                  <Crown size={14} className="shrink-0" />
+                  VIP
+                </span>
+              )}
+            </div>
             {user?.is_admin && (
               <span className={`chip bg-white/90 backdrop-blur-sm ${status === 'pending' ? 'text-red-500' : 'text-primary'}`}>
                 {status}
@@ -99,7 +111,7 @@ const ArticleCard = ({
             </div>
             
             <div className="flex items-center space-x-3 text-xs text-foreground/60">
-              <span>{date}</span>
+              <span>{date_post ?? date}</span>
             </div>
           </div>
         </div>
