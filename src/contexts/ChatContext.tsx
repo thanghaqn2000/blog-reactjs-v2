@@ -67,6 +67,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const currentTempUserIdRef = useRef<string | null>(null);
   const currentRealUserIdRef = useRef<string | null>(null);
+  /** Skip loading messages when we just created this conversation (first message) - avoids overwriting optimistic/streaming messages */
+  const skipLoadForConversationIdRef = useRef<number | null>(null);
 
   // Load quota on mount
   const refreshQuota = useCallback(async () => {
@@ -99,6 +101,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Load messages when conversation changes
   useEffect(() => {
+    // Skip load when we just created this conversation (first message) - messages come from optimistic UI + streaming
+    if (currentConversationId !== null && currentConversationId === skipLoadForConversationIdRef.current) {
+      skipLoadForConversationIdRef.current = null;
+      return;
+    }
+
     let isCancelled = false;
     
     const loadMessages = async () => {
@@ -140,11 +148,37 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [currentConversationId]);
 
-  // Initial load - only when authenticated (has token)
+  // Reset chat state when user changes (logout/login) so new user doesn't see previous user's messages
   useEffect(() => {
     if (token) {
+      // Clear previous user's conversation and messages first
+      setCurrentConversationId(null);
+      setMessages([]);
+      setConversations([]);
+      setIsStreaming(false);
+      setStreamingContent('');
+      setIsLoading(false);
+      abortControllerRef.current = null;
+      currentTempUserIdRef.current = null;
+      currentRealUserIdRef.current = null;
+      skipLoadForConversationIdRef.current = null;
+      setShowQuickReplies(true);
+      // Then load new user's data
       refreshQuota();
       refreshConversations();
+    } else {
+      // Logged out: clear all chat state
+      setCurrentConversationId(null);
+      setMessages([]);
+      setConversations([]);
+      setQuota(null);
+      setIsStreaming(false);
+      setStreamingContent('');
+      setIsLoading(false);
+      abortControllerRef.current = null;
+      currentTempUserIdRef.current = null;
+      currentRealUserIdRef.current = null;
+      skipLoadForConversationIdRef.current = null;
     }
   }, [token, refreshQuota, refreshConversations]);
 
@@ -177,6 +211,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       currentRealUserIdRef.current = null;
     }
     
+    skipLoadForConversationIdRef.current = null; // Normal switch: load messages for the new conversation
     setCurrentConversationId(conversationId);
     setShowQuickReplies(false);
   };
@@ -289,6 +324,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       if (!convId) {
         const newConv = await chatbotService.createConversation();
         convId = newConv.id;
+        skipLoadForConversationIdRef.current = newConv.id; // Skip load-messages effect so we don't overwrite optimistic/streaming messages
         setCurrentConversationId(newConv.id);
         setConversations(prev => [newConv, ...prev]);
       }

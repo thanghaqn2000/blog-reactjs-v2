@@ -269,6 +269,7 @@ const EditPost = () => {
                         <option value="">Chọn danh mục</option>
                         <option value="news">Tin tức</option>
                         <option value="finance">Tài chính</option>
+                        <option value="report">Báo cáo</option>
                       </select>
                       {errors.category && (
                         <p className="text-sm text-red-500">{errors.category.message}</p>

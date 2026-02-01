@@ -1,18 +1,18 @@
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { showToast } from '@/config/toast.config';
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
-    faBars,
-    faChevronDown,
-    faSignOutAlt,
-    faTimes,
-    faUser
+  faBars,
+  faChevronDown,
+  faSignOutAlt,
+  faTimes,
+  faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from 'react';
@@ -74,15 +74,19 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Logo */}
+          {/* Logo + ORCA text - responsive: fit within navbar height */}
           <Link 
             to="/" 
-            className="flex items-center space-x-2 font-display font-bold text-xl sm:text-2xl tracking-tight cursor-pointer"
+            className="flex items-center cursor-pointer gap-2.5 min-w-0 flex-1 sm:flex-initial"
           >
-            <span className={cn(
-              "text-primary"
-            )}>Stock</span>
-            <span className="text-foreground">Insights</span>
+            <img 
+              src="/logo-orca.png" 
+              alt="ORCA" 
+              className="max-h-14 sm:max-h-20 w-auto object-contain flex-shrink-0"
+            />
+            <span className="text-purple-900 font-display font-bold tracking-tight text-xl sm:text-[28px] truncate">
+              ORCA
+            </span>
           </Link>
           
           {/* Desktop Navigation with Dropdowns */}
@@ -105,11 +109,19 @@ const Navbar = () => {
                     variant="ghost" 
                     size="icon"
                     className={cn(
-                      "ml-2 rounded-full bg-blue-100/80 hover:bg-blue-200/80 transition-colors",
-                      isScrolled ? "text-gray-600 hover:text-black" : "text-white hover:text-white/80"
+                      "ml-2 rounded-full overflow-hidden p-0 transition-colors",
+                      isScrolled ? "bg-blue-100/80 hover:bg-blue-200/80 text-gray-600 hover:text-black" : "bg-blue-100/80 hover:bg-blue-200/80 text-white hover:text-white/80"
                     )}
                   >
-                    <FontAwesomeIcon icon={faUser} className="h-8 w-8 text-blue-500" />
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt=""
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <FontAwesomeIcon icon={faUser} className="h-8 w-8 text-blue-500" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -138,7 +150,7 @@ const Navbar = () => {
             )}
             
             <button
-              className={`p-2 rounded-full hover:bg-accent transition-colors md:hidden ${!isScrolled ? 'text-white hover:bg-white/20' : 'text-foreground'}`}
+              className="p-2 rounded-full hover:bg-accent transition-colors md:hidden text-foreground hover:bg-gray-100"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -158,27 +170,14 @@ const Navbar = () => {
           <div className="container mx-auto px-4 py-4">
             <nav className="flex flex-col space-y-2">
               <MobileNavLink to="/" label="Trang chủ" className='text-black'/>
-              
-              <MobileDropdownLink label="Investment">
+              <MobileNavLink to="/markets" label="Thị trường" className='text-black'/>
+              <MobileDropdownLink label="Đầu tư">
                 <MobileNavLink to="/investment/stocks" label="Cổ phiếu chứng khoán" className="pl-4" />
                 <MobileNavLink to="/investment/crypto" label="Tiền điện tử" className="pl-4" />
               </MobileDropdownLink>
-              
-              <MobileDropdownLink label="Chính sách">
-                <MobileNavLink to="/policy/fiscal" label="Chính sách tài khóa" className="pl-4" />
-                <MobileNavLink to="/policy/monetary" label="Chính sách tiền tệ" className="pl-4" />
-              </MobileDropdownLink>
-              
-              <MobileDropdownLink label="Quản lý">
-                <MobileNavLink to="/owner/profile" label="Hồ sơ" className="pl-4" />
-                <MobileNavLink to="/owner/settings" label="Cài đặt" className="pl-4" />
-              </MobileDropdownLink>
-              
-              <MobileNavLink to="/articles" label="Bài viết" />
-              <MobileNavLink to="/chat" label="Chat AI" />
-              <MobileNavLink to="/markets" label="Thị trường" />
-              <MobileNavLink to="/admin" label="Trang quản trị" />
-              <MobileNavLink to="/login" label="Đăng nhập" />
+              <MobileNavLink to="/articles" label="Bài viết" className='text-black'/>
+              <MobileNavLink to="/chat" label="Chat AI" className='text-black'/>
+              <MobileNavLink to="/feedback" label="Phản hồi của khách hàng" className='text-black'/>
             </nav>
           </div>
         </div>

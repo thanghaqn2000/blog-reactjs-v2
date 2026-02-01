@@ -112,7 +112,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <NavItem icon={LayoutDashboard} label="Trang chủ" to="/admin" collapsed={collapsed} />
             <NavItem icon={Users} label="Quản lí người dùng" to="/admin/users" collapsed={collapsed} />
             <NavItem icon={FileText} label="Quản lí bài viết" to="/admin/posts" collapsed={collapsed} />
-            <NavItem icon={Image} label="Quản lí hình ảnh" to="/admin/hero-slides" collapsed={collapsed} />
+            <NavItem icon={Image} label="Quản lí slide" to="/admin/hero-slides" collapsed={collapsed} />
             <NavItem icon={BarChart3} label="Quản lí thống kê" to="/admin/analytics" collapsed={collapsed} />
             <NavItem icon={Bell} label="Quản lí thông báo" to="/admin/notifications" collapsed={collapsed} />
             <NavItem icon={Settings} label="Quản lí cài đặt" to="/admin/settings" collapsed={collapsed} />
@@ -180,7 +180,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <NavItem icon={LayoutDashboard} label="Trang chủ" to="/admin" collapsed={false} />
                 <NavItem icon={Users} label="Users" to="/admin/users" collapsed={false} />
                 <NavItem icon={FileText} label="Quản lí bài viết" to="/admin/posts" collapsed={false} />
-                <NavItem icon={Image} label="Quản lí hình ảnh" to="/admin/hero-slides" collapsed={false} />
+                <NavItem icon={Image} label="Quản lí slide" to="/admin/hero-slides" collapsed={false} />
                 <NavItem icon={BarChart3} label="Quản lí thống kê" to="/admin/analytics" collapsed={false} />
                 <NavItem icon={Bell} label="Quản lí thông báo" to="/admin/notifications" collapsed={false} />
                 <NavItem icon={Settings} label="Quản lí cài đặt" to="/admin/settings" collapsed={false} />
