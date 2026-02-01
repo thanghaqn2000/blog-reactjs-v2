@@ -88,11 +88,11 @@ const ArticleCard = ({
           {/* Author & metadata */}
           <div className="mt-auto flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <img 
+              {/* <img 
                 src={author.avatar} 
                 alt={author.name}
                 className="w-7 h-7 rounded-full object-cover border border-border"
-              />
+              /> */}
               <span className="text-xs text-foreground/80 font-medium">
                 {author.name}
               </span>

@@ -20,9 +20,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import VipUpgradeModal from '@/components/VipUpgradeModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { useChatContext } from '@/contexts/ChatContext';
 import {
   AlertCircle,
+  ChevronLeft,
   Loader2,
   MessageSquarePlus,
   MoreVertical,
@@ -37,6 +39,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const ChatPage = () => {
+  const { user } = useAuth();
   const {
     messages,
     isLoading,
@@ -68,6 +71,18 @@ const ChatPage = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-close sidebar on mobile/small screen (match Tailwind md: 768px)
+  useEffect(() => {
+    const checkViewport = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      }
+    };
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
 
   // Auto scroll to bottom with debounce
   const scrollToBottom = useCallback(() => {
@@ -290,10 +305,12 @@ const ChatPage = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-gray-800"
+              className="group relative h-10 w-10 shrink-0 rounded-lg border border-gray-600 bg-gray-800 text-white hover:border-gray-500 hover:bg-gray-700"
               onClick={() => setIsSidebarOpen(false)}
+              aria-label="Ẩn sidebar"
             >
-              <PanelLeftClose className="h-5 w-5" />
+              <PanelLeftClose className="h-5 w-5 transition-opacity group-hover:opacity-0" />
+              <ChevronLeft className="absolute h-5 w-5 opacity-0 transition-opacity group-hover:opacity-100" />
             </Button>
           </div>
 
@@ -400,9 +417,11 @@ const ChatPage = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSidebarOpen(true)}
-                className="mr-4"
+                className="group relative mr-4 h-10 w-10 shrink-0 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 hover:border-gray-400 hover:bg-gray-200"
+                aria-label="Hiện sidebar"
               >
-                <PanelLeft className="h-5 w-5" />
+                <PanelLeft className="h-5 w-5 transition-opacity group-hover:opacity-0" />
+                <ChevronLeft className="absolute h-5 w-5 opacity-0 transition-opacity group-hover:opacity-100" />
               </Button>
             )}
             <div className="flex items-center gap-3 flex-1">
@@ -470,8 +489,16 @@ const ChatPage = () => {
                     </div>
 
                     {message.role === 'user' && (
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center">
-                        <User className="h-4 w-4 text-white" />
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-gray-400 flex items-center justify-center">
+                        {user?.avatar_url ? (
+                          <img
+                            src={user.avatar_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-4 w-4 text-white" />
+                        )}
                       </div>
                     )}
                   </div>

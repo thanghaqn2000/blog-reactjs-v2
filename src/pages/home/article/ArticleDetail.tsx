@@ -43,7 +43,6 @@ const Article = () => {
         setIsLoading(true);
         const response = await postServiceV1.getDetailPost(parseInt(id));
         const post = response.data;
-        
         setArticle({
           id: post.id.toString(),
           title: post.title,
@@ -124,12 +123,15 @@ const Article = () => {
   return (
     <MainLayout>
       <article className="pt-20 pb-16">
-        {/* Hero section - just the image */}
-        <div className="w-full h-[50vh] relative">
+        {/* Hero section - fixed size, smooth upscale */}
+        <div className="w-full h-[50vh] relative overflow-hidden bg-muted/30 flex items-center justify-center">
           <img 
-            src={import.meta.env.VITE_DEFAULT_IMG_POST} 
+            src={article.image}
             alt={article.title}
-            className="w-full h-full object-cover"
+            className="max-w-full max-h-full w-auto h-auto object-contain object-center"
+            style={{ imageRendering: 'smooth' as React.CSSProperties['imageRendering'] }}
+            decoding="async"
+            fetchPriority="high"
           />
         </div>
         
@@ -146,11 +148,11 @@ const Article = () => {
               
               <div className="flex flex-wrap items-center text-foreground/70 gap-x-8 gap-y-3 text-base mb-8">
                 <div className="flex items-center">
-                  <img 
+                  {/* <img 
                     src={article.author.avatar} 
                     alt={article.author.name}
                     className="w-8 h-8 rounded-full object-cover border border-border mr-3"
-                  />
+                  /> */}
                   <span className="font-medium">{article.author.name || 'Admin'}</span>
                 </div>
                 <div className="flex items-center">
