@@ -33,7 +33,7 @@ const initialSlides: Slide[] = [
     id: 1,
     url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920',
     alt: 'Stock market trading',
-    heading: 'Empower Your Investment Journey',
+    heading: 'Empower Your Investment Journeyđ',
     description: 'In-depth analysis and real-time market insights to help you make informed decisions.'
   },
   {
@@ -42,27 +42,6 @@ const initialSlides: Slide[] = [
     alt: 'Financial team meeting',
     heading: 'Expert Financial Analysis',
     description: 'Get access to expert opinions and comprehensive market research.'
-  },
-  {
-    id: 3,
-    url: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920',
-    alt: 'Digital finance technology',
-    heading: 'Future of Digital Finance',
-    description: 'Stay ahead with insights on blockchain, cryptocurrencies, and financial technology.'
-  },
-  {
-    id: 4,
-    url: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920',
-    alt: 'Global markets data',
-    heading: 'Global Market Trends',
-    description: 'Explore international market trends and investment opportunities worldwide.'
-  },
-  {
-    id: 5,
-    url: 'https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920',
-    alt: 'Retirement planning',
-    heading: 'Secure Your Financial Future',
-    description: 'Learn strategies for long-term wealth building and retirement planning.'
   }
 ];
 
