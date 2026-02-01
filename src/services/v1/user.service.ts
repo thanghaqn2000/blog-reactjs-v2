@@ -17,6 +17,7 @@ interface RegisterUserResponse {
     name: string;
     phone_number: string;
     is_admin: boolean;
+    is_vip: boolean;
   }
 }
 
@@ -45,6 +46,7 @@ interface UpdateUserResponse {
     name: string;
     phone_number: string;
     is_admin: boolean;
+    is_vip: boolean;
     require_phone_number: boolean;
   }
 }

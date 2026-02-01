@@ -89,6 +89,8 @@ const createPostSchema = z.object({
   content: z.string().min(1, 'Nội dung là bắt buộc'),
   category: z.string().min(1, 'Danh mục là bắt buộc'),
   status: z.enum(['pending', 'publish']),
+  sub_type: z.enum(['normal', 'vip']),
+  date_post: z.string().optional(),
 });
 
 

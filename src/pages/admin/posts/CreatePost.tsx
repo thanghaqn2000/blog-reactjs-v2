@@ -49,6 +49,8 @@ const CreatePost = () => {
     defaultValues: {
       status: 'pending',
       content: '',
+      sub_type: 'normal',
+      date_post: new Date().toISOString().split('T')[0],
     },
   });
 
@@ -57,6 +59,8 @@ const CreatePost = () => {
   const category = watch('category');
   const status = watch('status');
   const description = watch('description');
+  const sub_type = watch('sub_type');
+  const date_post = watch('date_post');
 
   const config = {
     readonly: false,
@@ -162,6 +166,8 @@ const CreatePost = () => {
           content: content,
           status: status,
           category: category,
+          sub_type: sub_type,
+          date_post: date_post || undefined,
           image_key: presignKey
         }
       });
@@ -259,6 +265,28 @@ const CreatePost = () => {
                         <option value="pending">Chờ duyệt</option>
                         <option value="publish">Xuất bản</option>
                       </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sub_type">Loại bài viết</Label>
+                      <select 
+                        id="sub_type"
+                        {...register('sub_type')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="normal">Phổ thông</option>
+                        <option value="vip">VIP</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="date_post">Ngày đăng</Label>
+                      <Input 
+                        id="date_post"
+                        type="date"
+                        {...register('date_post')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
                     </div>
 
                     <div className="space-y-2">

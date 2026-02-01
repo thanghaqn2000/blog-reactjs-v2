@@ -21,6 +21,7 @@ export interface User {
   avatar?: string;
   role: string;
   is_admin: boolean;
+  is_vip: boolean;
   created_at: string;
   updated_at: string;
   require_phone_number: boolean;

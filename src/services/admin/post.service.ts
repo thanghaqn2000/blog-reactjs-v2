@@ -10,6 +10,8 @@ export interface Post {
   content: string;
   created_at: string;
   updated_at: string;
+  sub_type?: string;
+  date_post?: string;
 }
 
 export interface ChartStock {
@@ -57,6 +59,8 @@ export interface CreatePost {
     content: string;
     category: string;
     status: string;
+    sub_type?: string;
+    date_post?: string;
     image_key?: string;
   };
 }

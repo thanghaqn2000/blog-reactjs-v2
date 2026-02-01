@@ -196,7 +196,7 @@ const Hero = () => {
                 Báo cáo
               </Link>
               <Link 
-                to="/markets" 
+                to="/articles" 
                 className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-white text-primary font-medium shadow-md hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all"
               >
                 <span>Tín hiệu</span>

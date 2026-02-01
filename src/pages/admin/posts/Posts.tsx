@@ -9,6 +9,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { formatDate } from '@/config/date.config';
 import { usePosts } from '@/contexts/PostsContext';
 import { AlertTriangle, Edit, Eye, FileText, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
@@ -80,6 +81,8 @@ const Posts = () => {
                     <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Danh mục</th>
                     <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Tác giả</th>
                     <th className="text-left py-3 px-4 font-medium">Trạng thái</th>
+                    <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Loại bài viết</th>
+                    <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Ngày đăng</th>
                     <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Ngày tạo</th>
                     <th className="text-center py-3 px-4 font-medium">Thao tác</th>
                   </tr>
@@ -102,11 +105,13 @@ const Posts = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 hidden md:table-cell">{post.author}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs ${statusColors[post.status]}`}>
-                          {post.status}
-                        </span>
-                      </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 rounded-full text-xs ${statusColors[post.status]}`}>
+                            {post.status}
+                          </span>
+                        </td>
+                      <td className="py-3 px-4 hidden md:table-cell">{post.sub_type}</td>
+                      <td className="py-3 px-4 hidden md:table-cell">{post.date_post ? formatDate(post.date_post) : '—'}</td>
                       <td className="py-3 px-4 hidden sm:table-cell">{post.date}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-center gap-2">
