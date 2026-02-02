@@ -91,7 +91,7 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
             </Link>
             <div className="flex items-center space-x-1">
               <Home size={20} />
-              <span className="font-semibold text-lg">Stock Insights</span>
+              <span className="font-semibold text-lg">ORCA</span>
             </div>
           </div>
         </div>

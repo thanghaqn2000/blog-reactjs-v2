@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -16,6 +17,7 @@ interface HeaderClientProps {
 const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
   const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const { user } = useAuth();
   
   const menuItemStyle = "px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none";
   const activeStyle = "text-primary";
@@ -119,6 +121,18 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
       >
         Phản hồi của khách hàng
       </Link>
+      {(user?.is_admin || user?.is_vip) && (
+        <Link 
+          to="https://script.google.com/macros/s/AKfycbxzt65T3IvP87rFVXSlZmwzKQLnMdyP9ykpN5pW1SPriTaJnAmk6AZH1tmSmtwOimwrcQ/exec" 
+          className={cn(
+            menuItemStyle,
+            location.pathname.includes('/chat') ? activeStyle : "",
+            scrolledStyle
+          )}
+        >
+          TOP cổ phiếu mạnh
+        </Link>
+      )}
     </nav>
   );
 };
