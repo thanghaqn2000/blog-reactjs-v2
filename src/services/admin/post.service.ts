@@ -21,11 +21,19 @@ export interface ChartStock {
   price: string;
 }
 
+export interface PaginationMeta {
+  current_page: number;
+  next_page: number | null;
+  previous_page: number | null;
+  total_pages: number;
+  total_count: number;
+  next_page_url: string | null;
+  previous_page_url: string | null;
+}
+
 export interface GetPostsResponse {
   data: Post[];
-  total: number;
-  page: number;
-  limit: number;
+  meta: PaginationMeta;
 }
 
 export interface CreatePostsResponse {
@@ -48,7 +56,7 @@ export interface PresignUrlResponse {
 
 export interface GetFilterPost {
   page?: number;
-  limit?: number;
+  per_page?: number;
   search?: string;
 }
 

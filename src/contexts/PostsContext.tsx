@@ -27,9 +27,14 @@ interface PostsContextType {
   posts: Post[];
   loading: boolean;
   error: string | null;
-  fetchPosts: () => Promise<void>;
+  fetchPosts: (page?: number) => Promise<void>;
   deletePost: (id: string) => void;
   getPost: (id: string) => Post | undefined;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
 }
 
 const PostsContext = createContext<PostsContextType | undefined>(undefined);
@@ -38,6 +43,11 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+  });
   const { token } = useAuth();
 
 
@@ -58,7 +68,7 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (page?: number) => {
     if (!token) {
       setPosts([])
       setLoading(false);
@@ -67,9 +77,19 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setLoading(true);
-      const response = await postService.getPosts();
+      const response = await postService.getPosts({ 
+        page: page ?? 1,
+        per_page: 10,
+      });
       const convertedPosts = response.data.map(convertApiPostToContextPost);
       setPosts(convertedPosts);
+      if (response.meta) {
+        setPagination({
+          currentPage: response.meta.current_page,
+          totalPages: response.meta.total_pages,
+          totalCount: response.meta.total_count,
+        });
+      }
       setError(null);
     } catch (err) {
       setError('Có lỗi xảy ra khi tải danh sách bài viết');
@@ -105,7 +125,7 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <PostsContext.Provider value={{ posts, loading, error, fetchPosts, deletePost, getPost }}>
+    <PostsContext.Provider value={{ posts, loading, error, fetchPosts, deletePost, getPost, pagination }}>
       {children}
     </PostsContext.Provider>
   );
