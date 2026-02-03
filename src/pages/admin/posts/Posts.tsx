@@ -23,10 +23,16 @@ const statusColors = {
 };
 
 const Posts = () => {
-  const { posts, deletePost } = usePosts();
+  const { posts, deletePost, fetchPosts, loading, pagination } = usePosts();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > pagination.totalPages) return;
+    fetchPosts(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleView = (id: string) => {
     navigate(`/admin/posts/detail/${id}`);
@@ -88,6 +94,20 @@ const Posts = () => {
                   </tr>
                 </thead>
                 <tbody>
+                  {loading && posts.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="py-6 px-4 text-center text-sm text-muted-foreground">
+                        Đang tải danh sách bài viết...
+                      </td>
+                    </tr>
+                  )}
+                  {!loading && posts.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="py-6 px-4 text-center text-sm text-muted-foreground">
+                        Chưa có bài viết nào.
+                      </td>
+                    </tr>
+                  )}
                   {posts.map((post) => (
                     <tr key={post.id} className="border-b hover:bg-muted/50">
                       <td className="py-3 px-4">
@@ -130,6 +150,49 @@ const Posts = () => {
                   ))}
                 </tbody>
               </table>
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs text-muted-foreground">
+                  Trang {pagination.currentPage} / {pagination.totalPages} &nbsp;·&nbsp; Tổng {pagination.totalCount} bài viết
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage <= 1 || loading}
+                    className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    &lt;
+                  </button>
+                  {Array.from({ length: pagination.totalPages }, (_, index) => {
+                    const page = index + 1;
+                    const isActive = page === pagination.currentPage;
+                    return (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => handlePageChange(page)}
+                        disabled={loading}
+                        className={[
+                          "h-8 w-8 rounded-lg border flex items-center justify-center text-sm transition-colors",
+                          isActive
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-foreground border-border hover:bg-muted",
+                        ].join(" ")}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage >= pagination.totalPages || loading}
+                    className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    &gt;
+                  </button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
