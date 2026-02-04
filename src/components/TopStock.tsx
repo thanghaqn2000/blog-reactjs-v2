@@ -5,25 +5,53 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { database } from "@/lib/firebase";
+import { TopStockItem, topStockV1Service } from "@/services/v1/top_stock_v1.service";
+import { ref as dbRef, onValue } from "firebase/database";
+import { ArrowRight, Crown, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-// Types
-interface RankedStock {
-  id: number;
-  name: string;
-  price: number;
-  change: number;
-  rank: number;
-}
+const TopStock = () => {
+  const [stocks, setStocks] = useState<TopStockItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-interface TopStockProps {
-  rankedStocks: RankedStock[];
-}
+  useEffect(() => {
+    const fetchTopStocks = async () => {
+      try {
+        setLoading(true);
+        const res = await topStockV1Service.getTopStocks(5);
+        setStocks(res.data ?? []);
+      } catch (error) {
+        console.error("Failed to fetch top stocks", error);
+        setStocks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-const TopStock = ({ rankedStocks }: TopStockProps) => {
+    fetchTopStocks();
+
+    const lastUpdatedRef = dbRef(database, "charts/last_updated_at");
+    let isFirstSnapshot = true;
+    const unsubscribe = onValue(lastUpdatedRef, (snapshot) => {
+      if (isFirstSnapshot) {
+        isFirstSnapshot = false;
+        return;
+      }
+      const updatedValue = snapshot.val();
+      if (updatedValue) {
+        fetchTopStocks();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -37,37 +65,45 @@ const TopStock = ({ rankedStocks }: TopStockProps) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Rank</TableHead>
-              <TableHead>Tên</TableHead>
-              <TableHead className="text-right">Giá</TableHead>
-              <TableHead className="text-right">Biến động</TableHead>
+              <TableHead>Mã</TableHead>
+              <TableHead className="text-right">Sức mạnh</TableHead>
+              <TableHead className="text-right">Khối lượng TB 20 ngày</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rankedStocks.map((stock) => (
-              <TableRow key={stock.id}>
-                <TableCell className="font-medium">{stock.rank}</TableCell>
-                <TableCell>{stock.name}</TableCell>
-                <TableCell className="text-right">${stock.price.toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  <span className={`flex items-center justify-end ${stock.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {stock.change > 0 ? (
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                    ) : (
-                      <ArrowDownRight className="mr-1 h-3 w-3" />
-                    )}
-                    {Math.abs(stock.change).toFixed(2)}%
-                  </span>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="py-4 text-center text-sm text-muted-foreground">
+                  Đang tải dữ liệu...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : stocks.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="py-4 text-center text-sm text-muted-foreground">
+                  Chưa có dữ liệu cổ phiếu.
+                </TableCell>
+              </TableRow>
+            ) : (
+              stocks.map((stock) => (
+                <TableRow key={stock.id}>
+                  <TableCell className="font-medium">{stock.rank}</TableCell>
+                  <TableCell>{stock.symbol}</TableCell>
+                  <TableCell className="text-right">{stock.rs_value}</TableCell>
+                  <TableCell className="text-right">{stock.vol_20d}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
         <Link
-          to="/investment/stocks"
+          to="/stock-insight"
           className="mt-4 flex items-center justify-center sm:justify-end text-sm font-medium text-primary hover:text-primary/80 transition-colors"
         >
-          <span>Xem thêm</span>
-          <ArrowRight size={16} className="ml-1" />
+          <span className="flex items-center gap-1">
+            Xem thêm
+            <Crown size={16} className="text-amber-500" />
+          </span>
+          <ArrowRight size={16} className="ml-2" />
         </Link>
       </CardContent>
     </Card>
@@ -75,3 +111,4 @@ const TopStock = ({ rankedStocks }: TopStockProps) => {
 };
 
 export default TopStock;
+
