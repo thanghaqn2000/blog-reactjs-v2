@@ -6,7 +6,8 @@ import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute, { ProtectedVIPRoute } from "./components/ProtectedRoute";
+import StockInsight from "./components/StockInsight";
 import { ChatProvider } from "./contexts/ChatContext";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
@@ -59,6 +60,7 @@ const App = () => (
                 
                 {/* VIP News route */}
                 <Route path="/vip-news" element={<VipNews />} />
+                <Route path="/stock-insight" element={<ProtectedVIPRoute><StockInsight /></ProtectedVIPRoute>} />
                 
                 {/* Investment routes */}
                 <Route path="/investment/stocks" element={<NotFound />} />

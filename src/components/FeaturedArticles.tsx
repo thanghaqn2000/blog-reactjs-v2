@@ -6,26 +6,6 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ArticleCard from './ArticleCard';
 import SidebarStock from './SidebarStock';
-
-// Sample data for ranked stocks
-const rankedStocks = [
-  { id: 1, name: "AAPL", price: 182.52, change: +1.43, rank: 1 },
-  { id: 2, name: "MSFT", price: 415.33, change: -0.78, rank: 2 },
-  { id: 3, name: "GOOGL", price: 162.08, change: +0.56, rank: 3 },
-  { id: 4, name: "AMZN", price: 177.23, change: +2.12, rank: 4 },
-  { id: 5, name: "NVDA", price: 946.10, change: -1.25, rank: 5 },
-];
-
-// Sample data for fund growth chart
-const fundGrowthData = [
-  { day: "Mon", value: 143.87 },
-  { day: "Tue", value: 144.32 },
-  { day: "Wed", value: 143.95 },
-  { day: "Thu", value: 145.76 },
-  { day: "Fri", value: 146.82 },
-  { day: "Sat", value: 147.15 },
-  { day: "Sun", value: 148.43 },
-];
 const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 
 interface Article {
@@ -255,11 +235,7 @@ const FeaturedArticles = () => {
           </div>
           
           {/* Sidebar Stock component */}
-          <SidebarStock 
-            rankedStocks={rankedStocks}
-            fundGrowthData={fundGrowthData}
-            className="w-full lg:w-1/3"
-          />
+          <SidebarStock className="w-full lg:w-1/3" />
         </div>
       </div>
     </section>

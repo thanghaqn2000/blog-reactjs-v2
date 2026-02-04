@@ -9,24 +9,7 @@ import { toast } from 'sonner';
 import { ArticleProps } from '../../../components/ArticleCard';
 import MainLayout from "../../../layouts/MainLayout";
 
-// Sample data for sidebar (you can move this to a separate data file later)
-const rankedStocks = [
-  { id: 1, name: "AAPL", price: 182.52, change: +1.43, rank: 1 },
-  { id: 2, name: "MSFT", price: 415.33, change: -0.78, rank: 2 },
-  { id: 3, name: "GOOGL", price: 162.08, change: +0.56, rank: 3 },
-  { id: 4, name: "AMZN", price: 177.23, change: +2.12, rank: 4 },
-  { id: 5, name: "NVDA", price: 946.10, change: -1.25, rank: 5 },
-];
-
-const fundGrowthData = [
-  { day: "Mon", value: 143.87 },
-  { day: "Tue", value: 144.32 },
-  { day: "Wed", value: 143.95 },
-  { day: "Thu", value: 145.76 },
-  { day: "Fri", value: 146.82 },
-  { day: "Sat", value: 147.15 },
-  { day: "Sun", value: 148.43 },
-];
+// SidebarStock hiện tự fetch dữ liệu, không cần sample data tại đây
 const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 
 
@@ -217,11 +200,7 @@ const Article = () => {
             {/* Sidebar */}
             <div className="w-full lg:w-[380px]">
               <div className="sticky top-20">
-                <SidebarStock 
-                  rankedStocks={rankedStocks}
-                  fundGrowthData={fundGrowthData}
-                  className="w-full"
-                />
+                <SidebarStock className="w-full" />
               </div>
             </div>
           </div>
