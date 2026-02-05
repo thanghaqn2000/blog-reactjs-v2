@@ -27,14 +27,17 @@ interface Article {
 const FeaturedArticles = () => {
   const navigate = useNavigate();
   const [visibleArticles, setVisibleArticles] = useState({
-    'Đầu tư danh mục': 3,
-    'Thông tin thị trường': 3
+    'Báo cáo': 6,
+    'Tin tức': 6,
+    'Tài chính': 6
   });
 
   const [articles, setArticles] = useState<{
+    report: Article[];
     news: Article[];
     finance: Article[];
   }>({
+    report: [],
     news: [],
     finance: []
   });  
@@ -42,11 +45,29 @@ const FeaturedArticles = () => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const [newsResponse, financeResponse] = await Promise.all([
-          postServiceV1.getPosts({ category: 'news', limit: 3 }),
-          postServiceV1.getPosts({ category: 'finance', limit: 3 })
+        const [reportResponse, newsResponse, financeResponse] = await Promise.all([
+          postServiceV1.getPosts({ category: 'report', limit: 10 }),
+          postServiceV1.getPosts({ category: 'news', limit: 10 }),
+          postServiceV1.getPosts({ category: 'finance', limit: 10 })
         ]);
         setArticles({
+          report: reportResponse.data.map(post => ({
+            id: post.id.toString(),
+            title: post.title,
+            excerpt: post.title,
+            date: formatDate(post.created_at),
+            image: post.image_url || defaultImage,
+            category: post.category,
+            description: post.description,
+            status: post.status,
+            date_post: post.date_post ? formatDate(post.date_post) : formatDate(post.created_at),
+            sub_type: post.sub_type,
+            readTime: '5 min read',
+            author: {
+              name: post.author || 'Admin',
+              avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+            }
+          })),
           news: newsResponse.data.map(post => ({
             id: post.id.toString(),
             title: post.title,
@@ -56,7 +77,7 @@ const FeaturedArticles = () => {
             category: post.category,
             description: post.description,
             status: post.status,
-            date_post: post.date_post,
+            date_post: post.date_post ? formatDate(post.date_post) : formatDate(post.created_at),
             sub_type: post.sub_type,
             readTime: '5 min read',
             author: {
@@ -74,7 +95,7 @@ const FeaturedArticles = () => {
             description: post.description,
             readTime: '5 min read',
             status: post.status,
-            date_post: formatDate(post.date_post),
+            date_post: post.date_post ? formatDate(post.date_post) : formatDate(post.created_at),
             sub_type: post.sub_type,
             author: {
               name: post.author || 'Admin',
@@ -91,14 +112,23 @@ const FeaturedArticles = () => {
   }, []);
   
   // Filter articles by category
+  const reportArticles = articles.report;
   const portfolioArticles = articles.news;
   const marketArticles = articles.finance;
   
   const loadMore = (category: string) => {
+    const getArticlesByCategoryLabel = (label: string) => {
+      if (label === 'Báo cáo') return reportArticles;
+      if (label === 'Tin tức') return portfolioArticles;
+      return marketArticles;
+    };
+
     setVisibleArticles(prev => ({
       ...prev,
-      [category]: Math.min(prev[category as keyof typeof prev] + 3, 
-        category === 'Đầu tư danh mục' ? portfolioArticles.length : marketArticles.length)
+      [category]: Math.min(
+        prev[category as keyof typeof prev] + 3,
+        getArticlesByCategoryLabel(category).length
+      )
     }));
   };
   
@@ -108,7 +138,7 @@ const FeaturedArticles = () => {
   };
   
   return (
-    <section className="py-16 relative">
+    <section className="pt-5 pb-16 relative">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section header */}
         <div className="flex items-center justify-between mb-10">
@@ -128,13 +158,50 @@ const FeaturedArticles = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Articles column (2/3 width) */}
           <div className="w-full lg:w-2/3">
-            {/* Portfolio Investments Category */}
+            {/* Reports Category */}
             <div className="mb-12">
               <h3 
                 className="text-xl font-bold mb-6 flex items-center border-l-4 border-primary pl-3 cursor-pointer hover:text-primary transition-colors"
-                onClick={() => handleCategoryClick('Đầu tư danh mục')}
+                onClick={() => handleCategoryClick('Báo cáo')}
               >
-                Đầu tư danh mục
+                Báo cáo
+              </h3>
+              {reportArticles.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Hiện tại bài viết đang trống
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mb-6">
+                  {reportArticles.slice(0, visibleArticles['Báo cáo']).map((article) => (
+                    <div key={article.id} className="flex h-full">
+                      <ArticleCard {...article} />
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* See more button */}
+              {visibleArticles['Báo cáo'] < reportArticles.length && (
+                <div className="text-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => loadMore('Báo cáo')}
+                    className="mt-4"
+                  >
+                    See more
+                    <ArrowRight size={16} className="ml-1" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* News Category */}
+            <div className="mb-12">
+              <h3 
+                className="text-xl font-bold mb-6 flex items-center border-l-4 border-primary pl-3 cursor-pointer hover:text-primary transition-colors"
+                onClick={() => handleCategoryClick('Tin tức')}
+              >
+                Tin tức
               </h3>
               {portfolioArticles.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -142,30 +209,20 @@ const FeaturedArticles = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mb-6">
-                  {portfolioArticles.slice(0, visibleArticles['Đầu tư danh mục']).map((article, index) => (
+                  {portfolioArticles.slice(0, visibleArticles['Tin tức']).map((article) => (
                     <div key={article.id} className="flex h-full">
-                      {index === visibleArticles['Đầu tư danh mục'] - 1 && 
-                       visibleArticles['Đầu tư danh mục'] < portfolioArticles.length ? (
-                        <div className="relative w-full">
-                          <ArticleCard {...article} />
-                          <div className="absolute right-3 bottom-3 bg-primary text-white p-1.5 rounded-full shadow-md hover:bg-primary/90 transition-colors">
-                            <ArrowRight size={16} />
-                          </div>
-                        </div>
-                      ) : (
-                        <ArticleCard {...article} />
-                      )}
+                      <ArticleCard {...article} />
                     </div>
                   ))}
                 </div>
               )}
               
               {/* See more button */}
-              {visibleArticles['Đầu tư danh mục'] < portfolioArticles.length && (
+              {visibleArticles['Tin tức'] < portfolioArticles.length && (
                 <div className="text-center">
                   <Button
                     variant="outline"
-                    onClick={() => loadMore('Đầu tư danh mục')}
+                    onClick={() => loadMore('Tin tức')}
                     className="mt-4"
                   >
                     See more
@@ -179,9 +236,9 @@ const FeaturedArticles = () => {
             <div>
               <h3 
                 className="text-xl font-bold mb-6 flex items-center border-l-4 border-primary pl-3 cursor-pointer hover:text-primary transition-colors"
-                onClick={() => handleCategoryClick('Thông tin thị trường')}
+                onClick={() => handleCategoryClick('Tài chính')}
               >
-                Thông tin thị trường
+                Tài chính
               </h3>
               {marketArticles.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -189,30 +246,20 @@ const FeaturedArticles = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mb-6">
-                  {marketArticles.slice(0, visibleArticles['Thông tin thị trường']).map((article, index) => (
+                  {marketArticles.slice(0, visibleArticles['Tài chính']).map((article) => (
                     <div key={article.id} className="flex h-full">
-                      {index === visibleArticles['Thông tin thị trường'] - 1 && 
-                       visibleArticles['Thông tin thị trường'] < marketArticles.length ? (
-                        <div className="relative w-full">
-                          <ArticleCard {...article} />
-                          <div className="absolute right-3 bottom-3 bg-primary text-white p-1.5 rounded-full shadow-md hover:bg-primary/90 transition-colors">
-                            <ArrowRight size={16} />
-                          </div>
-                        </div>
-                      ) : (
-                        <ArticleCard {...article} />
-                      )}
+                      <ArticleCard {...article} />
                     </div>
                   ))}
                 </div>
               )}
               
               {/* See more button */}
-              {visibleArticles['Thông tin thị trường'] < marketArticles.length && (
+              {visibleArticles['Tài chính'] < marketArticles.length && (
                 <div className="text-center">
                   <Button
                     variant="outline"
-                    onClick={() => loadMore('Thông tin thị trường')}
+                    onClick={() => loadMore('Tài chính')}
                     className="mt-4"
                   >
                     See more
