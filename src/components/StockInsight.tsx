@@ -108,7 +108,7 @@ const StockInsight = () => {
       try {
         // Stock list for Momentum Matrix
         const [topStocksRes, insightRes] = await Promise.all([
-          topStockV1Service.getTopStocks(50),
+          topStockV1Service.getTopStocks(500),
           topStockV1Service.getStockInsight(),
         ]);
 
@@ -142,7 +142,7 @@ const StockInsight = () => {
 
           setMarketData({
             index_value: vnClose,
-            index_pct: Math.round(indexPct * 100),
+            index_pct: indexPct * 100,
             index_trend_label: mapTrendLabel(raw.signal_ma200),
             advancing_count: raw.advancing,
             declining_count: raw.declining,

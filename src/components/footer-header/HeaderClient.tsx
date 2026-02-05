@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { Crown } from "lucide-react";
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -123,14 +124,17 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
       </Link>
       {(user?.is_admin || user?.is_vip) && (
         <Link 
-          to="https://script.google.com/macros/s/AKfycbxzt65T3IvP87rFVXSlZmwzKQLnMdyP9ykpN5pW1SPriTaJnAmk6AZH1tmSmtwOimwrcQ/exec" 
+          to="/stock-insight" 
           className={cn(
             menuItemStyle,
-            location.pathname.includes('/chat') ? activeStyle : "",
+            location.pathname.includes('/stock-insight') ? activeStyle : "",
             scrolledStyle
           )}
         >
-          TOP cổ phiếu mạnh
+          <span className="inline-flex items-center gap-1">
+            <span>TOP cổ phiếu mạnh</span>
+            <Crown className="w-4 h-4 text-amber-500" />
+          </span>
         </Link>
       )}
     </nav>

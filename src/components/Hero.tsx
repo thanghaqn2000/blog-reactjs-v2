@@ -96,7 +96,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="pt-24 pb-16 sm:pt-32 sm:pb-24 relative overflow-hidden">
+    <section className="relative overflow-hidden">
       {/* Slideshow Background */}
       <div className="absolute inset-0">
         <Carousel 
@@ -110,7 +110,7 @@ const Hero = () => {
           <CarouselContent className="h-full">
             {slideImages.map((slide, index) => (
               <CarouselItem key={slide.id} className="h-full">
-                <div className="relative w-full h-[calc(100vh-80px)] min-h-[500px]">
+                <div className="relative w-full h-[calc(50vh-40px)] min-h-[250px] max-h-[480px]">
                   <img 
                     src={slide.url} 
                     alt={slide.alt}
@@ -147,36 +147,31 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 min-h-[220px] sm:min-h-[260px] md:min-h-[320px] flex items-center">
         {/* Hero content */}
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-3xl mx-auto text-center">
           <div className="animate-fade-up">
-            {/* Tag */}
-            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-white mb-6 backdrop-blur-sm">
-              <span>Financial insights that matter</span>
-            </div>
-            
             {/* Headline - Dynamic based on active slide */}
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white drop-shadow-md">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4 mt-10 text-white drop-shadow-md">
               {slideImages[activeSlide]?.heading || 'Welcome to our platform'}
             </h1>
             
             {/* Description - Dynamic based on active slide */}
-            <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-sm">
+            <p className="text-base sm:text-lg text-white/90 mb-6 max-w-2xl mx-auto drop-shadow-sm">
               {slideImages[activeSlide]?.description || 'Discover financial insights and opportunities'}
             </p>
             
             {/* Call to action */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link 
                 to="/articles" 
-                className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary text-white font-medium shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all"
+                className="inline-flex items-center justify-center h-10 px-5 rounded-lg bg-primary text-white font-medium shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all"
               >
                 Báo cáo
               </Link>
               <Link 
                 to="/articles" 
-                className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-white text-primary font-medium shadow-md hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all"
+                className="inline-flex items-center justify-center h-10 px-5 rounded-lg bg-white text-primary font-medium shadow-md hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all"
               >
                 <span>Tín hiệu</span>
                 <ArrowRight size={16} className="ml-2" />

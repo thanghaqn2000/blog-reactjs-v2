@@ -14,13 +14,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { showToast } from "@/config/toast.config";
 import { usePosts } from '@/contexts/PostsContext';
+import { useThumbnailUpload } from '@/hooks/useThumbnailUpload';
 import AdminLayout from '@/layouts/AdminLayout';
 import { createPostSchema } from '@/schemas/user-validation';
 import { postService } from '@/services/admin/post.service';
 import { zodResolver } from '@hookform/resolvers/zod';
 import JoditEditor from 'jodit-react';
 import { ArrowLeft, FileImage, Loader2, Save, Trash2 } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import * as z from 'zod';
@@ -29,10 +30,15 @@ type CreatePostFormData = z.infer<typeof createPostSchema>;
 
 const CreatePost = () => {
   const editor = useRef(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState('');
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [presignKey, setPresignKey] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
+  const {
+    thumbnailPreview,
+    thumbnailFile,
+    presignKey,
+    isUploading,
+    handleThumbnailChange,
+    handleThumbnailPaste,
+    handleRemoveThumbnail,
+  } = useThumbnailUpload();
   const [editorContent, setEditorContent] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -101,56 +107,6 @@ const CreatePost = () => {
   const handleEditorChange = (newContent: string) => {
     setEditorContent(newContent);
     setValue('content', newContent, { shouldValidate: true });
-  };
-
-  const handleThumbnailChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setThumbnailFile(file);
-      setIsUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Gọi API presignUrl
-      try {
-        const response = await postService.presignUrl({
-          filename: file.name,
-          content_type: file.type
-        });
-        setPresignKey(response.key);
-
-        // Upload ảnh lên S3
-        const uploadResponse = await fetch(response.url, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
-          },
-        });
-
-        if (uploadResponse.ok) {
-          showToast.success('Upload ảnh thành công!');
-        } else {
-          showToast.error('Có lỗi xảy ra khi upload ảnh lên S3');
-        }
-      } catch (error) {
-        showToast.error('Có lỗi xảy ra khi tạo URL upload ảnh');
-      } finally {
-        setIsUploading(false);
-      }
-    }
-  };
-
-  const handleRemoveThumbnail = () => {
-    setThumbnailFile(null);
-    setThumbnailPreview('');
-    setPresignKey('');
-    setIsUploading(false);
-    const fileInput = document.getElementById('thumbnail') as HTMLInputElement;
-    if (fileInput) fileInput.value = '';
   };
 
   const onSubmit = async (data: CreatePostFormData) => {
@@ -291,11 +247,15 @@ const CreatePost = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="thumbnail">Ảnh đại diện</Label>
-                      <div className="flex items-center gap-4">
+                      <div
+                        className="flex items-center gap-4 border border-dashed border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-primary cursor-pointer"
+                        onClick={() => document.getElementById('thumbnail')?.click()}
+                        onPaste={handleThumbnailPaste}
+                        tabIndex={0}
+                      >
                         <Button 
                           variant="outline" 
                           type="button"
-                          onClick={() => document.getElementById('thumbnail')?.click()}
                           className="flex items-center gap-2"
                           disabled={isUploading}
                         >
@@ -319,7 +279,7 @@ const CreatePost = () => {
                               <Loader2 className="h-10 w-10 animate-spin" />
                               Đang upload ảnh...
                             </>
-                          ) : thumbnailFile ? thumbnailFile.name : 'Chưa chọn ảnh'}
+                          ) : thumbnailFile ? thumbnailFile.name : 'Click để chọn ảnh hoặc paste (Ctrl + V)'}
                         </span>
                       </div>
                       {thumbnailPreview && (
