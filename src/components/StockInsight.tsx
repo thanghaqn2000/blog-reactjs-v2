@@ -142,13 +142,13 @@ const StockInsight = () => {
 
           setMarketData({
             index_value: vnClose,
-            index_pct: indexPct * 100,
+            index_pct: Number((indexPct * 100).toFixed(2)),
             index_trend_label: mapTrendLabel(raw.signal_ma200),
             advancing_count: raw.advancing,
             declining_count: raw.declining,
-            ma50_pct: (Number(raw.pct_above_ma50) * 100),
-            ma100_pct: (Number(raw.pct_above_ma100) * 100),
-            ma200_pct: (Number(raw.pct_above_ma200) * 100),
+            ma50_pct: Number((Number(raw.pct_above_ma50) * 100).toFixed(2)),
+            ma100_pct: Number((Number(raw.pct_above_ma100) * 100).toFixed(2)),
+            ma200_pct: Number((Number(raw.pct_above_ma200) * 100).toFixed(2)),
             market_regime: raw.market_regime,
             regime_desc: raw.regime_desc,
             signal_ma200: mapSignal(raw.signal_ma200),
