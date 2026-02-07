@@ -18,6 +18,7 @@ import CreatePost from "./pages/admin/posts/CreatePost";
 import EditPost from "./pages/admin/posts/EditPost";
 import PostDetail from "./pages/admin/posts/PostDetail";
 import Posts from "./pages/admin/posts/Posts";
+import UserChatHistory from "./pages/admin/users/UserChatHistory";
 import UserManagement from "./pages/admin/users/UserManagement";
 import ChatPage from "./pages/client/ChatPage";
 import Profile from "./pages/client/Profile";
@@ -48,6 +49,7 @@ const App = () => (
                 {/* Admin routes */}
                 <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
                 <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+                <Route path="/admin/users/:id/chat-history" element={<AdminRoute><UserChatHistory /></AdminRoute>} />
                 <Route path="/admin/posts" element={<AdminRoute><Posts /></AdminRoute>} />
                 <Route path="/admin/posts/create" element={<AdminRoute><CreatePost /></AdminRoute>} />
                 <Route path="/admin/posts/edit/:id" element={<AdminRoute><EditPost /></AdminRoute>} />

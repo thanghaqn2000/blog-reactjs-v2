@@ -19,76 +19,44 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { showToast } from "@/config/toast.config";
+import { useAuth } from "@/contexts/AuthContext";
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
+import { GetUsersResponse, User, userService } from '@/services/admin/user.service';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import {
   Edit,
   Filter,
+  MessageCircle,
   MoreHorizontal,
-  Plus,
   Search,
   Star,
   Trash
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import * as z from 'zod';
 
-const sampleUsers = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'user',
-    status: 'active',
-    isVip: false,
-    joinedDate: '2023-05-15',
-    lastLogin: '2023-10-20'
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    role: 'admin',
-    status: 'active',
-    isVip: true,
-    joinedDate: '2023-03-10',
-    lastLogin: '2023-10-21'
-  },
-  {
-    id: '3',
-    name: 'Robert Johnson',
-    email: 'robert.johnson@example.com',
-    role: 'user',
-    status: 'inactive',
-    isVip: false,
-    joinedDate: '2023-06-22',
-    lastLogin: '2023-09-15'
-  },
-  {
-    id: '4',
-    name: 'Emily Davis',
-    email: 'emily.davis@example.com',
-    role: 'user',
-    status: 'active',
-    isVip: true,
-    joinedDate: '2023-04-05',
-    lastLogin: '2023-10-19'
-  },
-  {
-    id: '5',
-    name: 'Michael Wilson',
-    email: 'michael.wilson@example.com',
-    role: 'editor',
-    status: 'active',
-    isVip: false,
-    joinedDate: '2023-07-12',
-    lastLogin: '2023-10-18'
-  }
-];
+interface UserQuotaRow {
+  total_limit: number;
+  used: number;
+  remaining: number;
+}
+
+interface AdminUserRow {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  isVip: boolean;
+  joinedDate: string;
+  lastLogin: string;
+  userQuota?: UserQuotaRow;
+}
 
 const userFormSchema = z.object({
   name: z.string().min(2, {
@@ -108,12 +76,46 @@ const userFormSchema = z.object({
     message: "Password must be at least 6 characters.",
   }).optional(),
   notes: z.string().optional(),
+  total_limit: z.coerce.number().min(0).optional(),
+  used: z.coerce.number().min(0).optional(),
+  remaining: z.coerce.number().min(0).optional(),
+  /** Điều chỉnh quota: +20 tăng 20, -20 giảm 20. Chỉ dùng trong form Edit. */
+  quota_adjustment: z.union([z.coerce.number(), z.literal("")]).optional(),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
 
+const mapUserToRow = (user: User): AdminUserRow => {
+  const name = user.name || user.username || `User #${user.id}`;
+  const joinedRaw = user.joined_date || user.createdAt || '';
+  const lastRaw = user.last_login || user.updatedAt || '-';
+  const status = user.status || 'active';
+  const isVip = Boolean(user.is_vip);
+
+  const userQuota = user.user_quota
+    ? {
+        total_limit: user.user_quota.total_limit,
+        used: user.user_quota.used,
+        remaining: user.user_quota.remaining,
+      }
+    : undefined;
+
+  return {
+    id: user.id,
+    name,
+    email: user.email,
+    role: user.role,
+    status,
+    isVip,
+    joinedDate: joinedRaw ? joinedRaw.slice(0, 10) : '-',
+    lastLogin: lastRaw ? String(lastRaw).slice(0, 10) : '-',
+    userQuota,
+  };
+};
+
 const UserManagement = () => {
-  const [users, setUsers] = useState(sampleUsers);
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -122,22 +124,24 @@ const UserManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSelfDeleteWarningOpen, setIsSelfDeleteWarningOpen] = useState(false);
   const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<(typeof sampleUsers)[0] | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUserRow | null>(null);
   const usersPerPage = 10;
+  const dialogCloseFocusRef = useRef<HTMLDivElement>(null);
 
-  const createForm = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      role: 'user',
-      status: 'active',
-      isVip: false,
-      password: '',
-      notes: ''
-    },
+  const {
+    data: usersResponse,
+    isLoading: isLoadingUsers,
+    refetch: refetchUsers,
+  } = useQuery<GetUsersResponse>({
+    queryKey: ['admin-users'],
+    queryFn: () => userService.getUsers(),
+    staleTime: 5 * 60 * 1000,
   });
+
+  const apiUsers = usersResponse?.data ?? [];
+  const users: AdminUserRow[] = apiUsers.map(mapUserToRow);
 
   const editForm = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -147,7 +151,11 @@ const UserManagement = () => {
       role: 'user',
       status: 'active',
       isVip: false,
-      notes: ''
+      notes: '',
+      total_limit: 0,
+      used: 0,
+      remaining: 0,
+      quota_adjustment: undefined,
     },
   });
 
@@ -170,87 +178,86 @@ const UserManagement = () => {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-  const handleCreateUser = (data: UserFormValues) => {
-    const newUser = {
-      id: (users.length + 1).toString(),
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      status: data.status,
-      isVip: data.isVip,
-      joinedDate: new Date().toISOString().slice(0, 10),
-      lastLogin: '-'
-    };
-    
-    setUsers([...users, newUser]);
-    setIsCreateDialogOpen(false);
-    createForm.reset();
-    showToast.success("User created successfully");
-  };
-
-  const handleEditUser = (data: UserFormValues) => {
+  const handleEditUser = async (data: UserFormValues) => {
     if (!selectedUser) return;
-    
-    const updatedUsers = users.map(user => 
-      user.id === selectedUser.id 
-        ? { 
-            ...user, 
-            name: data.name, 
-            email: data.email, 
-            role: data.role, 
-            status: data.status,
-            isVip: data.isVip
-          } 
-        : user
-    );
-    
-    setUsers(updatedUsers);
-    setIsEditDialogOpen(false);
-    editForm.reset();
-    showToast.success("User updated successfully");
+    try {
+      const rawAdjustment = data.quota_adjustment;
+      const hasQuotaAdjustment =
+        rawAdjustment !== undefined &&
+        rawAdjustment !== "" &&
+        Number(rawAdjustment) !== 0;
+      const quotaAdjustment = hasQuotaAdjustment ? Number(rawAdjustment) : undefined;
+
+      const payload: Parameters<typeof userService.updateUser>[1] = {
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        status: data.status,
+        is_vip: data.isVip,
+      };
+      if (quotaAdjustment != null) {
+        payload.quota_adjustment = quotaAdjustment;
+      }
+
+      const updatedUser = await userService.updateUser(selectedUser.id, payload);
+      await refetchUsers();
+
+      if (updatedUser.user_quota) {
+        editForm.setValue("total_limit", updatedUser.user_quota.total_limit);
+        editForm.setValue("used", updatedUser.user_quota.used);
+        editForm.setValue("remaining", updatedUser.user_quota.remaining);
+      }
+      editForm.setValue("quota_adjustment", undefined);
+      showToast.success("User updated successfully");
+    } catch (error) {
+      showToast.error("Có lỗi xảy ra khi cập nhật người dùng");
+    }
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!selectedUser) return;
-    
-    const updatedUsers = users.filter(user => user.id !== selectedUser.id);
-    setUsers(updatedUsers);
-    setIsDeleteDialogOpen(false);
-    showToast.success("User deleted successfully");
+    if (currentUser && selectedUser.id === currentUser.id) {
+      showToast.error("Bạn không thể tự xóa chính mình");
+      handleDeleteDialogClose();
+      return;
+    }
+    try {
+      await userService.deleteUser(selectedUser.id);
+      await refetchUsers();
+      setIsDeleteDialogOpen(false);
+      showToast.success("User deleted successfully");
+    } catch (error) {
+      showToast.error("Có lỗi xảy ra khi xoá người dùng");
+    }
   };
 
-  const handleUpgradeToVip = () => {
+  const handleUpgradeToVip = async () => {
     if (!selectedUser) return;
-    
-    const updatedUsers = users.map(user => 
-      user.id === selectedUser.id 
-        ? { ...user, isVip: true } 
-        : user
-    );
-    
-    setUsers(updatedUsers);
-    setIsUpgradeDialogOpen(false);
-    showToast.success(`${selectedUser.name} has been upgraded to VIP`);
+    try {
+      await userService.updateUser(selectedUser.id, { is_vip: true });
+      await refetchUsers();
+      setIsUpgradeDialogOpen(false);
+      showToast.success(`${selectedUser.name} has been upgraded to VIP`);
+    } catch (error) {
+      showToast.error("Có lỗi xảy ra khi nâng cấp VIP");
+    }
   };
 
-  const openEditDialog = (user: (typeof sampleUsers)[0]) => {
+  const openEditDialog = (user: AdminUserRow) => {
     setSelectedUser(user);
+    const q = user.userQuota;
     editForm.reset({
       name: user.name,
       email: user.email,
       role: user.role,
       status: user.status,
       isVip: user.isVip,
-      notes: ''
+      notes: '',
+      total_limit: q?.total_limit ?? 0,
+      used: q?.used ?? 0,
+      remaining: q?.remaining ?? 0,
     });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleCreateDialogClose = () => {
-    setIsCreateDialogOpen(false);
-    setTimeout(() => {
-      createForm.reset();
-    }, 100);
+    setTimeout(() => setIsEditDialogOpen(true), 0);
   };
 
   const handleEditDialogClose = () => {
@@ -268,6 +275,11 @@ const UserManagement = () => {
     }, 100);
   };
 
+  const handleSelfDeleteWarningClose = () => {
+    setIsSelfDeleteWarningOpen(false);
+    setTimeout(() => setSelectedUser(null), 100);
+  };
+
   const handleUpgradeDialogClose = () => {
     setIsUpgradeDialogOpen(false);
     setTimeout(() => {
@@ -277,17 +289,12 @@ const UserManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-4">
+      <div ref={dialogCloseFocusRef} className="space-y-4" tabIndex={-1}>
         <Card>
           <CardHeader>
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <CardTitle>Quản lí người dùng</CardTitle>
-                <CardDescription>Quản lí người dùng, gán vai trò, và thiết lập quyền hạn</CardDescription>
-              </div>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Thêm người dùng
-              </Button>
+            <div>
+              <CardTitle>Quản lí người dùng</CardTitle>
+              <CardDescription>Quản lí người dùng, gán vai trò, và thiết lập quyền hạn</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -358,13 +365,13 @@ const UserManagement = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[200px]">Name</TableHead>
+                    <TableHead className="w-[200px]">Tên</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Vai trò</TableHead>
+                    <TableHead>Trạng thái</TableHead>
                     <TableHead>VIP</TableHead>
-                    <TableHead>Joined Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Ngày tham gia</TableHead>
+                    <TableHead className="text-right">Hành động</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -411,36 +418,43 @@ const UserManagement = () => {
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
+                                <span className="sr-only">Mở menu</span>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => openEditDialog(user)}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                Edit
+                                Cập nhật
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => {
                                   setSelectedUser(user);
-                                  setIsDeleteDialogOpen(true);
+                                  if (currentUser && user.id === currentUser.id) {
+                                    setTimeout(() => setIsSelfDeleteWarningOpen(true), 0);
+                                  } else {
+                                    setTimeout(() => setIsDeleteDialogOpen(true), 0);
+                                  }
                                 }}
                                 className="text-red-600"
                               >
                                 <Trash className="mr-2 h-4 w-4" />
-                                Delete
+                                Xóa
                               </DropdownMenuItem>
-                              {!user.isVip && (
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    setSelectedUser(user);
-                                    setIsUpgradeDialogOpen(true);
-                                  }}
-                                  className="text-amber-600"
-                                >
-                                  <Star className="mr-2 h-4 w-4" />
-                                  Upgrade to VIP
-                                </DropdownMenuItem>
-                              )}
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  navigate(`/admin/users/${user.id}/chat-history`, {
+                                    state: {
+                                      name: user.name,
+                                      email: user.email,
+                                      role: user.role,
+                                      isVip: user.isVip,
+                                    },
+                                  });
+                                }}
+                              >
+                                <MessageCircle className="mr-2 h-4 w-4" />
+                                Xem lịch sử nhắn tin
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -449,7 +463,7 @@ const UserManagement = () => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="h-24 text-center">
-                        No users found.
+                        Không tìm thấy người dùng.
                       </TableCell>
                     </TableRow>
                   )}
@@ -491,150 +505,18 @@ const UserManagement = () => {
         </Card>
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={handleCreateDialogClose}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if (!open) handleEditDialogClose(); }}>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            dialogCloseFocusRef.current?.focus?.();
+          }}
+        >
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
+            <DialogTitle>Cập nhật thông tin người dùng</DialogTitle>
             <DialogDescription>
-              Create a new user account. Click save when you're done.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...createForm}>
-            <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-4">
-              <FormField
-                control={createForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={createForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="john.doe@example.com" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={createForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input placeholder="••••••" type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={createForm.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <FormControl>
-                        <select 
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          {...field}
-                        >
-                          <option value="user">User</option>
-                          <option value="admin">Admin</option>
-                          <option value="editor">Editor</option>
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={createForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <FormControl>
-                        <select 
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          {...field}
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={createForm.control}
-                name="isVip"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>VIP Status</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        User will have access to premium content and features
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={createForm.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Additional information about this user..."
-                        className="resize-none" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCreateDialogClose}>Cancel</Button>
-                <Button type="submit">Save User</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={handleEditDialogClose}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user information. Click save when you're done.
+              Cập nhật thông tin người dùng. Nhấn lưu khi bạn hoàn thành.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -644,9 +526,9 @@ const UserManagement = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Tên</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} disabled/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -659,7 +541,7 @@ const UserManagement = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input type="email" {...field} disabled/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -671,34 +553,22 @@ const UserManagement = () => {
                   name="role"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role</FormLabel>
+                      <FormLabel>Vai trò</FormLabel>
                       <FormControl>
-                        <select 
+                        <select
                           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          {...field}
+                          value={field.value}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value);
+                            if (value === "admin" && editForm.getValues("isVip")) {
+                              editForm.setValue("isVip", false);
+                            }
+                          }}
                         >
                           <option value="user">User</option>
                           <option value="admin">Admin</option>
-                          <option value="editor">Editor</option>
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <FormControl>
-                        <select 
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          {...field}
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
+                          <option value="vip">VIP</option>
                         </select>
                       </FormControl>
                       <FormMessage />
@@ -706,39 +576,85 @@ const UserManagement = () => {
                   )}
                 />
               </div>
-              <FormField
-                control={editForm.control}
-                name="isVip"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>VIP Status</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        User will have access to premium content and features
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Quota</p>
+                <FormField
+                  control={editForm.control}
+                  name="quota_adjustment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Điều chỉnh quota</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="VD: 20 (tăng) hoặc -20 (giảm)"
+                          value={field.value === undefined || field.value === "" ? "" : field.value}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            field.onChange(v === "" ? undefined : v);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <FormField
+                    control={editForm.control}
+                    name="total_limit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Tổng quota</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} disabled readOnly className="bg-muted" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="used"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Đã sử dụng</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} disabled readOnly className="bg-muted" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="remaining"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Còn lại</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} disabled readOnly className="bg-muted" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleEditDialogClose}>Cancel</Button>
-                <Button type="submit">Save Changes</Button>
+                <Button type="button" variant="outline" onClick={handleEditDialogClose}>Thoát</Button>
+                <Button type="submit">Lưu thay đổi</Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={handleDeleteDialogClose}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => { if (!open) handleDeleteDialogClose(); }}>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            dialogCloseFocusRef.current?.focus?.();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
@@ -762,27 +678,23 @@ const UserManagement = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isUpgradeDialogOpen} onOpenChange={handleUpgradeDialogClose}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={isSelfDeleteWarningOpen} onOpenChange={(open) => { if (!open) handleSelfDeleteWarningClose(); }}>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            dialogCloseFocusRef.current?.focus?.();
+          }}
+        >
           <DialogHeader>
-            <DialogTitle>Upgrade to VIP</DialogTitle>
+            <DialogTitle>Không thể xóa</DialogTitle>
             <DialogDescription>
-              Upgrade this user to VIP status to provide access to premium content and features.
+              Bạn không thể tự xóa chính mình.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-2 p-4 rounded-md bg-amber-50 border border-amber-200">
-            <p className="text-sm text-amber-800">
-              You are about to upgrade <span className="font-medium">{selectedUser?.name}</span> to VIP status.
-            </p>
-          </div>
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={handleUpgradeDialogClose}>Cancel</Button>
-            <Button 
-              variant="premium" 
-              onClick={handleUpgradeToVip}
-            >
-              <Star className="mr-2 h-4 w-4" />
-              Confirm Upgrade
+            <Button type="button" onClick={handleSelfDeleteWarningClose}>
+              Đóng
             </Button>
           </DialogFooter>
         </DialogContent>

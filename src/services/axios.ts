@@ -6,12 +6,9 @@ export const v1Api = axios.create({
   baseURL: `${API_CONFIG.BASE_URL}${API_CONFIG.V1_PREFIX}`,
 });
 
-// Tạo instance cho admin API
+// Tạo instance cho admin API (mặc định reject với status không thuộc 2xx, để try/catch ở caller bắt được 4xx/5xx)
 export const adminApi = axios.create({
   baseURL: `${API_CONFIG.BASE_URL}${API_CONFIG.ADMIN_PREFIX}`,
-  validateStatus: function (status) {
-    return status < 500;
-  },
 });
 
 // Tạo một object để lưu trữ token
