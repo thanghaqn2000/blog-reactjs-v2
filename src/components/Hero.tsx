@@ -5,61 +5,77 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  type CarouselApi
+  type CarouselApi,
 } from "@/components/ui/carousel";
-import { ArrowRight } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { slideV1Service } from "@/services/v1/slide_v1.service";
+import { ArrowRight } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 // Default slides that will be used if no custom slides are found
-const defaultSlideImages = [
+interface HeroSlide {
+  id: number;
+  url: string;
+  alt: string;
+  heading: string;
+  description: string;
+}
+
+const defaultSlideImages: HeroSlide[] = [
   {
     id: 1,
-    url: '/slide1.jpg',
-    alt: '',
-    heading: 'ORCA - Nền Tảng Tín Hiệu và Phân Tích Cổ Phiếu Chứng Khoán Hiệu Quả Cao',
-    description: 'Phong cách "Sát thủ đại dương" (Mạnh mẽ & Quyết đoán)'
+    url: "/slide1.jpg",
+    alt: "",
+    heading:
+      "ORCA - Nền Tảng Tín Hiệu và Phân Tích Cổ Phiếu Chứng Khoán Hiệu Quả Cao",
+    description:
+      'Phong cách "Sát thủ đại dương" (Mạnh mẽ & Quyết đoán)',
   },
   {
     id: 2,
-    url: '/slide2.jpg',
-    alt: 'orca',
-    heading: "ORCA - Tiên phong sử dụng AI với độ chính xác cao trong trading.",
-    description: 'ORCA: Bản năng AI. Hành động táo bạo. Lợi nhuận tuyệt đối.'
-  }
+    url: "/slide2.jpg",
+    alt: "orca",
+    heading:
+      "ORCA - Tiên phong sử dụng AI với độ chính xác cao trong trading.",
+    description:
+      "ORCA: Bản năng AI. Hành động táo bạo. Lợi nhuận tuyệt đối.",
+  },
 ];
 
 const Hero = () => {
-  // Try to get slides from localStorage, otherwise use defaults
-  const getSlidesFromStorage = () => {
-    try {
-      const storedSlides = localStorage.getItem('heroSlides');
-      return storedSlides ? JSON.parse(storedSlides) : defaultSlideImages;
-    } catch (error) {
-      console.error('Error loading slides from storage:', error);
-      return defaultSlideImages;
-    }
-  };
-
-  const [slideImages, setSlideImages] = useState(getSlidesFromStorage());
+  const [slideImages, setSlideImages] = useState<HeroSlide[]>(defaultSlideImages);
   const [activeSlide, setActiveSlide] = useState(0);
   const [api, setApi] = useState<CarouselApi | null>(null);
 
-  // Check for updates to slides in localStorage
+  // Load slides từ public API v1; fallback về default nếu lỗi hoặc không có dữ liệu
   useEffect(() => {
-    const checkForUpdates = () => {
-      setSlideImages(getSlidesFromStorage());
+    const fetchSlides = async () => {
+      try {
+        const slides = await slideV1Service.getSlides();
+
+        if (!slides || slides.length === 0) {
+          setSlideImages(defaultSlideImages);
+          return;
+        }
+
+        const mapped: HeroSlide[] = slides.map((s) => ({
+          id: s.id,
+          url: s.image_url,
+          alt: s.heading,
+          heading: s.heading, 
+          description: s.description,
+        }));
+
+        setSlideImages(mapped);
+      } catch (error) {
+        // Nếu không gọi được API (chưa login / lỗi server), giữ default
+        console.error("Failed to load hero slides from API:", error);
+        setSlideImages(defaultSlideImages);
+        // Không spam toast nếu user không phải admin, nhưng log 1 lần là đủ
+      }
     };
 
-    // Initial check
-    checkForUpdates();
-
-    // Add storage event listener to update slides if changed in another tab
-    window.addEventListener('storage', checkForUpdates);
-    
-    return () => {
-      window.removeEventListener('storage', checkForUpdates);
-    };
+    fetchSlides();
   }, []);
 
   // Set the active slide based on current embla slide
@@ -85,7 +101,7 @@ const Hero = () => {
         api.scrollNext();
       }
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, [api]);
 
@@ -99,12 +115,12 @@ const Hero = () => {
     <section className="relative overflow-hidden">
       {/* Slideshow Background */}
       <div className="absolute inset-0">
-        <Carousel 
+        <Carousel
           className="w-full h-full"
           setApi={setApi}
           opts={{
             loop: true, // Enable infinite looping
-            align: "center"
+            align: "center",
           }}
         >
           <CarouselContent className="h-full">
