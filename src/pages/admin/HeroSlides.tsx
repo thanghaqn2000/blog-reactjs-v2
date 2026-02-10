@@ -2,15 +2,17 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { showToast } from "@/config/toast.config";
 import AdminLayout from '@/layouts/AdminLayout';
+import { postService } from '@/services/admin/post.service';
+import { slideService } from '@/services/admin/slide.service';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowUpDown, ImagePlus, Plus, Save, Trash2, X } from 'lucide-react';
-import React, { useState } from 'react';
+import { ArrowUpDown, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -18,7 +20,6 @@ import { z } from 'zod';
 interface Slide {
   id: number;
   url: string;
-  alt: string;
   heading: string;
   description: string;
   file?: File;
@@ -27,49 +28,26 @@ interface Slide {
 // Default placeholder image for new slides
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920';
 
-// Initial slides from the Hero component
-const initialSlides: Slide[] = [
-  {
-    id: 1,
-    url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920',
-    alt: 'Stock market trading',
-    heading: 'Empower Your Investment Journeyđ',
-    description: 'In-depth analysis and real-time market insights to help you make informed decisions.'
-  },
-  {
-    id: 2,
-    url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920',
-    alt: 'Financial team meeting',
-    heading: 'Expert Financial Analysis',
-    description: 'Get access to expert opinions and comprehensive market research.'
-  }
-];
-
 // Form schema for slide validation
 const slideSchema = z.object({
   heading: z.string().min(3, { message: "Heading must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  alt: z.string().min(3, { message: "Alt text must be at least 3 characters" }),
 });
 
 // Form schema for new slide
 const newSlideSchema = z.object({
   heading: z.string().min(3, { message: "Heading must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  alt: z.string().min(3, { message: "Alt text must be at least 3 characters" }),
 });
 
 const HeroSlides = () => {
-  const [slides, setSlides] = useState<Slide[]>(() => {
-    // Try to get saved slides from localStorage
-    const savedSlides = localStorage.getItem('heroSlides');
-    return savedSlides ? JSON.parse(savedSlides) : initialSlides;
-  });
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [activeSlide, setActiveSlide] = useState<Slide | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newSlideImage, setNewSlideImage] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Setup form for editing slides
   const form = useForm<z.infer<typeof slideSchema>>({
@@ -77,7 +55,6 @@ const HeroSlides = () => {
     defaultValues: {
       heading: "",
       description: "",
-      alt: "",
     },
   });
 
@@ -87,9 +64,62 @@ const HeroSlides = () => {
     defaultValues: {
       heading: "New Slide",
       description: "Description for the new slide goes here.",
-      alt: "New slide image",
     },
   });
+
+  // Helper: upload image to S3 via presign URL and return image_key
+  const uploadImageAndGetKey = async (file: File): Promise<string | null> => {
+    try {
+      const presign = await postService.presignUrl({
+        filename: file.name,
+        content_type: file.type,
+      });
+
+      const uploadResp = await fetch(presign.url, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResp.ok) {
+        showToast.error('Upload ảnh slide lên S3 thất bại');
+        return null;
+      }
+
+      return presign.key;
+    } catch (error) {
+      showToast.error('Có lỗi khi tạo URL upload ảnh slide');
+      return null;
+    }
+  };
+
+  // Load slides from API on mount
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const data = await slideService.getSlides();
+        const mapped: Slide[] = data.map((s) => ({
+          id: s.id,
+          url: s.image_url,
+          heading: s.heading,
+          description: s.description,
+        }));
+        setSlides(mapped);
+        if (mapped.length > 0) {
+          handleSelectSlide(mapped[0]);
+        }
+      } catch (error) {
+        showToast.error('Không tải được danh sách slide');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSlides();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle slide selection
   const handleSelectSlide = (slide: Slide) => {
@@ -98,34 +128,25 @@ const HeroSlides = () => {
     form.reset({
       heading: slide.heading,
       description: slide.description,
-      alt: slide.alt,
     });
   };
 
-  // Handle image upload for existing slide
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
+  const handleSelectedSlideFile = (file: File) => {
     if (!activeSlide) {
       showToast.error("Please select a slide first");
       return;
     }
 
-    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       showToast.error("Image size should be less than 5MB");
       return;
     }
 
-    // Preview the image
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
         setPreviewImage(event.target.result as string);
-        
-        // Store the file for later processing
-        setActiveSlide(prev => {
+        setActiveSlide((prev) => {
           if (!prev) return null;
           return { ...prev, file };
         });
@@ -134,12 +155,33 @@ const HeroSlides = () => {
     reader.readAsDataURL(file);
   };
 
-  // Handle image upload for new slide
-  const handleNewSlideImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle image upload for existing slide (from file input)
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    handleSelectedSlideFile(file);
+  };
 
-    // Check file size (max 5MB)
+  // Paste image for existing slide
+  const handleImagePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    if (!activeSlide) return;
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          event.preventDefault();
+          handleSelectedSlideFile(file);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleNewSlideFile = (file: File) => {
     if (file.size > 5 * 1024 * 1024) {
       showToast.error("Image size should be less than 5MB");
       return;
@@ -147,7 +189,6 @@ const HeroSlides = () => {
 
     setUploadedFile(file);
 
-    // Preview the image
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
@@ -157,101 +198,154 @@ const HeroSlides = () => {
     reader.readAsDataURL(file);
   };
 
+  // Handle image upload for new slide
+  const handleNewSlideImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleNewSlideFile(file);
+  };
+
+  // Paste image for new slide
+  const handleNewSlideImagePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          event.preventDefault();
+          handleNewSlideFile(file);
+        }
+        break;
+      }
+    }
+  };
+
   // Handle form submission for editing slides
-  const onSubmit = (values: z.infer<typeof slideSchema>) => {
+  const onSubmit = async (values: z.infer<typeof slideSchema>) => {
     if (!activeSlide) {
       showToast.error("No slide selected");
       return;
     }
 
-    // Create a new URL if file was uploaded
-    let newUrl = activeSlide.url;
-    if (previewImage && previewImage !== activeSlide.url) {
-      newUrl = previewImage;
-    }
+    try {
+      let imageKey: string | undefined;
 
-    // Update slides array
-    const updatedSlides = slides.map(slide => 
-      slide.id === activeSlide.id 
-        ? { 
-            ...slide, 
-            heading: values.heading, 
-            description: values.description, 
-            alt: values.alt,
-            url: newUrl
-          } 
-        : slide
-    );
-    
-    setSlides(updatedSlides);
-    // Save to localStorage for persistence
-    localStorage.setItem('heroSlides', JSON.stringify(updatedSlides));
-    showToast.success("Slide updated successfully");
+      if (activeSlide.file) {
+        const key = await uploadImageAndGetKey(activeSlide.file);
+        if (!key) return;
+        imageKey = key;
+      }
+
+      const payload: { slide: { heading: string; description: string; image_key?: string } } = {
+        slide: {
+          heading: values.heading,
+          description: values.description,
+        },
+      };
+
+      if (imageKey) {
+        payload.slide.image_key = imageKey;
+      }
+
+      const updated = await slideService.updateSlide(activeSlide.id, payload);
+
+      const newSlides = slides.map((slide) =>
+        slide.id === activeSlide.id
+          ? {
+              ...slide,
+              heading: updated.heading,
+              description: updated.description,
+              url: updated.image_url,
+              file: undefined,
+            }
+          : slide
+      );
+
+      setSlides(newSlides);
+      const refreshed = newSlides.find((s) => s.id === activeSlide.id) || null;
+      setActiveSlide(refreshed);
+      setPreviewImage(refreshed?.url || null);
+
+      showToast.success("Slide updated successfully");
+    } catch (error) {
+      showToast.error("Có lỗi khi cập nhật slide");
+    }
   };
 
   // Create a new slide
-  const createNewSlide = (values: z.infer<typeof newSlideSchema>) => {
-    // Generate a new ID (one higher than the current max ID)
-    const newId = Math.max(...slides.map(slide => slide.id), 0) + 1;
-    
-    // Create the new slide
-    const newSlide: Slide = {
-      id: newId,
-      url: newSlideImage || DEFAULT_IMAGE,
-      alt: values.alt,
-      heading: values.heading,
-      description: values.description,
-    };
-    
-    // Add the new slide to the collection
-    const updatedSlides = [...slides, newSlide];
-    setSlides(updatedSlides);
-    
-    // Save to localStorage for persistence
-    localStorage.setItem('heroSlides', JSON.stringify(updatedSlides));
-    
-    // Close the dialog and reset the form
-    setIsCreateDialogOpen(false);
-    setNewSlideImage(null);
-    setUploadedFile(null);
-    newSlideForm.reset({
-      heading: "New Slide",
-      description: "Description for the new slide goes here.",
-      alt: "New slide image",
-    });
-    
-    showToast.success("New slide created successfully");
-    
-    // Select the new slide for editing
-    handleSelectSlide(newSlide);
+  const createNewSlide = async (values: z.infer<typeof newSlideSchema>) => {
+    try {
+      if (!uploadedFile) {
+        showToast.error("Vui lòng tải lên hình ảnh cho slide");
+        return;
+      }
+
+      const imageKey = await uploadImageAndGetKey(uploadedFile);
+      if (!imageKey) return;
+
+      const created = await slideService.createSlide({
+        slide: {
+          heading: values.heading,
+          description: values.description,
+          image_key: imageKey,
+        },
+      });
+
+      const newSlide: Slide = {
+        id: created.id,
+        url: created.image_url,
+        heading: created.heading,
+        description: created.description,
+      };
+
+      const updatedSlides = [...slides, newSlide];
+      setSlides(updatedSlides);
+
+      setIsCreateDialogOpen(false);
+      setNewSlideImage(null);
+      setUploadedFile(null);
+      newSlideForm.reset({
+        heading: "New Slide",
+        description: "Description for the new slide goes here.",
+      });
+
+      showToast.success("New slide created successfully");
+      handleSelectSlide(newSlide);
+    } catch (error) {
+      showToast.error("Có lỗi khi tạo slide mới");
+    }
   };
 
   // Remove a slide
-  const removeSlide = (slideId: number) => {
+  const removeSlide = async (slideId: number) => {
     // Prevent removing all slides
     if (slides.length <= 1) {
       showToast.error("Cannot remove the last slide. At least one slide must remain.");
       return;
     }
-    
-    // Remove the slide from the array
-    const updatedSlides = slides.filter(slide => slide.id !== slideId);
-    setSlides(updatedSlides);
-    
-    // Save to localStorage for persistence
-    localStorage.setItem('heroSlides', JSON.stringify(updatedSlides));
-    
-    // If the active slide was removed, clear the active slide
-    if (activeSlide?.id === slideId) {
-      setActiveSlide(null);
-      setPreviewImage(null);
+    try {
+      await slideService.deleteSlide(slideId);
+
+      const updatedSlides = slides.filter(slide => slide.id !== slideId);
+      setSlides(updatedSlides);
+
+      if (activeSlide?.id === slideId) {
+        const next = updatedSlides[0] ?? null;
+        setActiveSlide(next);
+        setPreviewImage(next?.url || null);
+      }
+
+      showToast.success("Slide removed successfully");
+    } catch (error) {
+      showToast.error("Có lỗi khi xoá slide");
     }
-    
-    showToast.success("Slide removed successfully");
   };
 
-  // Move slide up or down in the order
-  const moveSlide = (slideId: number, direction: 'up' | 'down') => {
+  // Move slide up or down in the order & sync with backend
+  const moveSlide = async (slideId: number, direction: 'up' | 'down') => {
     const slideIndex = slides.findIndex(s => s.id === slideId);
     if (
       (direction === 'up' && slideIndex === 0) || 
@@ -262,11 +356,23 @@ const HeroSlides = () => {
     
     const newSlides = [...slides];
     const targetIndex = direction === 'up' ? slideIndex - 1 : slideIndex + 1;
-    
-    // Swap positions
-    [newSlides[slideIndex], newSlides[targetIndex]] = [newSlides[targetIndex], newSlides[slideIndex]];
-    
+
+    // Swap positions trong state để UI phản hồi ngay
+    [newSlides[slideIndex], newSlides[targetIndex]] = [
+      newSlides[targetIndex],
+      newSlides[slideIndex],
+    ];
+
     setSlides(newSlides);
+
+    try {
+      const orderedIds = newSlides.map((s) => s.id);
+      await slideService.reorderSlides(orderedIds);
+      showToast.success("Cập nhật thứ tự slide thành công");
+    } catch (error) {
+      showToast.error("Có lỗi khi cập nhật thứ tự slide");
+      // Optionally: refetch lại từ server để tránh lệch trạng thái
+    }
   };
 
   // Remove image from preview (reset to original)
@@ -285,10 +391,18 @@ const HeroSlides = () => {
     setUploadedFile(null);
   };
 
-  const handleSaveAll = () => {
-    // Logic to save all changes
-    showToast.success("All changes saved");
-  };
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex h-[calc(100vh-80px)] items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-muted-foreground">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p className="text-sm">Đang tải danh sách slide...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -330,32 +444,48 @@ const HeroSlides = () => {
                           )}
                         </AspectRatio>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Label 
-                          htmlFor="new-slide-image" 
-                          className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
-                        >
-                          <ImagePlus className="mr-2 h-4 w-4" />
-                          Tải lên hình ảnh
-                        </Label>
-                        <Input 
-                          id="new-slide-image" 
-                          type="file" 
-                          accept="image/*"
-                          className="hidden" 
-                          onChange={handleNewSlideImageUpload}
-                        />
-                        {newSlideImage && (
-                          <Button 
-                            type="button"
-                            variant="outline" 
-                            size="sm"
-                            onClick={removeNewSlideImage}
+                      <div
+                        className="flex flex-col gap-2 rounded-md border border-dashed border-muted-foreground/40 p-3 cursor-pointer hover:bg-muted/40"
+                        onClick={() => {
+                          const input = document.getElementById("new-slide-image") as HTMLInputElement | null;
+                          input?.click();
+                        }}
+                        onPaste={handleNewSlideImagePaste}
+                        tabIndex={0}
+                      >
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <Label 
+                            htmlFor="new-slide-image" 
+                            className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
                           >
-                            <X className="mr-2 h-4 w-4" />
-                            Xóa hình ảnh
-                          </Button>
-                        )}
+                            <ImagePlus className="mr-2 h-4 w-4" />
+                            Tải lên hình ảnh
+                          </Label>
+                          <Input 
+                            id="new-slide-image" 
+                            type="file" 
+                            accept="image/*"
+                            className="hidden" 
+                            onChange={handleNewSlideImageUpload}
+                          />
+                          {newSlideImage && (
+                            <Button 
+                              type="button"
+                              variant="outline" 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeNewSlideImage();
+                              }}
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              Xóa hình ảnh
+                            </Button>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          Click để chọn ảnh hoặc paste (Ctrl + V)
+                        </span>
                       </div>
                     </div>
                     
@@ -388,23 +518,6 @@ const HeroSlides = () => {
                       )}
                     />
                     
-                    <FormField
-                      control={newSlideForm.control}
-                      name="alt"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Alt Text</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Image alt text" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Mô tả hình ảnh cho truy cập bằng văn bản
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
                     <DialogFooter>
                       <Button type="submit" className="w-full">
                         Tạo slide
@@ -415,9 +528,6 @@ const HeroSlides = () => {
               </DialogContent>
             </Dialog>
             
-            <Button onClick={handleSaveAll}>
-              <Save className="mr-2 h-4 w-4" /> Lưu tất cả thay đổi
-            </Button>
           </div>
         </div>
 
@@ -447,7 +557,7 @@ const HeroSlides = () => {
                         >
                           <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded overflow-hidden">
-                              <img src={slide.url} alt={slide.alt} className="h-full w-full object-cover" />
+                              <img src={slide.url} alt={slide.heading} className="h-full w-full object-cover" />
                             </div>
                             <span className="font-medium text-sm truncate max-w-[120px]">
                               {slide.heading}
@@ -506,31 +616,47 @@ const HeroSlides = () => {
                             )}
                           </AspectRatio>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Label 
-                            htmlFor="image-upload" 
-                            className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
-                          >
-                            <ImagePlus className="mr-2 h-4 w-4" />
-                            Tải lên hình ảnh
-                          </Label>
-                          <Input 
-                            id="image-upload" 
-                            type="file" 
-                            accept="image/*"
-                            className="hidden" 
-                            onChange={handleImageUpload}
-                          />
-                          {previewImage !== activeSlide.url && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={removeUploadedImage}
+                        <div
+                          className="flex flex-col gap-2 rounded-md border border-dashed border-muted-foreground/40 p-3 cursor-pointer hover:bg-muted/40"
+                          onClick={() => {
+                            const input = document.getElementById("image-upload") as HTMLInputElement | null;
+                            input?.click();
+                          }}
+                          onPaste={handleImagePaste}
+                          tabIndex={0}
+                        >
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <Label 
+                              htmlFor="image-upload" 
+                              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Xóa hình ảnh đã tải lên
-                            </Button>
-                          )}
+                              <ImagePlus className="mr-2 h-4 w-4" />
+                              Tải lên hình ảnh
+                            </Label>
+                            <Input 
+                              id="image-upload" 
+                              type="file" 
+                              accept="image/*"
+                              className="hidden" 
+                              onChange={handleImageUpload}
+                            />
+                            {previewImage !== activeSlide.url && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeUploadedImage();
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Xóa hình ảnh đã tải lên
+                              </Button>
+                            )}
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            Click để chọn ảnh hoặc paste (Ctrl + V)
+                          </span>
                         </div>
                       </div>
 
@@ -560,23 +686,6 @@ const HeroSlides = () => {
                                 <FormControl>
                                   <Input placeholder="Mô tả slide" {...field} />
                                 </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="alt"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Mô tả hình ảnh</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Image alt text" {...field} />
-                                </FormControl>
-                                <FormDescription>
-                                  Mô tả hình ảnh cho truy cập bằng văn bản
-                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -613,11 +722,11 @@ const HeroSlides = () => {
                     <AspectRatio ratio={16 / 9} className="bg-muted">
                       {activeSlide && (
                         <div className="relative h-full w-full">
-                          <img 
-                            src={previewImage || activeSlide.url} 
-                            alt={activeSlide.alt}
-                            className="h-full w-full object-cover"
-                          />
+                            <img 
+                              src={previewImage || activeSlide.url} 
+                              alt={activeSlide.heading}
+                              className="h-full w-full object-cover"
+                            />
                           <div className="absolute inset-0 bg-black/40"></div>
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center">
                             <h2 className="text-2xl md:text-4xl font-bold mb-2">
