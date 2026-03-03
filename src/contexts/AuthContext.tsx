@@ -1,6 +1,17 @@
 import { authService, FirebaseUserInfo, TokenInfo, User } from '@/services/auth.service';
 import { setAuthToken } from '@/services/axios';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import axios from 'axios';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+
+const REFRESH_BUFFER_RATIO = 0.8;
+const MIN_REFRESH_MS = 30_000;
+const MAX_REFRESH_MS = 10 * 60_000;
+
+function computeRefreshDelay(expiresIn?: number): number {
+  if (!expiresIn || expiresIn <= 0) return MIN_REFRESH_MS;
+  const ms = expiresIn * 1000 * REFRESH_BUFFER_RATIO;
+  return Math.max(MIN_REFRESH_MS, Math.min(ms, MAX_REFRESH_MS));
+}
 interface AuthState {
   tokenInfo: TokenInfo | null;
   user: User | null;
@@ -8,11 +19,15 @@ interface AuthState {
   isLoading: boolean;
 }
 
+interface LoginResult {
+  deviceLimitExceeded: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (phoneNumber: string, password: string) => Promise<void>;
+  login: (phoneNumber: string, password: string) => Promise<LoginResult>;
   verifySocialToken: (userInfo: FirebaseUserInfo) => Promise<User>;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -52,12 +67,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshAuth();
   }, []);
 
+  const checkingSession = useRef(false);
+  const refreshTimerId = useRef<ReturnType<typeof setTimeout>>();
+
+  const checkSession = useCallback(async () => {
+    if (checkingSession.current) return;
+    checkingSession.current = true;
+    try {
+      const response = await authService.refreshToken();
+      setAuthState(prev => ({
+        ...prev,
+        tokenInfo: response.token_info,
+        user: response.user,
+      }));
+    } catch (err) {
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      if (status === 401 || status === 403) {
+        setAuthState({
+          tokenInfo: null,
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      } else {
+        console.error('Session check failed:', err);
+      }
+    } finally {
+      checkingSession.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!authState.isAuthenticated) return;
+
+    const scheduleRefresh = () => {
+      clearTimeout(refreshTimerId.current);
+      const delay = computeRefreshDelay(authState.tokenInfo?.expires_in);
+      refreshTimerId.current = setTimeout(checkSession, delay);
+    };
+
+    scheduleRefresh();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkSession();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearTimeout(refreshTimerId.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [authState.isAuthenticated, authState.tokenInfo, checkSession]);
+
   // Cập nhật token trong axios khi token thay đổi
   useEffect(() => {
     setAuthToken(authState.tokenInfo?.access_token || null);
   }, [authState.tokenInfo]);
 
-  const login = async (phone_number: string, password: string) => {
+  const login = async (phone_number: string, password: string): Promise<LoginResult> => {
     try {
       const response = await authService.login(phone_number, password);
       
@@ -67,6 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: true,
         isLoading: false,
       });
+
+      return { deviceLimitExceeded: response.device_limit_exceeded ?? false };
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

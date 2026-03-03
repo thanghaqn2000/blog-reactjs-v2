@@ -1,6 +1,12 @@
 import { API_CONFIG } from '@/config/api.config';
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+export const LOGOUT_REASON = {
+  SESSION_EXPIRED: 'session_expired',
+} as const;
+
+export type LogoutReason = (typeof LOGOUT_REASON)[keyof typeof LOGOUT_REASON];
+
 // Tạo instance cho v1 API
 export const v1Api = axios.create({
   baseURL: `${API_CONFIG.BASE_URL}${API_CONFIG.V1_PREFIX}`,
@@ -56,7 +62,9 @@ async function refreshAccessToken(): Promise<string | null> {
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       if (status === 401 || status === 403) {
         setAuthToken(null);
-        window.location.href = '/login';
+        if (!isAlreadyOnLogin()) {
+          window.location.href = `/login?reason=${LOGOUT_REASON.SESSION_EXPIRED}`;
+        }
       }
       return null;
     } finally {
@@ -75,10 +83,16 @@ function setDefaultAuthHeader(
   (instance.defaults.headers.common as Record<string, string>).JWTAuthorization = `Bearer ${token}`;
 }
 
-/** Khi refresh trả 401/403: clear token, redirect login, không retry */
+function isAlreadyOnLogin(): boolean {
+  return window.location.pathname.startsWith('/login');
+}
+
+/** Khi refresh trả 401/403: clear token, redirect login kèm reason param (trừ khi đã ở /login) */
 function handleSessionExpired(): void {
   setAuthToken(null);
-  window.location.href = '/login';
+  if (!isAlreadyOnLogin()) {
+    window.location.href = `/login?reason=${LOGOUT_REASON.SESSION_EXPIRED}`;
+  }
 }
 
 function createUnauthorizedInterceptor(instance: typeof v1Api | typeof adminApi) {

@@ -31,6 +31,7 @@ export interface User {
 export interface AuthResponse {
   token_info: TokenInfo;
   user: User;
+  device_limit_exceeded?: boolean;
 }
 
 export interface FirebaseUserInfo {
