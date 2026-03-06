@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ArticleCard from './ArticleCard';
+import BtcHeatMap from './BtcHeatMap';
 import SidebarStock from './SidebarStock';
 const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 
@@ -267,6 +268,13 @@ const FeaturedArticles = () => {
                   </Button>
                 </div>
               )}
+            </div>
+
+            <div className="mt-12">
+              <h3 className="text-xl font-bold mb-6 flex items-center border-l-4 border-primary pl-3">
+                Crypto Coins Heatmap
+              </h3>
+              <BtcHeatMap />
             </div>
             
             {/* View all link (mobile) */}
