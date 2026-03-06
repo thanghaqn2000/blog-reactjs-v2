@@ -14,6 +14,14 @@ import { ArrowRight, Crown, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+const formatVol = (val: number | string): string => {
+  const num = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(num)) return String(val);
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(0) + 'K';
+  return String(num);
+};
+
 const TopStock = () => {
   const [stocks, setStocks] = useState<TopStockItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -89,7 +97,7 @@ const TopStock = () => {
                   <TableCell className="font-medium">{stock.rank}</TableCell>
                   <TableCell>{stock.symbol}</TableCell>
                   <TableCell className="text-right">{stock.rs_value}</TableCell>
-                  <TableCell className="text-right">{stock.vol_20d}</TableCell>
+                  <TableCell className="text-right">{formatVol(stock.vol_20d)}</TableCell>
                 </TableRow>
               ))
             )}
