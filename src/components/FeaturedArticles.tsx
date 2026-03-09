@@ -5,8 +5,9 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ArticleCard from './ArticleCard';
-import BtcHeatMap from './BtcHeatMap';
 import SidebarStock from './SidebarStock';
+import BtcHeatMap from './widget/BtcHeatMap';
+import EconomicMap from './widget/EconomicMap';
 const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 
 interface Article {
@@ -275,6 +276,13 @@ const FeaturedArticles = () => {
                 Crypto Coins Heatmap
               </h3>
               <BtcHeatMap />
+            </div>
+
+            <div className="mt-12">
+              <h3 className="text-xl font-bold mb-6 flex items-center border-l-4 border-primary pl-3">
+                Economic Map
+              </h3>
+              <EconomicMap />
             </div>
             
             {/* View all link (mobile) */}
