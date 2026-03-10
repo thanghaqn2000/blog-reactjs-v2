@@ -14,20 +14,21 @@ const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 
 
 const Article = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [article, setArticle] = useState<ArticleProps | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const fetchArticle = async () => {
-      if (!id) return;
+      if (!slug) return;
       
       try {
         setIsLoading(true);
-        const response = await postServiceV1.getDetailPost(parseInt(id));
+        const response = await postServiceV1.getDetailPost(slug);
         const post = response.data;
         setArticle({
           id: post.id.toString(),
+          slug: post.slug,
           title: post.title,
           excerpt: post.title,
           category: post.category,
@@ -52,7 +53,7 @@ const Article = () => {
     };
 
     fetchArticle();
-  }, [id]);
+  }, [slug]);
   
   const handleShare = () => {
     if (navigator.share) {
@@ -96,7 +97,7 @@ const Article = () => {
               className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary text-white font-medium shadow-sm hover:bg-primary/90 transition-all"
             >
               <ArrowLeft size={16} className="mr-2" />
-              Back to Articles
+              Trở lại trang chủ
             </Link>
           </div>
         </div>
@@ -197,11 +198,9 @@ const Article = () => {
               />
             </div>
 
-            {/* Sidebar */}
-            <div className="w-full lg:w-[380px]">
-              <div className="sticky top-20">
-                <SidebarStock className="w-full" />
-              </div>
+            {/* Sidebar — scroll độc lập */}
+            <div className="w-full lg:w-[380px] lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
+              <SidebarStock className="w-full" />
             </div>
           </div>
         </div>

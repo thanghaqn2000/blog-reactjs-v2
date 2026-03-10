@@ -2,6 +2,7 @@ import { v1Api } from "../axios";
 
 export interface Post {
   id: number;
+  slug: string;
   title: string;
   image_url: string ;
   category: string;
@@ -38,8 +39,8 @@ export const postServiceV1 = {
     return response.data;
   },
 
-  async getDetailPost(id: number): Promise<GetPostDetailResponse> {
-    const response = await v1Api.get(`/posts/${id}`, {withCredentials: true });
+  async getDetailPost(slugOrId: string): Promise<GetPostDetailResponse> {
+    const response = await v1Api.get(`/posts/${slugOrId}`, {withCredentials: true });
     return response.data;
   }
 }

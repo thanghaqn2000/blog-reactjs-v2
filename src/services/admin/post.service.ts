@@ -2,6 +2,7 @@ import { adminApi } from '../axios';
 
 export interface Post {
   id: number;
+  slug: string;
   title: string;
   description: string;
   image_url: string;
