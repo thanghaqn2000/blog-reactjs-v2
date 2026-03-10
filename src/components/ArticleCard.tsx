@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 export interface ArticleProps {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   category: string;
@@ -25,6 +26,7 @@ export interface ArticleProps {
 
 const ArticleCard = ({ 
   id, 
+  slug,
   title, 
   date_post, 
   category, 
@@ -41,7 +43,7 @@ const ArticleCard = ({
   const imageUrl = image || defaultImage;
 
   return (
-    <Link to={`/article/${id}`} className="block group">
+    <Link to={`/article/${slug}`} className="block group">
       <motion.article 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

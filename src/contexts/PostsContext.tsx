@@ -6,6 +6,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 
 export interface Post {
   id: string;
+  slug: string;
   title: string;
   description: string;
   excerpt: string;
@@ -54,6 +55,7 @@ export const PostsProvider = ({ children }: { children: ReactNode }) => {
   const convertApiPostToContextPost = (apiPost: ApiPost): Post => {
     return {
       id: apiPost.id.toString(),
+      slug: apiPost.slug,
       title: apiPost.title,
       description: apiPost.description,
       excerpt: apiPost.title ?? '',

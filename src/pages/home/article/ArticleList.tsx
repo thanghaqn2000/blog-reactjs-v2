@@ -11,6 +11,7 @@ const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 function mapPostToArticleProps(post: Post): ArticleProps {
   return {
     id: post.id.toString(),
+    slug: post.slug,
     title: post.title,
     excerpt: post.description,
     category: post.category,
