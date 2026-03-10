@@ -55,7 +55,7 @@ const FeaturedSavedPosts = ({ posts }: FeaturedSavedPostsProps) => {
                 </CardContent>
                 <CardFooter className="pt-0 pb-6">
                   <Link
-                    to={`/article/${post.id}`}
+                    to={`/article/${post.slug || post.id}`}
                     className="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                   >
                     Read More

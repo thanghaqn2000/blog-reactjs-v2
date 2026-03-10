@@ -12,6 +12,7 @@ const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 
 interface Article {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   description: string;
@@ -55,6 +56,7 @@ const FeaturedArticles = () => {
         setArticles({
           report: reportResponse.data.map(post => ({
             id: post.id.toString(),
+            slug: post.slug,
             title: post.title,
             excerpt: post.title,
             date: formatDate(post.created_at),
@@ -72,6 +74,7 @@ const FeaturedArticles = () => {
           })),
           news: newsResponse.data.map(post => ({
             id: post.id.toString(),
+            slug: post.slug,
             title: post.title,
             excerpt: post.title,
             date: formatDate(post.created_at),
@@ -89,6 +92,7 @@ const FeaturedArticles = () => {
           })),
           finance: financeResponse.data.map(post => ({
             id: post.id.toString(),
+            slug: post.slug,
             title: post.title,
             excerpt: post.title,
             date: formatDate(post.created_at),

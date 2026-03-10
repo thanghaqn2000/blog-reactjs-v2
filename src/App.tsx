@@ -81,7 +81,7 @@ const App = () => (
                 
                 {/* Original routes */}
                 <Route path="/articles" element={<Articles />} />
-                <Route path="/article/:id" element={<Article />} />
+                <Route path="/article/:slug" element={<Article />} />
                 <Route path="/markets" element={<NotFound />} />
                 
                 {/* Auth callback route */}
