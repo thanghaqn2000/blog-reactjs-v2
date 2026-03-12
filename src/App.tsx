@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
 import ProtectedRoute, { ProtectedVIPRoute } from "./components/ProtectedRoute";
@@ -25,78 +25,90 @@ import Profile from "./pages/client/Profile";
 import Article from "./pages/home/article/ArticleDetail";
 import Articles from "./pages/home/article/ArticleList";
 import AuthCallback from "./pages/home/AuthCallback";
+import ExchangeRate from "./pages/home/ExchangeRate";
 import Index from "./pages/home/Index";
 import NotFound from "./pages/home/NotFound";
 import VipNews from "./pages/home/VipNews";
 
 const queryClient = new QueryClient();
 
+const AdminLayout = () => (
+  <AdminRoute>
+    <PostsProvider>
+      <Outlet />
+    </PostsProvider>
+  </AdminRoute>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <PostsProvider>
-        <ChatProvider>
-          <Toaster />
-          <Sonner position="top-right" />
-          <BrowserRouter>
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                
-                {/* Authentication routes */}
-                <Route path="/login" element={<Login />} />
-                
-                {/* Admin routes */}
-                <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
-                <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
-                <Route path="/admin/users/:id/chat-history" element={<AdminRoute><UserChatHistory /></AdminRoute>} />
-                <Route path="/admin/posts" element={<AdminRoute><Posts /></AdminRoute>} />
-                <Route path="/admin/posts/create" element={<AdminRoute><CreatePost /></AdminRoute>} />
-                <Route path="/admin/posts/edit/:id" element={<AdminRoute><EditPost /></AdminRoute>} />
-                <Route path="/admin/posts/detail/:id" element={<AdminRoute><PostDetail /></AdminRoute>} />
-                <Route path="/admin/hero-slides" element={<AdminRoute><HeroSlides /></AdminRoute>} />
-                <Route path="/admin/analytics" element={<AdminRoute><Dashboard /></AdminRoute>} />
-                <Route path="/admin/notifications" element={<AdminRoute><NotificationsManagement /></AdminRoute>} />
-                <Route path="/admin/notifications/:id" element={<AdminRoute><NotificationDetail /></AdminRoute>} />
-                <Route path="/admin/settings" element={<AdminRoute><Dashboard /></AdminRoute>} />
-                
-                {/* VIP News route */}
-                <Route path="/vip-news" element={<VipNews />} />
-                <Route path="/stock-insight" element={<ProtectedVIPRoute><StockInsight /></ProtectedVIPRoute>} />
-                
-                {/* Investment routes */}
-                <Route path="/investment/stocks" element={<NotFound />} />
-                <Route path="/investment/crypto" element={<NotFound />} />
-                
-                {/* Policy routes */}
-                <Route path="/policy/fiscal" element={<NotFound />} />
-                <Route path="/policy/monetary" element={<NotFound />} />
-                
-                {/* Owner routes */}
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/owner/settings" element={<NotFound />} />
-                
-                {/* Chat route - Protected */}
-                <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-                
-                {/* Original routes */}
-                <Route path="/articles" element={<Articles />} />
-                <Route path="/article/:slug" element={<Article />} />
-                <Route path="/markets" element={<NotFound />} />
-                
-                {/* Auth callback route */}
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                
-                {/* 404 route */}
-                <Route path="/404" element={<NotFound />} />
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AnimatePresence>
-          </BrowserRouter>
-        </ChatProvider>
-      </PostsProvider>
+      <ChatProvider>
+        <Toaster />
+        <Sonner position="top-right" />
+        <BrowserRouter>
+          <AnimatePresence mode="wait">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              
+              {/* Authentication routes */}
+              <Route path="/login" element={<Login />} />
+              
+              {/* Admin routes - PostsProvider chỉ active trong admin */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="users/:id/chat-history" element={<UserChatHistory />} />
+                <Route path="posts" element={<Posts />} />
+                <Route path="posts/create" element={<CreatePost />} />
+                <Route path="posts/edit/:id" element={<EditPost />} />
+                <Route path="posts/detail/:id" element={<PostDetail />} />
+                <Route path="hero-slides" element={<HeroSlides />} />
+                <Route path="analytics" element={<Dashboard />} />
+                <Route path="notifications" element={<NotificationsManagement />} />
+                <Route path="notifications/:id" element={<NotificationDetail />} />
+                <Route path="settings" element={<Dashboard />} />
+              </Route>
+              
+              {/* VIP News route */}
+              <Route path="/vip-news" element={<VipNews />} />
+              <Route path="/stock-insight" element={<ProtectedVIPRoute><StockInsight /></ProtectedVIPRoute>} />
+              
+              {/* Gold price route */}
+              <Route path="/exchange-rate" element={<ExchangeRate />} />
+              
+              {/* Investment routes */}
+              <Route path="/investment/stocks" element={<NotFound />} />
+              <Route path="/investment/crypto" element={<NotFound />} />
+              
+              {/* Policy routes */}
+              <Route path="/policy/fiscal" element={<NotFound />} />
+              <Route path="/policy/monetary" element={<NotFound />} />
+              
+              {/* Owner routes */}
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/owner/settings" element={<NotFound />} />
+              
+              {/* Chat route - Protected */}
+              <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+              
+              {/* Original routes */}
+              <Route path="/articles" element={<Articles />} />
+              <Route path="/article/:id" element={<Article />} />
+              <Route path="/markets" element={<NotFound />} />
+              
+              {/* Auth callback route */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              
+              {/* 404 route */}
+              <Route path="/404" element={<NotFound />} />
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnimatePresence>
+        </BrowserRouter>
+      </ChatProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

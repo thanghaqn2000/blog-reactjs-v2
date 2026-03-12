@@ -92,6 +92,17 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
         </DropdownMenu>
       </div> 
       <Link 
+        to="/exchange-rate" 
+        className={cn(
+          menuItemStyle,
+          location.pathname.includes('/exchange-rate') ? activeStyle : "",
+          scrolledStyle
+        )}
+      >
+        Giá vàng / ngoại tệ
+      </Link>
+
+      <Link 
         to="/articles" 
         className={cn(
           menuItemStyle,

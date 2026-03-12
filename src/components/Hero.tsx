@@ -7,7 +7,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { slideV1Service } from "@/services/v1/slide_v1.service";
+import { slideV1Service } from "@/services/v1/slide.service";
 import { ArrowRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";

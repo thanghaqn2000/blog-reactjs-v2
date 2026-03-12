@@ -21,6 +21,7 @@ export interface GetFilterPost {
   limit?: number;
   title?: string;
   category?: string;
+  featured?: boolean;
 }
 
 export interface GetPostsResponse {

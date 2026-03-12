@@ -3,7 +3,7 @@ import {
   StockInsightData,
   TopStockItem,
   topStockV1Service,
-} from "@/services/v1/top_stock_v1.service";
+} from "@/services/v1/top_stock.service";
 import {
   Activity,
   AlertCircle,

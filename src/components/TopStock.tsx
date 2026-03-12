@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { database } from "@/lib/firebase";
-import { TopStockItem, topStockV1Service } from "@/services/v1/top_stock_v1.service";
+import { TopStockItem, topStockV1Service } from "@/services/v1/top_stock.service";
 import { ref as dbRef, onValue } from "firebase/database";
 import { ArrowRight, Crown, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
