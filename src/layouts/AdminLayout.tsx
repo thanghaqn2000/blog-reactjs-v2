@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { cn } from '@/lib/utils';
-import { BarChart3, Bell, ChevronLeft, FileText, Image, LayoutDashboard, LogOut, Menu, Settings, Users, X } from 'lucide-react';
+import { BarChart3, Bell, ChevronLeft, FileText, Image, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -114,6 +114,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <NavItem icon={FileText} label="Quản lí bài viết" to="/admin/posts" collapsed={collapsed} />
             <NavItem icon={Image} label="Quản lí slide" to="/admin/hero-slides" collapsed={collapsed} />
             <NavItem icon={BarChart3} label="Quản lí thống kê" to="/admin/analytics" collapsed={collapsed} />
+            <NavItem icon={MessageCircle} label="Quản lí phản hồi" to="/admin/feedback" collapsed={collapsed} />
             <NavItem icon={Bell} label="Quản lí thông báo" to="/admin/notifications" collapsed={collapsed} />
             <NavItem icon={Settings} label="Quản lí cài đặt" to="/admin/settings" collapsed={collapsed} />
           </div>
@@ -178,10 +179,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <nav className="flex-1 overflow-auto py-4">
               <div className="px-3 space-y-1">
                 <NavItem icon={LayoutDashboard} label="Trang chủ" to="/admin" collapsed={false} />
-                <NavItem icon={Users} label="Users" to="/admin/users" collapsed={false} />
+                <NavItem icon={Users} label="Quản lí người dùng" to="/admin/users" collapsed={false} />
                 <NavItem icon={FileText} label="Quản lí bài viết" to="/admin/posts" collapsed={false} />
                 <NavItem icon={Image} label="Quản lí slide" to="/admin/hero-slides" collapsed={false} />
                 <NavItem icon={BarChart3} label="Quản lí thống kê" to="/admin/analytics" collapsed={false} />
+                <NavItem icon={MessageCircle} label="Quản lí phản hồi" to="/admin/feedback" collapsed={false} />
                 <NavItem icon={Bell} label="Quản lí thông báo" to="/admin/notifications" collapsed={false} />
                 <NavItem icon={Settings} label="Quản lí cài đặt" to="/admin/settings" collapsed={false} />
               </div>
