@@ -176,7 +176,6 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
-            
             <button
               className="p-2 rounded-full hover:bg-accent transition-colors md:hidden text-foreground hover:bg-gray-100"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
