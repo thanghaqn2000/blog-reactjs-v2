@@ -46,8 +46,18 @@ function ExchangeRateVci() {
   const fetchFullData = useCallback(async (date: string) => {
     try {
       setLoading(true);
-      const res = await exchangeRateV1Service.getExchangeRates(date, 1, 9999);
-      setFullData(res.data);
+      const first = await exchangeRateV1Service.getExchangeRates(date, 1, ITEMS_PER_PAGE);
+      let allData = [...first.data];
+      const tp = first.meta.total_pages;
+      if (tp > 1) {
+        const rest = await Promise.all(
+          Array.from({ length: tp - 1 }, (_, i) =>
+            exchangeRateV1Service.getExchangeRates(date, i + 2, ITEMS_PER_PAGE),
+          ),
+        );
+        allData = [...allData, ...rest.flatMap((r) => r.data)];
+      }
+      setFullData(allData);
       setFullDataLoaded(true);
     } catch (error) {
       console.error('Failed to fetch all exchange rates', error);

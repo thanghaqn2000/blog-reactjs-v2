@@ -3,7 +3,6 @@ import { showToast } from "@/config/toast.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/lib/firebase";
 import { FacebookAuthProvider, fetchSignInMethodsForEmail, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { Facebook } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
 interface SocialLoginProps {
@@ -160,24 +159,15 @@ const SocialLogin = ({ onSocialLogin }: SocialLoginProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <Button 
           variant="outline" 
           type="button" 
           onClick={handleGoogleLogin}
           className="flex items-center justify-center gap-2 hover:bg-gray-50 transition-all border-primary/20"
         >
-          <FcGoogle className="h-5 w-5" />
+          <FcGoogle className="h-10 w-10" />
           <span>Google</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          type="button" 
-          onClick={handleFacebookLogin}
-          className="flex items-center justify-center gap-2 bg-[#1877F2] text-white hover:bg-[#1877F2]/90 transition-all"
-        >
-          <Facebook className="h-5 w-5" />
-          <span>Facebook</span>
         </Button>
       </div>
     </>

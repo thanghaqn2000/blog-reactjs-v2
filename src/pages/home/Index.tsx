@@ -3,7 +3,6 @@ import { Post } from "@/contexts/PostsContext";
 import { postServiceV1 } from "@/services/v1/post.service";
 import { useEffect, useState } from "react";
 import FeaturedArticles from "../../components/FeaturedArticles";
-import FeaturedSavedPosts from "../../components/FeaturedSavedPosts";
 import Hero from "../../components/Hero";
 import MainLayout from "../../layouts/MainLayout";
 
@@ -43,7 +42,7 @@ const Index = () => {
   return (
     <MainLayout>
       <Hero />
-      {featuredPosts.length > 0 && <FeaturedSavedPosts posts={featuredPosts} />}
+      {/* {featuredPosts.length > 0 && <FeaturedSavedPosts posts={featuredPosts} />} */}
       <FeaturedArticles />
     </MainLayout>
   );

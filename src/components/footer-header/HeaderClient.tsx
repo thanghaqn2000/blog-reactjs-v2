@@ -1,4 +1,3 @@
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,9 +6,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { Crown } from "lucide-react";
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { ChevronDown, Crown, MessageCircle, Star } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 interface HeaderClientProps {
   isScrolled: boolean;
@@ -19,65 +18,58 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
   const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const { user } = useAuth();
-  
-  const menuItemStyle = "px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none";
-  const activeStyle = "text-primary";
-  const scrolledStyle =  "cursor-pointer text-black hover:text-black hover:bg-white/20";
-  
-  const handleMouseEnter = (menu: string) => {
-    setOpenDropdown(menu);
-  };
-  
-  const handleMouseLeave = () => {
-    setOpenDropdown(null);
-  };
-  
+
+  const baseItem =
+    "px-3 py-2 text-sm font-medium rounded-full transition-colors focus:outline-none whitespace-nowrap";
+  const inactiveItem =
+    "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 cursor-pointer";
+  const activeItem = "bg-[#EEF0FF] text-primary cursor-pointer";
+
+  const handleMouseEnter = (menu: string) => setOpenDropdown(menu);
+  const handleMouseLeave = () => setOpenDropdown(null);
+
   return (
-    <nav className="flex items-center space-x-1">
-      <Link 
-        to="/" 
+    <nav className="flex items-center gap-0.5">
+      <Link
+        to="/"
         className={cn(
-          menuItemStyle,
-          location.pathname === '/' ? activeStyle : "",
-          scrolledStyle
+          baseItem,
+          location.pathname === "/" ? activeItem : inactiveItem
         )}
       >
         Trang chủ
       </Link>
 
-      <Link 
-        to="/markets" 
+      <Link
+        to="/markets"
         className={cn(
-          menuItemStyle,
-          location.pathname.includes('/markets') ? activeStyle : "",
-          scrolledStyle
+          baseItem,
+          location.pathname.includes("/markets") ? activeItem : inactiveItem
         )}
       >
         Thị trường
       </Link>
-      <div 
-        className="relative" 
-        onMouseEnter={() => handleMouseEnter('investment')} 
+
+      <div
+        className="relative"
+        onMouseEnter={() => handleMouseEnter("investment")}
         onMouseLeave={handleMouseLeave}
       >
-        <DropdownMenu open={openDropdown === 'investment'}>
-          <DropdownMenuTrigger 
+        <DropdownMenu open={openDropdown === "investment"}>
+          <DropdownMenuTrigger
             className={cn(
-              menuItemStyle,
-              "flex items-center gap-1",
-              location.pathname.includes('/investment') ? activeStyle : "",
-              scrolledStyle
+              baseItem,
+              "flex items-center gap-0.5",
+              location.pathname.includes("/investment") ? activeItem : inactiveItem
             )}
             asChild
           >
             <div>
               Đầu tư
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1">
-                <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <ChevronDown className="h-3.5 w-3.5 ml-0.5 opacity-70" />
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white shadow-lg rounded-md min-w-[200px]">
+          <DropdownMenuContent className="bg-white shadow-lg rounded-xl min-w-[200px] border border-gray-100">
             <DropdownMenuItem asChild>
               <Link to="/investment/stocks" className="px-3 py-2 cursor-pointer">
                 Cổ phiếu chứng khoán
@@ -90,64 +82,68 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div> 
-      <Link 
-        to="/exchange-rate" 
+      </div>
+
+      <div className="w-px h-5 bg-gray-200 mx-1" aria-hidden />
+
+      <Link
+        to="/exchange-rate"
         className={cn(
-          menuItemStyle,
-          location.pathname.includes('/exchange-rate') ? activeStyle : "",
-          scrolledStyle
+          baseItem,
+          location.pathname.includes("/exchange-rate")
+            ? activeItem
+            : inactiveItem
         )}
       >
         Giá vàng / ngoại tệ
       </Link>
 
-      <Link 
-        to="/articles" 
+      <Link
+        to="/articles"
         className={cn(
-          menuItemStyle,
-          location.pathname.includes('/articles') ? activeStyle : "",
-          scrolledStyle
+          baseItem,
+          location.pathname.includes("/articles") ? activeItem : inactiveItem
         )}
       >
         Bài viết
       </Link>
-      
-      <Link 
-        to="/chat" 
+
+      <Link
+        to="/feedback"
         className={cn(
-          menuItemStyle,
-          location.pathname.includes('/chat') ? activeStyle : "",
-          scrolledStyle
+          baseItem,
+          "inline-flex items-center gap-1.5",
+          location.pathname.includes("/feedback") ? activeItem : inactiveItem
         )}
       >
-        Chat AI
+        Phản hồi khách hàng
+        <Star className="h-3.5 w-3.5 text-gray-400 stroke-[1.5]" />
       </Link>
-      <Link 
-        to="/" 
-        className={cn(
-          menuItemStyle,
-          location.pathname.includes('/chat') ? activeStyle : "",
-          scrolledStyle
-        )}
-      >
-        Phản hồi của khách hàng
-      </Link>
+
       {(user?.is_admin || user?.is_vip) && (
-        <Link 
-          to="/stock-insight" 
+        <Link
+          to="/stock-insight"
           className={cn(
-            menuItemStyle,
-            location.pathname.includes('/stock-insight') ? activeStyle : "",
-            scrolledStyle
+            baseItem,
+            "inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50/80",
+            location.pathname.includes("/stock-insight") && "bg-amber-50/80 text-amber-700"
           )}
         >
-          <span className="inline-flex items-center gap-1">
-            <span>TOP cổ phiếu mạnh</span>
-            <Crown className="w-4 h-4 text-amber-500" />
-          </span>
+          TOP cổ phiếu mạnh
+          <Crown className="h-4 w-4 text-amber-500 shrink-0" />
         </Link>
       )}
+
+      <Link
+        to="/chat"
+        className={cn(
+          "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-colors shadow-sm",
+          location.pathname.includes("/chat") && "ring-2 ring-primary/30"
+        )}
+      >
+        <MessageCircle className="h-4 w-4 shrink-0" />
+        Chat AI
+      </Link>
     </nav>
   );
 };

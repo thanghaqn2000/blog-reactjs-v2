@@ -7,32 +7,64 @@ const ITEMS_PER_PAGE = 10;
 const formatPrice = (val: number) => val.toLocaleString('vi-VN') + 'đ/chỉ';
 
 function GoldBtmc() {
-  const [data, setData] = useState<GoldPriceItem[]>([]);
+  const [pagedData, setPagedData] = useState<GoldPriceItem[]>([]);
+  const [fullData, setFullData] = useState<GoldPriceItem[]>([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [serverTotalPages, setServerTotalPages] = useState(1);
+  const [serverTotalCount, setServerTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [clock, setClock] = useState('');
+  const [fullDataLoaded, setFullDataLoaded] = useState(false);
 
-  const fetchData = useCallback(async (p: number) => {
+  const fetchPagedData = useCallback(async (p: number) => {
     try {
       setLoading(true);
       const res = await goldPriceV1Service.getGoldPrices(p, ITEMS_PER_PAGE);
-      setData(res.data);
-      setTotalPages(res.meta.total_pages);
-      setTotalCount(res.meta.total_count);
+      setPagedData(res.data);
+      setServerTotalPages(res.meta.total_pages);
+      setServerTotalCount(res.meta.total_count);
     } catch (error) {
       console.error('Failed to fetch gold prices', error);
-      setData([]);
+      setPagedData([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const fetchFullData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const first = await goldPriceV1Service.getGoldPrices(1, ITEMS_PER_PAGE);
+      let allData = [...first.data];
+      const tp = first.meta.total_pages;
+      if (tp > 1) {
+        const rest = await Promise.all(
+          Array.from({ length: tp - 1 }, (_, i) =>
+            goldPriceV1Service.getGoldPrices(i + 2, ITEMS_PER_PAGE),
+          ),
+        );
+        allData = [...allData, ...rest.flatMap((r) => r.data)];
+      }
+      setFullData(allData);
+      setFullDataLoaded(true);
+    } catch (error) {
+      console.error('Failed to fetch all gold prices', error);
+      setFullData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const isSearching = searchTerm.trim().length > 0;
+
   useEffect(() => {
-    fetchData(page);
-  }, [page, fetchData]);
+    if (isSearching) {
+      if (!fullDataLoaded) fetchFullData();
+    } else {
+      fetchPagedData(page);
+    }
+  }, [page, isSearching, fullDataLoaded, fetchPagedData, fetchFullData]);
 
   useEffect(() => {
     const update = () => {
@@ -44,11 +76,19 @@ function GoldBtmc() {
     return () => clearInterval(id);
   }, []);
 
-  const filteredData = useMemo(() => {
-    if (!searchTerm) return data;
+  const filtered = useMemo(() => {
+    if (!isSearching) return pagedData;
     const term = searchTerm.toLowerCase();
-    return data.filter((item) => item.name.toLowerCase().includes(term));
-  }, [data, searchTerm]);
+    return fullData.filter((item) => item.name.toLowerCase().includes(term));
+  }, [searchTerm, isSearching, pagedData, fullData]);
+
+  const totalPages = isSearching
+    ? Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+    : serverTotalPages;
+  const totalCount = isSearching ? filtered.length : serverTotalCount;
+  const displayed = isSearching
+    ? filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+    : filtered;
 
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
   const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
@@ -113,7 +153,7 @@ function GoldBtmc() {
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
               placeholder="Tìm nhanh..."
               className="pl-10 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 outline-none transition-all w-full shadow-sm"
             />
@@ -147,14 +187,14 @@ function GoldBtmc() {
                       <Loader2 className="w-6 h-6 animate-spin text-stone-400 mx-auto" />
                     </td>
                   </tr>
-                ) : filteredData.length === 0 ? (
+                ) : displayed.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-10 text-center text-sm text-stone-400">
                       Chưa có dữ liệu giá vàng.
                     </td>
                   </tr>
                 ) : (
-                  filteredData.map((row, i) => (
+                  displayed.map((row, i) => (
                     <tr
                       key={i}
                       className="hover:bg-amber-50/40 transition-all group border-b border-stone-50"

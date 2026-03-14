@@ -1,9 +1,9 @@
 
-import { Link } from "react-router-dom";
-import { Post } from "@/contexts/PostsContext";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { Post } from "@/contexts/PostsContext";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FeaturedSavedPostsProps {
   posts: Post[];
@@ -16,7 +16,7 @@ const FeaturedSavedPosts = ({ posts }: FeaturedSavedPostsProps) => {
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold tracking-tight">Featured Posts</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Featured sPosts</h2>
           <Link
             to="/articles"
             className="hidden sm:flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
