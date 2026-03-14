@@ -12,13 +12,13 @@ import {
   faChevronDown,
   faCrown,
   faSignOutAlt,
+  faTableCellsLarge,
   faTimes,
   faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import AdminLink from '../AdminLink';
 import { Button } from '../ui/button';
 import HeaderClient from './HeaderClient';
 
@@ -78,14 +78,14 @@ const Navbar = () => {
           {/* Logo + ORCA text - responsive: fit within navbar height */}
           <Link 
             to="/" 
-            className="flex items-center cursor-pointer gap-2.5 min-w-0 flex-1 sm:flex-initial"
+            className="flex items-center cursor-pointer gap-2.5 shrink-0"
           >
             <img 
               src="/logo-orca.png" 
               alt="ORCA" 
               className="max-h-14 sm:max-h-20 w-auto object-contain flex-shrink-0"
             />
-            <span className="text-purple-900 font-display font-bold tracking-tight text-xl sm:text-[28px] truncate">
+            <span className="text-purple-900 font-display font-bold tracking-tight text-xl sm:text-[28px] whitespace-nowrap">
               ORCA
             </span>
           </Link>
@@ -97,24 +97,37 @@ const Navbar = () => {
           
           {/* Search & Login & Mobile Menu Buttons */}
           <div className="flex items-center gap-2">
-            
-            {user?.is_admin && (
-              <AdminLink isScrolled={isScrolled} />
-            )}
             {isLoading ? (
               <div className="ml-2 w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size={(user?.is_admin || user?.is_vip) ? "sm" : "icon"}
                     className={cn(
-                      "ml-2 flex items-center rounded-full overflow-hidden transition-colors",
-                      (user?.is_admin || user?.is_vip) ? "gap-2 py-1 pl-1 pr-2" : "p-0",
-                      isScrolled ? "bg-blue-100/80 hover:bg-blue-200/80 text-gray-600 hover:text-black" : "bg-blue-100/80 hover:bg-blue-200/80 text-white hover:text-white/80"
+                      "ml-2 flex items-center overflow-hidden transition-colors border rounded-xl",
+                      (user?.is_admin || user?.is_vip)
+                        ? "gap-2 py-1.5 pl-2.5 pr-2 border-amber-200/80 bg-amber-50/90 hover:bg-amber-100/90 text-gray-800"
+                        : "p-0 rounded-full border-transparent hover:bg-gray-100"
                     )}
                   >
+                    {(user?.is_admin || user?.is_vip) && (
+                      <>
+                        <FontAwesomeIcon
+                          icon={faCrown}
+                          className="h-3.5 w-3.5 text-amber-500 shrink-0"
+                        />
+                        <span className="flex flex-col items-start leading-tight">
+                          <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-wide">
+                            Premium
+                          </span>
+                          <span className="text-xs font-medium text-gray-700">
+                            {user?.is_admin ? "Admin User" : "VIP"}
+                          </span>
+                        </span>
+                      </>
+                    )}
                     {user?.avatar_url ? (
                       <img
                         src={user.avatar_url}
@@ -123,25 +136,23 @@ const Navbar = () => {
                       />
                     ) : (
                       <span className="shrink-0">
-                        <FontAwesomeIcon icon={faUser} className="h-8 w-8 text-blue-500" />
+                        <FontAwesomeIcon icon={faUser} className="h-8 w-8 text-primary" />
                       </span>
                     )}
                     {(user?.is_admin || user?.is_vip) && (
-                    <span className="flex flex-col items-center leading-tight">
-                      <FontAwesomeIcon 
-                        icon={faCrown} 
-                        className="h-3 w-3 text-amber-600" 
-                      />
-                      <span 
-                        className="text-[12px] font-bold text-amber-600 whitespace-nowrap "
-                      >
-                        Premium (VIP)
-                      </span>
-                    </span>
+                      <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3 text-gray-500 ml-0.5" />
                     )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {user?.is_admin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center cursor-pointer">
+                        <FontAwesomeIcon icon={faTableCellsLarge} className="mr-2 h-4 w-4" />
+                        <span>Admin</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="flex items-center cursor-pointer">
                       <FontAwesomeIcon icon={faUser} className="mr-2 h-4 w-4" />
