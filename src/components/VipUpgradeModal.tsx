@@ -42,20 +42,20 @@ const VipUpgradeModal = ({ open, onClose }: VipUpgradeModalProps) => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="rounded-md bg-muted p-4">
-              <h3 className="font-medium mb-2">Hiện tại lượt nhắn còn lại của bạn đã hết, hãy liên hệ với admin để nâng cấp thêm lượt nhắn</h3>
+              <h3 className="font-medium mb-2">Liên hệ zalo để nâng cấp tài khoản VIP</h3>
               <ul className="list-disc pl-5 space-y-1">
-                <li>Link zalo: <a href="Zalo.me/0969351090" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600">0969351090</a></li>
+                <li>Link zalo: <a href="https://zalo.me/0969351090" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600">0969351090</a></li>
             </ul>
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row sm:justify-between sm:space-x-2">
-            <Button variant="outline" onClick={onClose}>Thoát</Button>
-            <Button 
+            <Button variant="outline" className="w-full" onClick={onClose}>Thoát</Button>
+            {/* <Button 
               variant="premium" 
               onClick={handleUpgradeClick}
             >
               Nâng cấp VIP
-            </Button>
+            </Button> */}
           </DialogFooter>
         </DialogContent>
       </Dialog>
