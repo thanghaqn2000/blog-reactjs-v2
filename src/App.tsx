@@ -12,6 +12,7 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
 import HeroSlides from "./pages/admin/HeroSlides";
+import FeedbackManagement from "./pages/admin/FeedbackManagement";
 import NotificationDetail from "./pages/admin/notifications/NotificationDetail";
 import NotificationsManagement from "./pages/admin/notifications/NotificationsManagement";
 import CreatePost from "./pages/admin/posts/CreatePost";
@@ -26,6 +27,7 @@ import Article from "./pages/home/article/ArticleDetail";
 import Articles from "./pages/home/article/ArticleList";
 import AuthCallback from "./pages/home/AuthCallback";
 import ExchangeRate from "./pages/home/ExchangeRate";
+import Feedback from "./pages/home/Feedback";
 import Index from "./pages/home/Index";
 import NotFound from "./pages/home/NotFound";
 import VipNews from "./pages/home/VipNews";
@@ -59,6 +61,7 @@ const App = () => (
                 <Route index element={<Dashboard />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="users/:id/chat-history" element={<UserChatHistory />} />
+                <Route path="feedback" element={<FeedbackManagement />} />
                 <Route path="posts" element={<Posts />} />
                 <Route path="posts/create" element={<CreatePost />} />
                 <Route path="posts/edit/:id" element={<EditPost />} />
@@ -97,6 +100,16 @@ const App = () => (
               <Route path="/article/:slug" element={<Article />} />
               <Route path="/markets" element={<NotFound />} />
               
+              {/* Feedback route - protected */}
+              <Route
+                path="/feedback"
+                element={
+                  <ProtectedRoute>
+                    <Feedback />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Auth callback route */}
               <Route path="/auth/callback" element={<AuthCallback />} />
               
