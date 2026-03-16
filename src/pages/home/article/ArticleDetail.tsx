@@ -1,8 +1,10 @@
 import SidebarStock from '@/components/SidebarStock';
+import VipUpgradeModal from '@/components/VipUpgradeModal';
 import { formatDate } from '@/config/date.config';
+import { useAuth } from '@/contexts/AuthContext';
 import { postServiceV1 } from '@/services/v1/post.service';
 import DOMPurify from 'dompurify';
-import { ArrowLeft, Calendar, Crown } from 'lucide-react';
+import { ArrowLeft, Calendar, Crown, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -17,6 +19,8 @@ const Article = () => {
   const { slug } = useParams<{ slug: string }>();
   const [article, setArticle] = useState<ArticleProps | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const { user } = useAuth();
   
   useEffect(() => {
     const fetchArticle = async () => {
@@ -90,8 +94,8 @@ const Article = () => {
       <MainLayout>
         <div className="container-page min-h-screen pt-20">
           <div className="max-w-2xl mx-auto text-center py-16">
-            <h1 className="text-2xl font-bold mb-4">Article not found</h1>
-            <p className="text-foreground/70 mb-8">The article you're looking for doesn't exist or has been removed.</p>
+            <h1 className="text-2xl font-bold mb-4">Không tìm thấy bài viết</h1>
+            <p className="text-foreground/70 mb-8">Bài viết bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
             <Link 
               to="/articles" 
               className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary text-white font-medium shadow-sm hover:bg-primary/90 transition-all"
@@ -104,6 +108,23 @@ const Article = () => {
       </MainLayout>
     );
   }
+
+  const isVipArticle = article.sub_type === 'vip';
+  console.log(article.sub_type);
+  const canViewVip = !!user && (user.is_admin || user.is_vip);
+  const shouldGateVip = isVipArticle && !canViewVip;
+
+  const getFirstHalfSentences = (html: string) => {
+    const text = html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!text) return [];
+    const parts = text.split(/(?<=[.!?])\s+/);
+    return parts.slice(0, 1);
+  };
+
+  const firstHalfSentences = shouldGateVip ? getFirstHalfSentences(article.content || '') : [];
   
   return (
     <MainLayout>
@@ -157,6 +178,27 @@ const Article = () => {
           </div>
         </div>
         
+        {shouldGateVip && (
+          <div className="container mx-auto px-4 sm:px-6 pt-6">
+            <div className="max-w-8xl">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex flex-col md:flex-row items-center gap-6">
+                  <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white shrink-0">
+                          <Lock size={24} />
+                      </div>
+                      <div>
+                          <p className="font-bold text-amber-900">Bài viết này dành cho user VIP</p>
+                          <p className="text-sm text-amber-700">Rất vui nếu quí khách nâng cấp tài khoản để đọc toàn bộ phân tích chuyên sâu.</p>
+                      </div>
+                  </div>
+                  <button onClick={() => setShowUpgradeModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-full font-bold transition-all shadow-md active:scale-95 whitespace-nowrap">
+                      Nâng cấp VIP ngay
+                  </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Back link */}
         <div className="container mx-auto px-4 sm:px-6 py-6">
           <Link 
@@ -192,10 +234,48 @@ const Article = () => {
               </div> */}
               
               {/* Content */}
-              <div 
-                className="prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || 'Chưa có nội dung') }}
-              />
+              {shouldGateVip ? (
+                <div className="space-y-6">
+                  <div className="prose prose-lg max-w-none">
+                    {firstHalfSentences.length > 0 ? (
+                      firstHalfSentences.map((s, idx) => <p key={idx}>{s}</p>)
+                    ) : (
+                      <p>Chưa có nội dung</p>
+                    )}
+                  </div>
+
+                  <div className="relative rounded-2xl border border-border bg-white overflow-hidden">
+                    <div
+                      className="pointer-events-none select-none opacity-60 blur-sm px-6 py-6"
+                      aria-hidden
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(article.content || ''),
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/60 to-white" />
+                        <div className="absolute inset-0 blur-overlay mt-[100px]">
+                            <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-gray-100 max-w-sm mx-auto">
+                                <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Crown size={24} />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Đăng ký để đọc tiếp</h3>
+                                <p className="text-gray-500 text-sm mb-6">Bạn cần tài khoản VIP để xem đầy đủ bài viết này.</p>
+                                <button onClick={() => setShowUpgradeModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 mb-3">
+                                    Nâng cấp ngay
+                                </button>
+                                {/* <p className="text-xs text-gray-400 italic">Chỉ từ 99.000đ/tháng</p> */}
+                            </div>
+                        </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="prose prose-lg max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(article.content || "Chưa có nội dung"),
+                  }}
+                />
+              )}
             </div>
 
             {/* Sidebar — scroll độc lập */}
@@ -205,6 +285,11 @@ const Article = () => {
           </div>
         </div>
       </article>
+
+      <VipUpgradeModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </MainLayout>
   );
 };

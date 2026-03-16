@@ -61,9 +61,6 @@ const ArticleCard = ({
           {/* Category chip */}
           <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="chip bg-white/90 backdrop-blur-sm text-primary">
-                {category}
-              </span>
               {sub_type === 'vip' && (
                 <span className="chip bg-amber-600 text-white flex items-center gap-1.5">
                   <Crown size={14} className="shrink-0" />
@@ -79,14 +76,14 @@ const ArticleCard = ({
           </div>
           
           {/* Trending badge */}
-          {trending && (
+          {/* {trending && (
             <div className="absolute top-3 right-3">
               <span className="chip bg-primary text-white flex items-center space-x-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-white mr-1"></span>
                 <span>Trending</span>
               </span>
             </div>
-          )}
+          )} */}
         </div>
         
         {/* Content */}
