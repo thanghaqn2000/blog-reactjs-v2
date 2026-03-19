@@ -6,13 +6,13 @@ import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
-import ProtectedRoute, { ProtectedVIPRoute } from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import StockInsight from "./components/StockInsight";
 import { ChatProvider } from "./contexts/ChatContext";
 import { PostsProvider } from "./contexts/PostsContext";
 import Dashboard from "./pages/admin/Dashboard";
-import HeroSlides from "./pages/admin/HeroSlides";
 import FeedbackManagement from "./pages/admin/FeedbackManagement";
+import HeroSlides from "./pages/admin/HeroSlides";
 import NotificationDetail from "./pages/admin/notifications/NotificationDetail";
 import NotificationsManagement from "./pages/admin/notifications/NotificationsManagement";
 import CreatePost from "./pages/admin/posts/CreatePost";
@@ -75,7 +75,7 @@ const App = () => (
               
               {/* VIP News route */}
               <Route path="/vip-news" element={<VipNews />} />
-              <Route path="/stock-insight" element={<ProtectedVIPRoute><StockInsight /></ProtectedVIPRoute>} />
+              <Route path="/stock-insight" element={<StockInsight />} />
               
               {/* Gold price route */}
               <Route path="/exchange-rate" element={<ExchangeRate />} />

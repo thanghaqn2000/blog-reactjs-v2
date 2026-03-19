@@ -1,6 +1,6 @@
 import ArticleCard, { ArticleProps } from "@/components/ArticleCard";
 import { formatDate } from "@/config/date.config";
-import { Post, postServiceV1 } from "@/services/v1/post.service";
+import { getPostAuthorInfo, Post, postServiceV1 } from "@/services/v1/post.service";
 import { Filter, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import MainLayout from "../../../layouts/MainLayout";
 const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
 
 function mapPostToArticleProps(post: Post): ArticleProps {
+  const { name: authorName, avatar: authorAvatar } = getPostAuthorInfo(post);
   return {
     id: post.id.toString(),
     slug: post.slug,
@@ -22,9 +23,11 @@ function mapPostToArticleProps(post: Post): ArticleProps {
     status: post.status,
     image: post.image_url || defaultImage,
     sub_type: post.sub_type,
+    source: post.source,
+    author_type: post.author_type,
     author: {
-      name: post.author || "Admin",
-      avatar: "",
+      name: authorName,
+      avatar: authorAvatar,
     },
   };
 }

@@ -1,3 +1,5 @@
+import VipUpgradeModal from "@/components/VipUpgradeModal";
+import { useAuth } from "@/contexts/AuthContext";
 import MainLayout from "@/layouts/MainLayout";
 import {
   StockInsightData,
@@ -13,6 +15,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Crown,
   Loader2,
   MinusCircle,
   Search,
@@ -85,11 +88,15 @@ const StockInsight = () => {
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [loadingStocks, setLoadingStocks] = useState<boolean>(true);
   const [loadingMarketData, setLoadingMarketData] = useState<boolean>(true);
+  const { user } = useAuth();
+  const canViewVip = !!user && (user.is_admin || user.is_vip);
+  const shouldGateVip = !canViewVip;
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [modalTitle, setModalTitle] = useState("✨ ORCA System Analysis");
 
   const audioSource = useRef<HTMLAudioElement | null>(null);
@@ -457,7 +464,26 @@ const StockInsight = () => {
              />
           </div>
           )}
+          
         </div>
+
+        {shouldGateVip && (
+            <div className="px-10 mb-10">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white shrink-0">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-amber-900 text-sm">
+                    Bảng xếp hạng sức mạnh này dành cho user VIP
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    Vui lòng nâng cấp tài khoản để xem đầy đủ chi tiết danh sách cổ phiếu và tín hiệu sức mạnh.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* 2. Momentum Matrix */}
         <div className="bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-sm">
@@ -487,66 +513,108 @@ const StockInsight = () => {
               />
             </div>
           </div>
-
-          {loadingStocks ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="relative">
+            <div className={shouldGateVip ? "opacity-40 blur-xl pointer-events-none select-none" : ""}>
+              {loadingStocks ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 z-10 bg-white">
+                      <tr className="bg-white shadow-sm">
+                        <Th label="Mã" sortKey={null} current={sortConfig} onSort={setSortConfig} />
+                        <Th label="Sức mạnh" sortKey="rs" current={sortConfig} onSort={setSortConfig} />
+                        <Th label="Khối lượng TB 20 ngày" sortKey="vol20D" current={sortConfig} onSort={setSortConfig} />
+                        <Th label="Xếp hạng" sortKey={null} current={sortConfig} onSort={setSortConfig} align="center" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {processedData.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                            Chưa có dữ liệu cổ phiếu.
+                          </td>
+                        </tr>
+                      ) : (
+                        processedData.map((item) => (
+                          <tr
+                            key={item.t}
+                            className="hover:bg-slate-50 transition-all group cursor-pointer border-l-4 border-transparent hover:border-indigo-600"
+                          >
+                            <td className="px-10 py-7">
+                              <div className="flex items-center gap-5">
+                                <div
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-sm ${
+                                    item.rs > 95 ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-500"
+                                  }`}
+                                >
+                                  {item.t[0]}
+                                </div>
+                                <span className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight">
+                                  {item.t}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-10 py-7">
+                              <div className="flex items-center gap-4">
+                                <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-700 ${
+                                      item.rs > 95 ? "bg-indigo-600" : "bg-slate-400"
+                                    }`}
+                                    style={{ width: `${item.rs}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs font-bold text-slate-400 w-8">
+                                  {item.rs.toFixed(1)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-10 py-7">
+                              <span className="text-sm font-bold text-slate-500">
+                                {formatVol(item.vol20D)}
+                              </span>
+                            </td>
+                            <td className="px-10 py-7 text-center">
+                              <span
+                                className={`text-[11px] font-black px-3 py-1 rounded-full ${
+                                  item.dynamicRank <= 5
+                                    ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                                    : "bg-slate-50 text-slate-400 border border-slate-200"
+                                }`}
+                              >
+                                #{item.dynamicRank}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          ) : (
-          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 z-10 bg-white">
-                <tr className="bg-white shadow-sm">
-                  <Th label="Mã" sortKey={null} current={sortConfig} onSort={setSortConfig} />
-                  <Th label="Sức mạnh" sortKey="rs" current={sortConfig} onSort={setSortConfig} />
-                  <Th label="Khối lượng TB 20 ngày" sortKey="vol20D" current={sortConfig} onSort={setSortConfig} />
-                  <Th label="Xếp hạng" sortKey={null} current={sortConfig} onSort={setSortConfig} align="center" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {processedData.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
-                      Chưa có dữ liệu cổ phiếu.
-                    </td>
-                  </tr>
-                ) : (
-                  processedData.map((item) => (
-                    <tr key={item.t} className="hover:bg-slate-50 transition-all group cursor-pointer border-l-4 border-transparent hover:border-indigo-600">
-                    <td className="px-10 py-7">
-                      <div className="flex items-center gap-5">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-sm ${item.rs > 95 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                          {item.t[0]}
-                        </div>
-                        <span className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight">{item.t}</span>
-                      </div>
-                    </td>
-                    <td className="px-10 py-7">
-                      <div className="flex items-center gap-4">
-                        <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-700 ${item.rs > 95 ? 'bg-indigo-600' : 'bg-slate-400'}`} 
-                            style={{ width: `${item.rs}%` }} 
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-slate-400 w-8">{item.rs.toFixed(1)}</span>
-                      </div>
-                    </td>
-                    <td className="px-10 py-7">
-                      <span className="text-sm font-bold text-slate-500">{formatVol(item.vol20D)}</span>
-                    </td>
-                    <td className="px-10 py-7 text-center">
-                      <span className={`text-[11px] font-black px-3 py-1 rounded-full ${item.dynamicRank <= 5 ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}>
-                        #{item.dynamicRank}
-                      </span>
-                    </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+
+            {shouldGateVip && !loadingStocks && (
+              <div className="absolute inset-0 flex items-center justify-center px-4">
+                <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-gray-100 max-w-sm w-full">
+                  <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Crown size={24} />
+                  </div>
+                  <p className="text-xl font-bold text-gray-900 mb-2">Đăng ký để đọc tiếp</p>
+                  <p className="text-gray-500 text-sm mb-6">Bạn cần tài khoản VIP để xem đầy đủ bảng xếp hạng sức mạnh.</p>
+                  <button
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95"
+                  >
+                    Nâng cấp ngay
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          )}
         </div>
 
         {/* Intelligence Insight Modal */}
@@ -595,6 +663,8 @@ const StockInsight = () => {
           </div>
         )}
       </div>
+
+      <VipUpgradeModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }

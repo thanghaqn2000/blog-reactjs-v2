@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuth } from "@/contexts/AuthContext";
 import { database } from "@/lib/firebase";
 import { TopStockItem, topStockV1Service } from "@/services/v1/top_stock.service";
 import { ref as dbRef, onValue } from "firebase/database";
@@ -25,6 +26,9 @@ const formatVol = (val: number | string): string => {
 const TopStock = () => {
   const [stocks, setStocks] = useState<TopStockItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { user } = useAuth();
+  const canViewVip = !!user && (user.is_admin || user.is_vip);
+  const shouldGateVip = !canViewVip;
 
   useEffect(() => {
     const fetchTopStocks = async () => {
@@ -69,7 +73,24 @@ const TopStock = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
+        {shouldGateVip && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center text-white shrink-0">
+              <Crown size={18} />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-amber-900 text-sm">
+                Bảng xếp hạng này dành cho user VIP
+              </p>
+              <p className="text-xs text-amber-700">
+                Vui lòng nâng cấp tài khoản để xem đầy đủ và chi tiết dữ liệu sức mạnh cổ phiếu.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className={shouldGateVip ? "relative opacity-40 blur-[1px] pointer-events-none" : ""}>
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Rank</TableHead>
@@ -103,6 +124,7 @@ const TopStock = () => {
             )}
           </TableBody>
         </Table>
+        </div>
         <Link
           to="/stock-insight"
           className="mt-4 flex items-center justify-center sm:justify-end text-sm font-medium text-primary hover:text-primary/80 transition-colors"

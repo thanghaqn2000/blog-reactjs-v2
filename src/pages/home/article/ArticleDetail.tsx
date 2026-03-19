@@ -2,7 +2,7 @@ import SidebarStock from '@/components/SidebarStock';
 import VipUpgradeModal from '@/components/VipUpgradeModal';
 import { formatDate } from '@/config/date.config';
 import { useAuth } from '@/contexts/AuthContext';
-import { postServiceV1 } from '@/services/v1/post.service';
+import { getPostAuthorInfo, postServiceV1 } from '@/services/v1/post.service';
 import DOMPurify from 'dompurify';
 import { ArrowLeft, Calendar, Crown, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -30,6 +30,7 @@ const Article = () => {
         setIsLoading(true);
         const response = await postServiceV1.getDetailPost(slug);
         const post = response.data;
+        const { name: authorName, avatar: authorAvatar } = getPostAuthorInfo(post);
         setArticle({
           id: post.id.toString(),
           slug: post.slug,
@@ -42,10 +43,12 @@ const Article = () => {
           status: post.status,
           image: post.image_url || defaultImage,
           sub_type: post.sub_type,
+          source: post.source,
+          author_type: post.author_type,
           content: post.content,
           author: {
-            name: post.author || 'Admin',
-            avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+            name: authorName,
+            avatar: authorAvatar
           }
         });
       } catch (error) {
@@ -110,7 +113,6 @@ const Article = () => {
   }
 
   const isVipArticle = article.sub_type === 'vip';
-  console.log(article.sub_type);
   const canViewVip = !!user && (user.is_admin || user.is_vip);
   const shouldGateVip = isVipArticle && !canViewVip;
 
@@ -162,12 +164,34 @@ const Article = () => {
               
               <div className="flex flex-wrap items-center text-foreground/70 gap-x-8 gap-y-3 text-base mb-8">
                 <div className="flex items-center">
-                  {/* <img 
-                    src={article.author.avatar} 
-                    alt={article.author.name}
-                    className="w-8 h-8 rounded-full object-cover border border-border mr-3"
-                  /> */}
-                  <span className="font-medium">{article.author.name || 'Admin'}</span>
+                  {(() => {
+                    const isSystemAuthor = article.author_type === 'system';
+                    const displayAuthorName = isSystemAuthor ? (article.source ?? '') : article.author.name;
+                    const displayAuthorInitial = (displayAuthorName?.trim()?.charAt(0) ?? '?').toUpperCase();
+
+                    return (
+                      <>
+                        {isSystemAuthor ? (
+                          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-white uppercase border border-border mr-3">
+                            {displayAuthorInitial}
+                          </div>
+                        ) : article.author.avatar ? (
+                          <img
+                            src={article.author.avatar}
+                            alt={article.author.name}
+                            className="w-8 h-8 rounded-full object-cover border border-border mr-3"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-white uppercase border border-border mr-3">
+                            {displayAuthorInitial}
+                          </div>
+                        )}
+                        <span className="font-medium">{displayAuthorName || 'Admin'}</span>
+                      </>
+                    );
+                  })()}
                 </div>
                 <div className="flex items-center">
                   <Calendar size={18} className="mr-2" />

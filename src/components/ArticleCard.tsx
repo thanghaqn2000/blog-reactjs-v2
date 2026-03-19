@@ -16,6 +16,8 @@ export interface ArticleProps {
   status: string;
   content?: string;
   sub_type?: string;
+  source?: string;
+  author_type?: 'system' | 'admin' | string;
   author: {
     name: string;
     avatar: string;
@@ -35,12 +37,18 @@ const ArticleCard = ({
   status,
   image, 
   author,
+  source,
+  author_type,
   sub_type,
   trending = false
 }: ArticleProps) => {
   const { user } = useAuth();
   const defaultImage = import.meta.env.VITE_DEFAULT_IMG_POST;
   const imageUrl = image || defaultImage;
+  const isSystemAuthor = author_type === 'system';
+  const displayAuthorName = isSystemAuthor ? (source ?? '') : author.name;
+  const displayAuthorLabel = isSystemAuthor ? 'Nguồn' : 'Tác giả';
+  const displayAuthorInitial = (displayAuthorName?.trim()?.charAt(0) ?? '?').toUpperCase();
 
   return (
     <Link to={`/article/${slug}`} className="block group">
@@ -99,14 +107,29 @@ const ArticleCard = ({
           {/* Author & metadata */}
           <div className="mt-auto flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              {/* <img 
-                src={author.avatar} 
-                alt={author.name}
-                className="w-7 h-7 rounded-full object-cover border border-border"
-              /> */}
-              <span className="text-xs text-foreground/80 font-medium">
-                {author.name}
-              </span>
+              <div className="flex items-center gap-3">
+                {isSystemAuthor ? (
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                    {displayAuthorInitial}
+                  </div>
+                ) : author.avatar ? (
+                  <img
+                    src={author.avatar}
+                    alt={author.name}
+                    className="w-8 h-8 rounded-full object-cover bg-slate-200"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                    {displayAuthorInitial}
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-400 leading-none mb-1">{displayAuthorLabel}</span>
+                  <span className="text-sm font-bold text-gray-800 leading-none">{displayAuthorName}</span>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center space-x-3 text-xs text-foreground/60">
