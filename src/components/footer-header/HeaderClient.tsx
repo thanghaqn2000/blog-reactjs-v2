@@ -120,19 +120,17 @@ const HeaderClient = ({ isScrolled }: HeaderClientProps) => {
         <Star className="h-3.5 w-3.5 text-gray-400 stroke-[1.5]" />
       </Link>
 
-      {(user?.is_admin || user?.is_vip) && (
-        <Link
-          to="/stock-insight"
-          className={cn(
-            baseItem,
-            "inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50/80",
-            location.pathname.includes("/stock-insight") && "bg-amber-50/80 text-amber-700"
-          )}
+      <Link
+        to="/stock-insight"
+        className={cn(
+          baseItem,
+          "inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50/80",
+          location.pathname.includes("/stock-insight") && "bg-amber-50/80 text-amber-700"
+        )}
         >
           TOP cổ phiếu mạnh
           <Crown className="h-4 w-4 text-amber-500 shrink-0" />
         </Link>
-      )}
 
       <Link
         to="/chat"

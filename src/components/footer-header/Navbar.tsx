@@ -206,9 +206,7 @@ const Navbar = () => {
               <MobileNavLink to="/chat" label="Chat AI" className='text-black'/>
               <MobileNavLink to="/feedback" label="Phản hồi của khách hàng" className='text-black'/>
               <MobileNavLink to="/exchange-rate" label="Bảng giá vàng / tỷ giá ngoại tệ" className='text-black'/>
-              {(user?.is_admin || user?.is_vip) && (
-                <MobileNavLink to="/stock-insight" label=" TOP cổ phiếu mạnh 👑" className='text-black'/>
-              )}
+              <MobileNavLink to="/stock-insight" label=" TOP cổ phiếu mạnh 👑" className='text-black'/>
             </nav>
           </div>
         </div>

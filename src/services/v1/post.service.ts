@@ -1,5 +1,13 @@
 import { v1Api } from "../axios";
 
+export type PostAuthor =
+  | string
+  | {
+      name?: string;
+      avatar_url?: string;
+      avatar?: string;
+    };
+
 export interface Post {
   id: number;
   slug: string;
@@ -8,12 +16,23 @@ export interface Post {
   category: string;
   description: string;
   status: string;
-  author: string;
+  source?: string;
+  author_type?: 'system' | 'admin' | string;
   content: string;
   created_at: string;
   updated_at: string;
   date_post?: string;
   sub_type?: string;
+  author?: PostAuthor;
+}
+
+export function getPostAuthorInfo(post: Post): { name: string; avatar: string } {
+  if (!post.author) return { name: "Admin", avatar: "" };
+  if (typeof post.author === "string") return { name: post.author || "Admin", avatar: "" };
+  return {
+    name: post.author.name || "Admin",
+    avatar: post.author.avatar_url ?? post.author.avatar ?? "",
+  };
 }
 
 export interface GetFilterPost {

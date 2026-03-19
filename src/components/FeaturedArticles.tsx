@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/config/date.config";
-import { postServiceV1 } from "@/services/v1/post.service";
+import { getPostAuthorInfo, postServiceV1 } from "@/services/v1/post.service";
 import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,10 +17,14 @@ interface Article {
   excerpt: string;
   description: string;
   date: string;
+  date_post?: string;
   image: string;
   category: string;
   readTime: string;
   status: string;
+  sub_type?: string;
+  source?: string;
+  author_type?: 'system' | 'admin' | string;
   author: {
     name: string;
     avatar: string;
@@ -53,61 +57,38 @@ const FeaturedArticles = () => {
           postServiceV1.getPosts({ category: 'news', limit: 10 }),
           postServiceV1.getPosts({ category: 'finance', limit: 10 })
         ]);
+
+        const mapPostToArticle = (post: any): Article => {
+          const { name: authorName, avatar: authorAvatar } = getPostAuthorInfo(post);
+          return {
+            id: post.id.toString(),
+            slug: post.slug,
+            title: post.title,
+            excerpt: post.title,
+            date: formatDate(post.created_at),
+            image: post.image_url || defaultImage,
+            category: post.category,
+            description: post.description,
+            status: post.status,
+            date_post: post.date_post ? formatDate(post.date_post) : formatDate(post.created_at),
+            sub_type: post.sub_type,
+            source: post.source,
+            author_type: post.author_type,
+            readTime: '5 min read',
+            author: {
+              name: authorName,
+              avatar: authorAvatar
+            }
+          };
+        };
+
         setArticles({
-          report: reportResponse.data.map(post => ({
-            id: post.id.toString(),
-            slug: post.slug,
-            title: post.title,
-            excerpt: post.title,
-            date: formatDate(post.created_at),
+          report: reportResponse.data.map(mapPostToArticle),
+          news: newsResponse.data.map(mapPostToArticle),
+          finance: financeResponse.data.map((post: any) => ({
+            ...mapPostToArticle(post),
             image: post.image_url || defaultImage,
-            category: post.category,
-            description: post.description,
-            status: post.status,
-            date_post: post.date_post ? formatDate(post.date_post) : formatDate(post.created_at),
-            sub_type: post.sub_type,
-            readTime: '5 min read',
-            author: {
-              name: post.author || 'Admin',
-              avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-            }
           })),
-          news: newsResponse.data.map(post => ({
-            id: post.id.toString(),
-            slug: post.slug,
-            title: post.title,
-            excerpt: post.title,
-            date: formatDate(post.created_at),
-            image: post.image_url || defaultImage,
-            category: post.category,
-            description: post.description,
-            status: post.status,
-            date_post: post.date_post ? formatDate(post.date_post) : formatDate(post.created_at),
-            sub_type: post.sub_type,
-            readTime: '5 min read',
-            author: {
-              name: post.author || 'Admin',
-              avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-            }
-          })),
-          finance: financeResponse.data.map(post => ({
-            id: post.id.toString(),
-            slug: post.slug,
-            title: post.title,
-            excerpt: post.title,
-            date: formatDate(post.created_at),
-            image: post.image_url,
-            category: post.category,
-            description: post.description,
-            readTime: '5 min read',
-            status: post.status,
-            date_post: post.date_post ? formatDate(post.date_post) : formatDate(post.created_at),
-            sub_type: post.sub_type,
-            author: {
-              name: post.author || 'Admin',
-              avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-            }
-          }))
         });
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -194,7 +175,7 @@ const FeaturedArticles = () => {
                     onClick={() => loadMore('Báo cáo')}
                     className="mt-4"
                   >
-                    See more
+                    Xem thêm
                     <ArrowRight size={16} className="ml-1" />
                   </Button>
                 </div>
@@ -231,7 +212,7 @@ const FeaturedArticles = () => {
                     onClick={() => loadMore('Tin tức')}
                     className="mt-4"
                   >
-                    See more
+                    Xem thêm
                     <ArrowRight size={16} className="ml-1" />
                   </Button>
                 </div>
@@ -268,7 +249,7 @@ const FeaturedArticles = () => {
                     onClick={() => loadMore('Tài chính')}
                     className="mt-4"
                   >
-                    See more
+                    Xem thêm
                     <ArrowRight size={16} className="ml-1" />
                   </Button>
                 </div>
