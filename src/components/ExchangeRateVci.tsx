@@ -116,11 +116,15 @@ function ExchangeRateVci() {
     ? filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
     : filtered;
 
+  /** API trả chuỗi kiểu Mỹ: "29,658.06" (phẩy nghìn, chấm thập phân). */
   const formatVal = (val: string) => {
     if (val === '-') return <span className="text-gray-300 italic text-xs">Chờ cập nhật</span>;
-    const num = Number(val.replace(/,/g, ''));
+    const normalized = val.replace(/,/g, '').trim();
+    const num = Number(normalized);
     if (isNaN(num)) return val;
-    return `${num.toLocaleString('vi-VN')}đ`;
+    // Cùng kiểu hiển thị VND: làm tròn đồng nguyên (USD .00 và các mã có xu đều thống nhất)
+    const rounded = Math.round(num);
+    return `${rounded.toLocaleString('vi-VN')}đ`;
   };
 
   const historyDateDisplay = (() => {

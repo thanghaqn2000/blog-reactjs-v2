@@ -17,12 +17,13 @@ import {
   ChevronUp,
   Crown,
   Loader2,
+  Lock,
   MinusCircle,
   Search,
   TrendingUp,
   Volume2,
   Waves,
-  X
+  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -468,21 +469,24 @@ const StockInsight = () => {
         </div>
 
         {shouldGateVip && (
-            <div className="px-10 mb-10">
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white shrink-0">
-                  <AlertCircle className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-amber-900 text-sm">
-                    Bảng xếp hạng sức mạnh này dành cho user VIP
-                  </p>
-                  <p className="text-xs text-amber-700">
-                    Vui lòng nâng cấp tài khoản để xem đầy đủ chi tiết danh sách cổ phiếu và tín hiệu sức mạnh.
-                  </p>
-                </div>
+          <div className="container mx-auto px-4 sm:px-6 pt-6">
+            <div className="max-w-8xl">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex flex-col md:flex-row items-center gap-6">
+                  <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white shrink-0">
+                          <Lock size={24} />
+                      </div>
+                      <div>
+                          <p className="font-bold text-amber-900">Bài viết này dành cho user VIP</p>
+                          <p className="text-sm text-amber-700">Rất vui nếu quí khách nâng cấp tài khoản để đọc toàn bộ phân tích chuyên sâu.</p>
+                      </div>
+                  </div>
+                  <button onClick={() => setShowUpgradeModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-full font-bold transition-all shadow-md active:scale-95 whitespace-nowrap">
+                      Nâng cấp VIP ngay
+                  </button>
               </div>
             </div>
+          </div>
           )}
 
         {/* 2. Momentum Matrix */}
@@ -513,14 +517,32 @@ const StockInsight = () => {
               />
             </div>
           </div>
-          <div className="relative">
-            <div className={shouldGateVip ? "opacity-40 blur-xl pointer-events-none select-none" : ""}>
+          <div
+            className={
+              shouldGateVip
+                ? "relative min-h-[22rem] sm:min-h-[26rem]"
+                : "relative"
+            }
+          >
+            <div className={shouldGateVip ? "opacity-40 blur-sm pointer-events-none select-none min-h-[12rem]" : ""}>
               {loadingStocks ? (
-                <div className="flex items-center justify-center py-20">
+                <div
+                  className={
+                    shouldGateVip
+                      ? "flex min-h-[20rem] items-center justify-center py-20"
+                      : "flex items-center justify-center py-20"
+                  }
+                >
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
                 </div>
               ) : (
-                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <div
+                  className={
+                    shouldGateVip
+                      ? "overflow-x-auto max-h-[600px] overflow-y-auto min-h-[12rem]"
+                      : "overflow-x-auto max-h-[600px] overflow-y-auto"
+                  }
+                >
                   <table className="w-full text-left border-collapse">
                     <thead className="sticky top-0 z-10 bg-white">
                       <tr className="bg-white shadow-sm">
@@ -598,14 +620,15 @@ const StockInsight = () => {
             </div>
 
             {shouldGateVip && !loadingStocks && (
-              <div className="absolute inset-0 flex items-center justify-center px-4">
-                <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-gray-100 max-w-sm w-full">
+              <div className="absolute inset-0 z-20 flex items-center justify-center px-4 py-6 pointer-events-none">
+                <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-gray-100 max-w-sm w-full pointer-events-auto">
                   <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Crown size={24} />
                   </div>
                   <p className="text-xl font-bold text-gray-900 mb-2">Đăng ký để đọc tiếp</p>
                   <p className="text-gray-500 text-sm mb-6">Bạn cần tài khoản VIP để xem đầy đủ bảng xếp hạng sức mạnh.</p>
                   <button
+                    type="button"
                     onClick={() => setShowUpgradeModal(true)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95"
                   >

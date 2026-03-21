@@ -268,28 +268,36 @@ const Article = () => {
                     )}
                   </div>
 
-                  <div className="relative rounded-2xl border border-border bg-white overflow-hidden">
+                  <div className="relative rounded-2xl border border-border bg-white overflow-hidden min-h-[22rem] sm:min-h-[26rem]">
                     <div
-                      className="pointer-events-none select-none opacity-60 blur-sm px-6 py-6"
+                      className="pointer-events-none select-none opacity-60 blur-sm px-6 py-6 min-h-[12rem]"
                       aria-hidden
                       dangerouslySetInnerHTML={{
                         __html: DOMPurify.sanitize(article.content || ''),
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/60 to-white" />
-                        <div className="absolute inset-0 blur-overlay mt-[100px]">
-                            <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-gray-100 max-w-sm mx-auto">
-                                <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Crown size={24} />
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Đăng ký để đọc tiếp</h3>
-                                <p className="text-gray-500 text-sm mb-6">Bạn cần tài khoản VIP để xem đầy đủ bài viết này.</p>
-                                <button onClick={() => setShowUpgradeModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 mb-3">
-                                    Nâng cấp ngay
-                                </button>
-                                {/* <p className="text-xs text-gray-400 italic">Chỉ từ 99.000đ/tháng</p> */}
-                            </div>
+                    <div
+                      className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/70 to-white"
+                      aria-hidden
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+                      <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-gray-100 max-w-sm w-full pointer-events-auto">
+                        <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Crown size={24} />
                         </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Đăng ký để đọc tiếp</h3>
+                        <p className="text-gray-500 text-sm mb-6">
+                          Bạn cần tài khoản VIP để xem đầy đủ bài viết này.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowUpgradeModal(true)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95"
+                        >
+                          Nâng cấp ngay
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
