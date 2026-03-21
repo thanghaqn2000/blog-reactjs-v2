@@ -14,6 +14,7 @@ import { ref as dbRef, onValue } from "firebase/database";
 import { ArrowRight, Crown, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import VipUpgradeModal from "./VipUpgradeModal";
 
 const formatVol = (val: number | string): string => {
   const num = typeof val === 'string' ? parseFloat(val) : val;
@@ -27,6 +28,7 @@ const TopStock = () => {
   const [stocks, setStocks] = useState<TopStockItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuth();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const canViewVip = !!user && (user.is_admin || user.is_vip);
   const shouldGateVip = !canViewVip;
 
@@ -74,22 +76,29 @@ const TopStock = () => {
       </CardHeader>
       <CardContent>
         {shouldGateVip && (
-          <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center text-white shrink-0">
-              <Crown size={18} />
+          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white shadow-md">
+              <Crown size={24} />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-amber-900 text-sm">
+            <div className="min-w-0 flex-1 space-y-3">
+              <p className="text-base font-bold text-amber-900 sm:text-lg">
                 Bảng xếp hạng này dành cho user VIP
               </p>
-              <p className="text-xs text-amber-700">
+              <p className="text-sm leading-relaxed text-amber-800 sm:text-[15px]">
                 Vui lòng nâng cấp tài khoản để xem đầy đủ và chi tiết dữ liệu sức mạnh cổ phiếu.
               </p>
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(true)}
+                className="w-full rounded-full bg-amber-600 px-8 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-amber-700 active:scale-[0.98] sm:w-auto sm:py-2.5"
+              >
+                Nâng cấp VIP ngay
+              </button>
             </div>
           </div>
         )}
 
-        <div className={shouldGateVip ? "relative opacity-40 blur-[1px] pointer-events-none" : ""}>
+        <div className={shouldGateVip ? "relative opacity-40 blur-sm pointer-events-none" : ""}>
           <Table>
           <TableHeader>
             <TableRow>
@@ -136,6 +145,8 @@ const TopStock = () => {
           <ArrowRight size={16} className="ml-2" />
         </Link>
       </CardContent>
+      <VipUpgradeModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
+
     </Card>
   );
 };
