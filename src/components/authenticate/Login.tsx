@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showToast } from "@/config/toast.config";
 import { useAuth } from "@/contexts/AuthContext";
-import { LOGOUT_REASON } from "@/services/axios";
 import { ArrowLeft, Eye, EyeOff, Home, Lock, LogIn, Mail, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -38,20 +37,14 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
 
   const reasonHandled = useRef(false);
 
+  // Gỡ ?reason= cũ trên URL (không toast — trùng với hướng dẫn refresh token / F5)
   useEffect(() => {
     if (reasonHandled.current) return;
     const params = new URLSearchParams(location.search);
-    const reason = params.get('reason');
-
-    if (reason === LOGOUT_REASON.SESSION_EXPIRED) {
-      showToast.warning("Phiên đăng nhập đã hết hạn hoặc bị thu hồi do giới hạn thiết bị. Vui lòng đăng nhập lại.");
-    }
-
-    if (reason) {
-      reasonHandled.current = true;
-      navigate('/login', { replace: true });
-    }
-  }, [location.search]);
+    if (!params.has('reason')) return;
+    reasonHandled.current = true;
+    navigate('/login', { replace: true });
+  }, [location.search, navigate]);
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -79,7 +72,9 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
       const result = await login(phoneNumber, loginPassword);
 
       if (result.deviceLimitExceeded) {
-        showToast.warning("Bạn đã đạt giới hạn 3 thiết bị. Phiên đăng nhập cũ nhất đã bị đăng xuất.");
+        showToast.warning(
+          "Phiên đăng nhập đã hết hạn hoặc bị thu hồi do giới hạn thiết bị. Vui lòng đăng nhập lại.",
+        );
       }
 
       showToast.success("Đăng nhập thành công", {
