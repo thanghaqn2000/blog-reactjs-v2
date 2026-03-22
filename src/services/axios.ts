@@ -1,6 +1,15 @@
 import { API_CONFIG } from '@/config/api.config';
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+/** Tên sự kiện: axios đã xóa phiên (refresh 401…); AuthContext lắng nghe để đồng bộ state */
+export const AUTH_SESSION_CLEARED_EVENT = 'orca-auth-session-cleared';
+
+function notifySessionCleared() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(AUTH_SESSION_CLEARED_EVENT));
+  }
+}
+
 // Tạo instance cho v1 API
 export const v1Api = axios.create({
   baseURL: `${API_CONFIG.BASE_URL}${API_CONFIG.V1_PREFIX}`,
@@ -14,12 +23,12 @@ export const adminApi = axios.create({
 // Tạo một object để lưu trữ token
 export const tokenStore = {
   token: null as string | null,
-  setToken: function(newToken: string | null) {
+  setToken: function (newToken: string | null) {
     this.token = newToken;
   },
-  getToken: function() {
+  getToken: function () {
     return this.token;
-  }
+  },
 };
 
 // Hàm để cập nhật token
@@ -27,7 +36,22 @@ export const setAuthToken = (token: string | null) => {
   tokenStore.setToken(token);
 };
 
-/** Kiểm tra request có phải là gọi refresh token không (tránh loop khi refresh trả 401) */
+function clearDefaultAuthHeaders() {
+  const clear = (instance: typeof v1Api) => {
+    const common = instance.defaults.headers?.common as Record<string, string> | undefined;
+    if (common && 'JWTAuthorization' in common) {
+      delete common.JWTAuthorization;
+    }
+  };
+  clear(v1Api);
+  clear(adminApi);
+}
+
+/**
+ * BE khi refresh không hợp lệ thường trả 401 + body dạng:
+ * `{ "error": "Phiên đăng nhập đã hết hạn hoặc bị thu hồi", "status": 401 }` — đúng nghiệp vụ.
+ * FE xử lý trong interceptor: xóa phiên, không redirect /login (ProtectedRoute lo route cần auth).
+ */
 function isRefreshRequest(config: InternalAxiosRequestConfig): boolean {
   const url = config.url ?? '';
   return typeof url === 'string' && url.includes('refresh_tokens');
@@ -56,10 +80,8 @@ async function refreshAccessToken(): Promise<string | null> {
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       if (status === 401 || status === 403) {
         setAuthToken(null);
-        // Không gắn ?reason= — tránh toast “phiên hết hạn” khi F5 + cookie refresh cũ (chưa đăng nhập thực sự)
-        if (!isAlreadyOnLogin()) {
-          window.location.href = '/login';
-        }
+        clearDefaultAuthHeaders();
+        notifySessionCleared();
       }
       return null;
     } finally {
@@ -78,16 +100,10 @@ function setDefaultAuthHeader(
   (instance.defaults.headers.common as Record<string, string>).JWTAuthorization = `Bearer ${token}`;
 }
 
-function isAlreadyOnLogin(): boolean {
-  return window.location.pathname.startsWith('/login');
-}
-
-/** Khi refresh trả 401/403: clear token, redirect login kèm reason param (trừ khi đã ở /login) */
 function handleSessionExpired(): void {
   setAuthToken(null);
-  if (!isAlreadyOnLogin()) {
-    window.location.href = '/login';
-  }
+  clearDefaultAuthHeaders();
+  notifySessionCleared();
 }
 
 function createUnauthorizedInterceptor(instance: typeof v1Api | typeof adminApi) {
@@ -118,27 +134,33 @@ function createUnauthorizedInterceptor(instance: typeof v1Api | typeof adminApi)
 }
 
 // Thêm interceptor cho v1 API để tự động thêm token
-v1Api.interceptors.request.use((config) => {
-  const token = tokenStore.getToken();
-  if (token) {
-    config.headers.JWTAuthorization = `Bearer ${token}`;
+v1Api.interceptors.request.use(
+  (config) => {
+    const token = tokenStore.getToken();
+    if (token) {
+      config.headers.JWTAuthorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+);
 
 // Thêm interceptor cho admin API để tự động thêm token
-adminApi.interceptors.request.use((config) => {
-  const token = tokenStore.getToken();
-  if (token) {
-    config.headers.JWTAuthorization = `Bearer ${token}`;
+adminApi.interceptors.request.use(
+  (config) => {
+    const token = tokenStore.getToken();
+    if (token) {
+      config.headers.JWTAuthorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+);
 
-// Response: khi 401 thì refresh rồi retry; nếu request là refresh thì logout + redirect
+// Response: khi 401 thì refresh rồi retry; refresh thất bại thì xóa phiên + event (không redirect /login)
 v1Api.interceptors.response.use((res) => res, createUnauthorizedInterceptor(v1Api));
-adminApi.interceptors.response.use((res) => res, createUnauthorizedInterceptor(adminApi)); 
+adminApi.interceptors.response.use((res) => res, createUnauthorizedInterceptor(adminApi));
