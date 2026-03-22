@@ -1,12 +1,6 @@
 import { API_CONFIG } from '@/config/api.config';
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-export const LOGOUT_REASON = {
-  SESSION_EXPIRED: 'session_expired',
-} as const;
-
-export type LogoutReason = (typeof LOGOUT_REASON)[keyof typeof LOGOUT_REASON];
-
 // Tạo instance cho v1 API
 export const v1Api = axios.create({
   baseURL: `${API_CONFIG.BASE_URL}${API_CONFIG.V1_PREFIX}`,
@@ -62,8 +56,9 @@ async function refreshAccessToken(): Promise<string | null> {
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       if (status === 401 || status === 403) {
         setAuthToken(null);
+        // Không gắn ?reason= — tránh toast “phiên hết hạn” khi F5 + cookie refresh cũ (chưa đăng nhập thực sự)
         if (!isAlreadyOnLogin()) {
-          window.location.href = `/login?reason=${LOGOUT_REASON.SESSION_EXPIRED}`;
+          window.location.href = '/login';
         }
       }
       return null;
@@ -91,7 +86,7 @@ function isAlreadyOnLogin(): boolean {
 function handleSessionExpired(): void {
   setAuthToken(null);
   if (!isAlreadyOnLogin()) {
-    window.location.href = `/login?reason=${LOGOUT_REASON.SESSION_EXPIRED}`;
+    window.location.href = '/login';
   }
 }
 
