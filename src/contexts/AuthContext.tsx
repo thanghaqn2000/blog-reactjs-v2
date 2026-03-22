@@ -1,5 +1,5 @@
 import { authService, FirebaseUserInfo, TokenInfo, User } from '@/services/auth.service';
-import { setAuthToken } from '@/services/axios';
+import { AUTH_SESSION_CLEARED_EVENT, setAuthToken } from '@/services/axios';
 import axios from 'axios';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
@@ -65,6 +65,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     refreshAuth();
+  }, []);
+
+  // Khi axios xóa phiên (refresh 401, v.v.) — cập nhật state, không redirect
+  useEffect(() => {
+    const onCleared = () => {
+      setAuthState((prev) => ({
+        ...prev,
+        tokenInfo: null,
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+      }));
+    };
+    window.addEventListener(AUTH_SESSION_CLEARED_EVENT, onCleared);
+    return () => window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, onCleared);
   }, []);
 
   const checkingSession = useRef(false);
