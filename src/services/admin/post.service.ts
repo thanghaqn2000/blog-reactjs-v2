@@ -1,5 +1,12 @@
 import { adminApi } from '../axios';
 
+export type AdminPostAuthor =
+  | string
+  | {
+      name?: string;
+      avatar_url?: string;
+    };
+
 export interface Post {
   id: number;
   slug: string;
@@ -13,6 +20,7 @@ export interface Post {
   updated_at: string;
   sub_type?: string;
   date_post?: string;
+  author?: AdminPostAuthor;
 }
 
 export interface ChartStock {
@@ -55,10 +63,65 @@ export interface PresignUrlResponse {
   key: string;
 }
 
+/** Query admin posts index — chỉ gửi field có giá trị hợp lệ (theo BE) */
 export interface GetFilterPost {
   page?: number;
   per_page?: number;
+  /** title_cont */
+  title?: string;
+  /** news | finance | report */
+  category?: string;
+  /** pending | publish */
+  status?: string;
+  /** normal | vip */
+  sub_type?: string;
+  date_post_from?: string;
+  date_post_to?: string;
+  /** @deprecated dùng title */
   search?: string;
+}
+
+export type AdminPostsFilters = {
+  title?: string;
+  category?: string;
+  status?: string;
+  sub_type?: string;
+  date_post_from?: string;
+  date_post_to?: string;
+};
+
+const VALID_CATEGORY = ['news', 'finance', 'report'] as const;
+const VALID_STATUS = ['pending', 'publish'] as const;
+const VALID_SUB_TYPE = ['normal', 'vip'] as const;
+
+export function buildAdminPostsParams(
+  page: number,
+  perPage: number,
+  filters: AdminPostsFilters
+): GetFilterPost {
+  const params: GetFilterPost = { page, per_page: perPage };
+  const title = filters.title?.trim();
+  if (title) params.title = title;
+  if (filters.category && VALID_CATEGORY.includes(filters.category as (typeof VALID_CATEGORY)[number])) {
+    params.category = filters.category;
+  }
+  if (filters.status && VALID_STATUS.includes(filters.status as (typeof VALID_STATUS)[number])) {
+    params.status = filters.status;
+  }
+  if (filters.sub_type && VALID_SUB_TYPE.includes(filters.sub_type as (typeof VALID_SUB_TYPE)[number])) {
+    params.sub_type = filters.sub_type;
+  }
+  const from = filters.date_post_from?.trim();
+  const to = filters.date_post_to?.trim();
+  if (from) params.date_post_from = from;
+  if (to) params.date_post_to = to;
+  return params;
+}
+
+export function adminPostAuthorLabel(author?: AdminPostAuthor): string {
+  if (author == null) return 'Admin';
+  if (typeof author === 'string') return author || 'Admin';
+  return author.name || 'Admin';
 }
 
 export interface CreatePost {
@@ -82,6 +145,12 @@ export interface PresignUrl {
 class PostService {
   async getPosts(params?: GetFilterPost): Promise<GetPostsResponse> {
     const response = await adminApi.get('/posts', { params, withCredentials: true });
+    return response.data;
+  }
+
+  /** Bài hệ thống tự đăng — cùng query lọc/phân trang như GET /posts (BE: author_type system) */
+  async getAutoPosts(params?: GetFilterPost): Promise<GetPostsResponse> {
+    const response = await adminApi.get('/posts/auto_posts', { params, withCredentials: true });
     return response.data;
   }
 
