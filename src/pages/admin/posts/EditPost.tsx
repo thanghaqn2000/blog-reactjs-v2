@@ -158,7 +158,7 @@ const EditPost = () => {
         }
       });
 
-      await fetchPosts();
+      await fetchPosts(1, undefined, { scope: 'manual' });
       showToast.success('Cập nhật bài viết thành công!');
       navigate('/admin/posts');
     } catch (error) {

@@ -128,7 +128,7 @@ const CreatePost = () => {
         }
       });
       
-      await fetchPosts();
+      await fetchPosts(1, undefined, { scope: 'manual' });
       showToast.success('Tạo bài viết thành công!');
       navigate('/admin/posts');
     } catch (error) {
