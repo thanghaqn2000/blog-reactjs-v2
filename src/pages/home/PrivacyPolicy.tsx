@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
         >
           <div className="container mx-auto px-4 text-center">
             <h1 className="mb-4 text-3xl font-bold text-white md:text-4xl">
-              Chính sách Bảo mật / Privacy Policy
+              Privacy Policy
             </h1>
             <p className="mx-auto max-w-2xl leading-relaxed text-blue-100">
               Chúng tôi cam kết bảo vệ dữ liệu cá nhân của bạn và minh bạch trong cách chúng tôi vận
