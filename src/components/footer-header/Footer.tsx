@@ -3,10 +3,14 @@ import { faFacebook, faInstagram, faLinkedin, faTiktok } from "@fortawesome/free
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from 'react-router-dom';
 
-/** `import.meta.env.DEV` do Vite gán (dev server = true), không đọc từ .env. Ghi đè URL: VITE_PRIVACY_POLICY_URL */
+/** Ghi đè URL: VITE_PRIVACY_POLICY_URL / VITE_TERMS_OF_SERVICE_URL */
 const privacyPolicyHref =
   import.meta.env.VITE_PRIVACY_POLICY_URL ||
   (import.meta.env.DEV ? '/privacy-policy' : 'https://orcavietnam.com/privacy-policy');
+
+const termsOfServiceHref =
+  import.meta.env.VITE_TERMS_OF_SERVICE_URL ||
+  (import.meta.env.DEV ? '/terms-of-service' : 'https://orcavietnam.com/terms-of-service');
 
 const Footer = () => {
   return (
@@ -27,12 +31,20 @@ const Footer = () => {
               <SocialLink href="#" icon={faInstagram} color="text-sky-500" />
               <SocialLink href="#" icon={faTiktok} color="text-red-600" />
             </div>
-            <a
-              href={privacyPolicyHref}
-              className="mt-5 inline-block text-sm font-bold text-primary transition-colors hover:text-primary/80 hover:underline"
-            >
-              Privacy Policy
-            </a>
+            <div className="mt-5 flex flex-col gap-2">
+              <a
+                href={privacyPolicyHref}
+                className="inline-block text-sm font-bold text-primary transition-colors hover:text-primary/80 hover:underline"
+              >
+                Privacy Policy
+              </a>
+              <a
+                href={termsOfServiceHref}
+                className="inline-block text-sm font-bold text-primary transition-colors hover:text-primary/80 hover:underline"
+              >
+                Terms of Service
+              </a>
+            </div>
           </div>
           
           {/* Quick Links */}
