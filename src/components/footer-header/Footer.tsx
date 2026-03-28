@@ -66,7 +66,7 @@ const Footer = () => {
               to="/privacy-policy"
               className="text-sm text-foreground/60 transition-colors hover:text-foreground/80"
             >
-              Chính sách bảo mật
+              Privacy Policy
             </Link>
           </div>
         </div>
