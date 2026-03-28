@@ -61,17 +61,14 @@ const Footer = () => {
             © {new Date().getFullYear()} ORCA. Tất cả quyền được bảo lưu.
           </p>
           
-          {/* <div className="flex items-center space-x-6">
-            <Link to="/privacy" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
-              Chính sách riêng tư
+          <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
+            <Link
+              to="/privacy-policy"
+              className="text-sm text-foreground/60 transition-colors hover:text-foreground/80"
+            >
+              Chính sách bảo mật
             </Link>
-            <Link to="/terms" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
-              Điều khoản dịch vụ
-            </Link>
-            <Link to="/cookies" className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors">
-              Cookie
-            </Link>
-          </div> */}
+          </div>
         </div>
       </div>
     </footer>

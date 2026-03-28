@@ -30,6 +30,7 @@ import ExchangeRate from "./pages/home/ExchangeRate";
 import Feedback from "./pages/home/Feedback";
 import Index from "./pages/home/Index";
 import NotFound from "./pages/home/NotFound";
+import PrivacyPolicy from "./pages/home/PrivacyPolicy";
 import VipNews from "./pages/home/VipNews";
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ const App = () => (
 
               {/* Auth callback route */}
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               
               {/* 404 route */}
               <Route path="/404" element={<NotFound />} />
