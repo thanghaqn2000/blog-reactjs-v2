@@ -3,6 +3,11 @@ import { faFacebook, faInstagram, faLinkedin, faTiktok } from "@fortawesome/free
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from 'react-router-dom';
 
+/** `import.meta.env.DEV` do Vite gán (dev server = true), không đọc từ .env. Ghi đè URL: VITE_PRIVACY_POLICY_URL */
+const privacyPolicyHref =
+  import.meta.env.VITE_PRIVACY_POLICY_URL ||
+  (import.meta.env.DEV ? '/privacy-policy' : 'https://orcavietnam.com/privacy-policy');
+
 const Footer = () => {
   return (
     <footer className="bg-secondary py-12 md:py-16">
@@ -22,6 +27,12 @@ const Footer = () => {
               <SocialLink href="#" icon={faInstagram} color="text-sky-500" />
               <SocialLink href="#" icon={faTiktok} color="text-red-600" />
             </div>
+            <a
+              href={privacyPolicyHref}
+              className="mt-5 inline-block text-sm font-bold text-primary transition-colors hover:text-primary/80 hover:underline"
+            >
+              Privacy Policy
+            </a>
           </div>
           
           {/* Quick Links */}
@@ -56,19 +67,10 @@ const Footer = () => {
         </div>
         
         {/* Bottom Bar */}
-        <div className="border-t border-border mt-10 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-foreground/60 mb-4 md:mb-0">
+        <div className="border-t border-border mt-10 pt-8">
+          <p className="text-center text-sm text-foreground/60 md:text-left">
             © {new Date().getFullYear()} ORCA. Tất cả quyền được bảo lưu.
           </p>
-          
-          <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
-            <Link
-              to="/privacy-policy"
-              className="text-sm text-foreground/60 transition-colors hover:text-foreground/80"
-            >
-              Privacy Policy
-            </Link>
-          </div>
         </div>
       </div>
     </footer>
