@@ -14,6 +14,7 @@ const termsOfServiceHref =
 
 const Footer = () => {
   return (
+    <>
     <footer className="bg-secondary py-12 md:py-16">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
@@ -30,20 +31,6 @@ const Footer = () => {
               <SocialLink href="#" icon={faLinkedin} color="text-blue-700" />
               <SocialLink href="#" icon={faInstagram} color="text-sky-500" />
               <SocialLink href="#" icon={faTiktok} color="text-red-600" />
-            </div>
-            <div className="mt-5 flex flex-col gap-2">
-              <a
-                href={privacyPolicyHref}
-                className="inline-block text-sm font-bold text-primary transition-colors hover:text-primary/80 hover:underline"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href={termsOfServiceHref}
-                className="inline-block text-sm font-bold text-primary transition-colors hover:text-primary/80 hover:underline"
-              >
-                Terms of Service
-              </a>
             </div>
           </div>
           
@@ -86,6 +73,29 @@ const Footer = () => {
         </div>
       </div>
     </footer>
+    <nav
+      className="border-t border-border bg-muted/40"
+      aria-label="Pháp lý"
+    >
+      <div className="container mx-auto flex flex-wrap items-center justify-center gap-x-2 gap-y-2 px-4 py-4 sm:px-6">
+        <a
+          href={privacyPolicyHref}
+          className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          Privacy Policy
+        </a>
+        <span className="text-foreground/40 select-none" aria-hidden>
+          |
+        </span>
+        <a
+          href={termsOfServiceHref}
+          className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          Terms of Service
+        </a>
+      </div>
+    </nav>
+    </>
   );
 };
 
