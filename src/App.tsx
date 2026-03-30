@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import { GoogleAnalytics } from "./components/GoogleAnalytics";
+import { PageViewTracking } from "./components/PageViewTracking";
 import AdminRoute from "./components/AdminRoute";
 import Login from "./components/authenticate/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -51,6 +53,8 @@ const App = () => (
         <Toaster />
         <Sonner position="top-right" />
         <BrowserRouter>
+          <GoogleAnalytics />
+          <PageViewTracking />
           <AnimatePresence mode="wait">
             <Routes>
               <Route path="/" element={<Index />} />
