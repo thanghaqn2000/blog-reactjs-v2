@@ -82,17 +82,27 @@ class AuthService {
     return v1Api.post('/auth/change-password', data, { withCredentials: true });
   }
 
-  // Quên mật khẩu
-  async forgotPassword(email: string): Promise<void> {
-    return v1Api.post('/auth/forgot-password', { email }, { withCredentials: true });
+  // Quên mật khẩu — public, không cookie session
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const { data } = await v1Api.post<{ message: string }>(
+      '/auth/forgot-password',
+      { email },
+      { withCredentials: false }
+    );
+    return data;
   }
 
-  // Đặt lại mật khẩu
-  async resetPassword(data: {
+  // Đặt lại mật khẩu — BE yêu cầu snake_case: new_password
+  async resetPassword(payload: {
     token: string;
-    newPassword: string;
-  }): Promise<void> {
-    return v1Api.post('/auth/reset-password', data, { withCredentials: true });
+    new_password: string;
+  }): Promise<{ message?: string }> {
+    const { data } = await v1Api.post<{ message?: string }>(
+      '/auth/reset-password',
+      payload,
+      { withCredentials: false }
+    );
+    return data;
   }
 
   async verifySocialToken(userInfo: FirebaseUserInfo): Promise<AuthResponse> {

@@ -170,9 +170,9 @@ const Login = ({ onLogin, onSocialLogin, onRegister }: LoginProps) => {
                       <Label htmlFor="password">
                         Mật khẩu <span className="text-red-500">*</span>
                       </Label>
-                      <a href="#" className="text-sm text-primary hover:underline">
+                      <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                         Quên mật khẩu?
-                      </a>
+                      </Link>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
