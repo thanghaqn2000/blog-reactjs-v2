@@ -7,7 +7,9 @@ import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import { PageViewTracking } from "./components/PageViewTracking";
 import AdminRoute from "./components/AdminRoute";
+import ForgotPassword from "./components/authenticate/ForgotPassword";
 import Login from "./components/authenticate/Login";
+import ResetPassword from "./components/authenticate/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import StockInsight from "./components/StockInsight";
 import { ChatProvider } from "./contexts/ChatContext";
@@ -61,6 +63,8 @@ const App = () => (
               
               {/* Authentication routes */}
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               
               {/* Admin routes - PostsProvider chỉ active trong admin */}
               <Route path="/admin" element={<AdminLayout />}>
